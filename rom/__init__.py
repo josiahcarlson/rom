@@ -100,10 +100,6 @@ Getting started
 
 from decimal import Decimal as _Decimal
 import json
-import string
-import time
-import unittest
-import uuid
 
 import redis
 
@@ -113,7 +109,7 @@ from .index import GeneralIndex
 from .util import (_model, _numeric_keygen, _string_keygen, _to_score,
     ClassProperty, connect, session, _many_to_one_keygen)
 
-VERSION = '0.10'
+VERSION = '0.11'
 
 NULL = object()
 MODELS = {}
@@ -177,7 +173,7 @@ class Column(object):
         self._keygen = None
 
         if unique:
-            if self._allowed != str:
+            if self._allowed != str and self._allowed != unicode:
                 raise ColumnError("Unique columns can only be strings")
 
         numeric = True
@@ -245,6 +241,7 @@ class Column(object):
         self._validate(value)
         obj._data[self._attr] = value
         obj._modified = True
+        session.add(obj)
 
     def __get__(self, obj, objtype):
         try:
@@ -260,6 +257,7 @@ class Column(object):
         except KeyError:
             raise AttributeError("%s.%s does not exist"%(self._model, self._attr))
         obj._modified = True
+        session.add(obj)
 
 class Integer(Column):
     '''
@@ -403,6 +401,7 @@ class PrimaryKey(Column):
         else:
             value = int(value)
         obj._data[attr] = value
+        session.add(obj)
 
     def __set__(self, obj, value):
         if not obj._init:
@@ -450,6 +449,8 @@ class ManyToOne(Column):
             model = MODELS[self._ftable]
         except KeyError:
             raise ORMError("Missing foreign table %r referenced by %s.%s"%(self._ftable, self._model, self._attr))
+        if not self._required and value is None:
+            return
         if not isinstance(value, model):
             raise InvalidColumnValue("%s.%s has type %r but must be of type %r"%(
                 self._model, self._attr, type(value), model))
@@ -491,7 +492,7 @@ class OneToMany(Column):
         if not obj._init:
             self._model, self._attr = value[:2]
             try:
-                model = MODELS[self._ftable]
+                MODELS[self._ftable]
             except KeyError:
                 raise ORMError("Missing foreign table %r referenced by %s.%s"%(self._ftable, self._model, self._attr))
             return
@@ -602,7 +603,7 @@ class Model(object):
     __metaclass__ = _ModelMetaclass
     def __init__(self, **kwargs):
         self._new = not kwargs.pop('_loading', False)
-        model = self.__class__.__name__
+        model = _model(self)
         self._data = {}
         self._last = {}
         self._modified = False
@@ -622,7 +623,7 @@ class Model(object):
 
     @property
     def _pk(self):
-        return '%s:%s'%(self.__class__.__name__, getattr(self, self._pkey))
+        return '%s:%s'%(_model(self), getattr(self, self._pkey))
 
     @classmethod
     @connect
@@ -631,7 +632,7 @@ class Model(object):
         if not pk:
             raise ColumnError("Missing primary key value")
 
-        model = cls.__name__
+        model = _model(cls)
         key = '%s:%s'%(model, pk)
         pipe = conn.pipeline(True)
 
@@ -755,6 +756,7 @@ class Model(object):
         session.forget(self)
         self._apply_changes(self._last, {}, delete=True)
         self._modified = True
+        session.add(self)
 
     def copy(self):
         '''
@@ -784,14 +786,13 @@ class Model(object):
         single = not isinstance(ids, (list, tuple))
         if single:
             ids = [ids]
-        pks = ['%s:%s'%(cls.__name__, id) for id in ids]
+        pks = ['%s:%s'%(_model(cls), id) for id in ids]
         # get from the session, if possible
         out = map(session.get, pks)
         # if we couldn't get an instance from the session, load from Redis
         if None in out:
             pipe = conn.pipeline(True)
             idxs = []
-            remove = []
             # Fetch missing data
             for i, data in enumerate(out):
                 if data is None:
@@ -858,7 +859,7 @@ class Model(object):
                 qval0 = cls._columns[plain_attr]._to_redis(qval0)
                 qval1 = cls._columns[plain_attr]._to_redis(qval1)
 
-                ids = conn.zrangebyscore('%s:%s:idx'%(cls.__name__, attr), qval0, qval1, *_limit)
+                ids = conn.zrangebyscore('%s:%s:idx'%(_model(cls), attr), qval0, qval1, *_limit)
                 if ids:
                     return cls.get(ids)
                 return []
@@ -868,7 +869,7 @@ class Model(object):
                 if isinstance(value, tuple):
                     raise QueryError("Cannot query a unique index with a range of values")
                 qvalue = cls._columns[attr]._to_redis(value)
-                id = conn.hget('%s:%s:uidx'%(cls.__name__, attr), qvalue)
+                id = conn.hget('%s:%s:uidx'%(_model(cls), attr), qvalue)
                 if not id:
                     return None
                 return cls.get(id)
@@ -910,9 +911,13 @@ class Query(object):
             # for numeric ranges, use None for open-ended ranges
             attribute=(min, max)
 
-            # for string searches, attributes with *all* strings that are in the
-            # list will be matched
-            attribute=[required, values]
+            # for string searches, passing a plain string will require that
+            # string to be in the index as a literal
+            attribute=string
+
+            # to perform an 'or' query on strings, you can pass a list of
+            # strings
+            attribute=[string1, string2]
 
         As an example, the following will return entities that have both
         ``hello`` and ``world`` in the ``String`` column ``scol`` and has a
@@ -921,21 +926,21 @@ class Query(object):
 
             # The following
             results = MyModel.query \\
-                .filter(scol=['hello', 'world']) \\
+                .filter(scol='hello') \\
+                .filter(scol='world') \\
                 .filter(ncol=(2, 10)) \\
                 .execute()
         '''
         cur_filters = list(self._filters)
         for attr, value in kwargs.iteritems():
             if isinstance(value, (str, unicode)):
-                value = [value]
-            if isinstance(value, tuple):
+                cur_filters.append('%s:%s'%(attr, value))
+            elif isinstance(value, tuple):
                 if len(value) != 2:
                     raise QueryError("Numeric ranges require 2 endpoints, you provided %s with %r"%(len(value), value))
                 cur_filters.append((attr, value[0], value[1]))
-            elif isinstance(value, list):
-                for v in value:
-                    cur_filters.append('%s:%s'%(attr, v))
+            elif isinstance(value, list) and value:
+                cur_filters.append(['%s:%s'%(attr, v) for v in value])
             else:
                 raise QueryError("Sorry, we don't know how to filter %r by %r"%(attr, value))
         return Query(self._model, tuple(cur_filters), self._order_by, self._limit)
@@ -981,3 +986,19 @@ class Query(object):
         limit = () if not self._limit else self._limit
         ids = self._model._gindex.search(self._filters, self._order_by, *limit)
         return self._model.get(ids)
+
+    def all(self):
+        '''
+        Alias for ``execute()``.
+        '''
+        return self.execute()
+
+    def first(self):
+        '''
+        Returns only the first result from the query, if any.
+        '''
+        limit = (0, 1) if not self.limit else (self._limit[0], 1)
+        ids = self._model._gindex.search(self._filters, self._order_by, *limit)
+        if ids:
+            return self.model.get(ids[0])
+        return None

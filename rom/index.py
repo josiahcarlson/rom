@@ -101,8 +101,10 @@ class GeneralIndex(object):
         for fltr in filters:
             if isinstance(fltr, (str, unicode)):
                 pipe.scard(fltr)
-            elif isinstance(fltr, (tuple, list)):
-                pipe.zcard(fltr)
+            elif isinstance(fltr, tuple):
+                pipe.zcard(fltr[0])
+            elif isinstance(fltr, list):
+                pipe.zcard(fltr[0])
             else:
                 raise QueryError("Don't know how to handle a filter of: %r"%(fltr,))
         sizes = list(enumerate(pipe.execute()))
@@ -112,10 +114,23 @@ class GeneralIndex(object):
         # the first "intersection" is actually a union to get us started
         intersect = pipe.zunionstore
         for fltr in sfilters:
+            if isinstance(fltr, list):
+                # or string string/tag search
+                if len(fltr) == 1:
+                    # only 1? Use the simple version.
+                    fltr = fltr[0]
+                elif not fltr:
+                    continue
+                else:
+                    temp_id2 = str(uuid.uuid4())
+                    pipe.zunionstore(temp_id2, dict(
+                        ('%s:%s:idx'%(self.namespace, fi), 0) for fi in fltr))
+                    intersect(temp_id, {temp_id:0, temp_id2:0})
+                    pipe.delete(temp_id2)
             if isinstance(fltr, (str, unicode)):
                 # simple string/tag search
                 intersect(temp_id, {temp_id:0, '%s:%s:idx'%(self.namespace, fltr):0})
-            elif isinstance(fltr, (tuple, list)):
+            elif isinstance(fltr, tuple):
                 # zset range search
                 if len(fltr) != 3:
                     raise QueryError("Cannot filter range of data without 2 endpoints (%s given)"%(len(fltr)-1,))
@@ -137,7 +152,7 @@ class GeneralIndex(object):
             * *filters* - A list of filters that apply to the search of one of
               the following two forms:
 
-                1. ``'column:string'`` - a plain string will match words in a
+                1. ``'column:string'`` - a plain string will match a word in a
                    text search on the column
 
                 .. note: Read the documentation about the ``Query`` object
@@ -148,6 +163,9 @@ class GeneralIndex(object):
 
                 .. note: Read the documentation about the ``Query`` object
                   for information about open-ended ranges
+
+                3. ``['column:string1', 'column:string2']`` - will match any
+                   of the words in a text search on the column
 
             * *order_by* - A string that names the numeric column by which to
               sort the results by. Prefixing with '-' will return results in

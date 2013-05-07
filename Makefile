@@ -35,6 +35,7 @@ upload:
 
 docs:
 	$(SPHINXBUILD) -b html $(ALLSPHINXOPTS) $(BUILDDIR)/html
+	cd _build/html/ && zip -r9 ../../rom_docs.zip * && cd ../../
 	@echo
 	@echo "Build finished. The HTML pages are in $(BUILDDIR)/html."
 

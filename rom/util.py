@@ -8,7 +8,7 @@ import redis
 from .exceptions import ORMError
 
 __all__ = '''
-    get_connection Session'''.split()
+    get_connection Session refresh_indices'''.split()
 
 CONNECTION = redis.Redis()
 
@@ -59,6 +59,8 @@ class ClassProperty(object):
         return ClassProperty(self.get, self.set, delete)
 
 def _model(obj):
+    if type(obj) is type:
+        return obj.__name__
     return obj.__class__.__name__
 
 # These are just the default index key generators for numeric and string
@@ -115,13 +117,11 @@ class Session(threading.local):
         '''
         Adds an entity to the session.
         '''
-        pk = obj._pk
         try:
-            if pk in self.known:
-                raise ORMError("Tried to load an object in a session but the object was already here!")
+            self.known
         except AttributeError:
             self.known = {}
-        self.known[pk] = obj
+        self.known[obj._pk] = obj
 
     def forget(self, obj):
         '''
@@ -129,6 +129,10 @@ class Session(threading.local):
         deleted). Call this to ensure that an entity that you've modified is
         not automatically saved on ``session.commit()`` .
         '''
+        try:
+            self.known
+        except AttributeError:
+            self.known = {}
         self.known.pop(obj._pk, None)
 
     def get(self, pk):
@@ -178,8 +182,74 @@ class Session(threading.local):
             * *all* - pass ``True`` to save all entities known, not only those
               entities that have been modified.
         '''
-        changes = self.flush(full)
+        changes = self.flush(full, all)
         self.known = {}
         return changes
 
+    def save(self, *objects, **kwargs):
+        '''
+        This method an alternate API for saving many entities (possibly not
+        tracked by the session). You can call::
+
+            session.save(obj)
+            session.save(obj1, obj2, ...)
+            session.save([obj1, obj2, ...])
+
+        And the entities will be flushed to Redis.
+
+        You can pass the keyword arguments ``full`` and ``all`` with the same
+        meaning and semantics as the ``.commit()`` method.
+        '''
+        from rom import Model
+        full = kwargs.get('full')
+        all = kwargs.get('all')
+        changes = 0
+        for o in objects:
+            if isinstance(o, (list, tuple)):
+                changes += self.save(*o, full=full, all=all)
+            elif isinstance(o, Model):
+                if all or o._modified:
+                    changes += o.save(full)
+            else:
+                raise ORMError(
+                    "Cannot save an object that is not an instance of a Model (you provided %r)"%(
+                        o,))
+        return changes
+
 session = Session()
+
+@connect
+def refresh_indices(model, conn, block_size=100):
+    '''
+    This utility function will iterate over all entities of a provided model,
+    refreshing their indices. This is primarily useful after adding an index
+    on a column.
+
+    Arguments:
+
+        * *model* - the model whose entities you want to reindex
+        * *block_size* - the maximum number of entities you want to fetch from
+          Redis at a time, defaulting to 100
+
+    This function will yield its progression through re-indexing all of your
+    entities.
+
+    Example use::
+
+        for progress, total in refresh_indices(MyModel, block_size=200):
+            print "%s of %s"%(progress, total)
+
+    .. note: This uses the session object to handle index refresh via calls to
+      ``.commit()``. If you have any outstanding entities known in the
+      session, they will be committed.
+
+    '''
+    max_id = int(conn.get('%s:%s:'%(_model(model), model._pkey)) or '0')
+    block_size = max(block_size, 10)
+    for i in xrange(1, max_id+1, block_size):
+        # fetches entities, keeping a record in the session
+        models = model.get(range(i, i+block_size))
+        models # for pyflakes
+        # re-save un-modified data, resulting in index-only updates
+        session.commit(all=True)
+        yield min(i+block_size, max_id), max_id
