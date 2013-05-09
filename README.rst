@@ -1,4 +1,3 @@
-
 Rom - the Redis object mapper for Python
 
 Copyright 2013 Josiah Carlson
@@ -49,20 +48,15 @@ Getting started
    https://pypi.python.org/pypi/redis
 3. (optional) Make sure that you have the hiredis library installed for Python
 4. Make sure that you have a Redis server installed and available remotely
-5. Update/replace the ``rom.util.get_connection()`` function via monkeypatch
-   using something like the below::
+5. Update the Redis connection settings for ``rom`` via
+   ``rom.util.set_connection_settings()`` (other connection update options,
+   including per-model connections, can be read about in the ``rom.util``
+   documentation)::
 
     import redis
     from rom import util
 
-    CONNECTION = None
-    def my_get_connection():
-        global CONNECTION
-        if not CONNECTION:
-            CONNECTION = redis.Redis(**my_connection_settings)
-        return CONNECTION
-
-    util.get_connection = my_get_connection
+    util.set_connection_settings(host='myhost', db=7)
 
 .. warning:: If you forget to update the connection function, rom will attempt
  to connect to localhost:6379 .
