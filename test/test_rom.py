@@ -144,19 +144,18 @@ class TestORM(unittest.TestCase):
             attr4=-1000,
             attr5=_Decimal('2.643'),
         ).save()
-        
-        
+
         self.assertEquals(IndexedModel.query.filter(attr='hello').count(), 1)
-        self.assertEquals(IndexedModel.query.filter(attr2=['how', 'are']).count(), 1)
-        self.assertEquals(IndexedModel.query.filter(attr='hello', attr2=['how', 'are']).count(), 1)
-        self.assertEquals(IndexedModel.query.filter(attr='hello', noattr='bad', attr2=['how', 'are']).count(), 0)
+        self.assertEquals(IndexedModel.query.filter(attr2='how').filter(attr2='are').count(), 1)
+        self.assertEquals(IndexedModel.query.filter(attr='hello').filter(attr2='how').filter(attr2='are').count(), 1)
+        self.assertEquals(IndexedModel.query.filter(attr='hello', noattr='bad').filter(attr2='how').filter(attr2='are').count(), 0)
         self.assertEquals(IndexedModel.query.filter(attr='hello', attr3=(None, None)).count(), 1)
         self.assertEquals(IndexedModel.query.filter(attr='hello', attr3=(None, 10)).count(), 1)
         self.assertEquals(IndexedModel.query.filter(attr='hello', attr3=(None, 10)).execute()[0].id, 1)
         self.assertEquals(IndexedModel.query.filter(attr='hello', attr3=(5, None)).count(), 1)
         self.assertEquals(IndexedModel.query.filter(attr='hello', attr3=(5, 10), attr4=(4,5), attr5=(2.5, 2.7)).count(), 1)
         self.assertEquals(IndexedModel.query.filter(attr='hello', attr3=(10, 20), attr4=(4,5), attr5=(2.5, 2.7)).count(), 0)
-        
+
         results = IndexedModel.query.filter(attr='world').order_by('attr4').execute()
         self.assertEquals([x.id for x in results], [2,1])
 
