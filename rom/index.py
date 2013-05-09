@@ -2,7 +2,8 @@
 import json
 import uuid
 
-from .util import connect, _to_score
+from .exceptions import QueryError
+from .util import _to_score
 
 class GeneralIndex(object):
     '''
@@ -47,7 +48,6 @@ class GeneralIndex(object):
         pipe.hdel(self.namespace + '::', id)
         return len(known) + len(scored)
 
-    @connect
     def unindex(self, conn, id):
         '''
         Will unindex an entity atomically.
@@ -61,7 +61,6 @@ class GeneralIndex(object):
         pipe.execute()
         return ret
 
-    @connect
     def index(self, conn, id, keys, scores, pipe=None):
         '''
         Will index the provided data atomically.
@@ -93,7 +92,6 @@ class GeneralIndex(object):
             pipe.execute()
         return len(keys) + len(scores)
 
-    @connect
     def _prepare(self, conn, filters):
         temp_id = str(uuid.uuid4())
         pipe = conn.pipeline(True)
@@ -143,7 +141,7 @@ class GeneralIndex(object):
             intersect = pipe.zinterstore
         return pipe, intersect, temp_id
 
-    def search(self, filters, order_by, offset=None, count=None):
+    def search(self, conn, filters, order_by, offset=None, count=None):
         '''
         Search for model ids that match the provided filters.
 
@@ -184,24 +182,26 @@ class GeneralIndex(object):
             * *count* - The maximum number of results to return from the query
         '''
         # prepare the filters
-        pipe, intersect, temp_id = self._prepare(filters)
+        pipe, intersect, temp_id = self._prepare(conn, filters)
 
         # handle ordering
         if order_by:
             reverse = order_by and order_by.startswith('-')
             intersect(temp_id, {temp_id:0, '%s:%s:idx'%(self.namespace, order_by.lstrip('-')): -1 if reverse else 1})
-        pipe.zrange(temp_id, offset or 0, (offset + count - 1) if offset and count else -1)
+        offset = offset if offset is not None else 0
+        end = (offset + count - 1) if count > 0 else -1
+        pipe.zrange(temp_id, offset, end)
         pipe.delete(temp_id)
         return pipe.execute()[-2]
 
-    def count(self, filters):
+    def count(self, conn, filters):
         '''
         Returns the count of the items that match the provided filters.
 
         For the meaning of what the ``filters`` argument means, see the
         ``.search()`` method docs.
         '''
-        pipe, intersect, temp_id = self._prepare(filters)
+        pipe, intersect, temp_id = self._prepare(conn, filters)
         pipe.zcard(temp_id)
         pipe.delete(temp_id)
         return pipe.execute()[-2]

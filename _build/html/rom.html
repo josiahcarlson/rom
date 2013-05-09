@@ -6,7 +6,7 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>rom Package &mdash; rom 0.11 documentation</title>
+    <title>rom Package &mdash; rom 0.12 documentation</title>
     
     <link rel="stylesheet" href="_static/default.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
@@ -14,7 +14,7 @@
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    './',
-        VERSION:     '0.11',
+        VERSION:     '0.12',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -23,7 +23,7 @@
     <script type="text/javascript" src="_static/jquery.js"></script>
     <script type="text/javascript" src="_static/underscore.js"></script>
     <script type="text/javascript" src="_static/doctools.js"></script>
-    <link rel="top" title="rom 0.11 documentation" href="index.html" />
+    <link rel="top" title="rom 0.12 documentation" href="index.html" />
     <link rel="prev" title="Welcome to the documentation for the Redis object Mapper" href="index.html" /> 
   </head>
   <body>
@@ -39,7 +39,7 @@
         <li class="right" >
           <a href="index.html" title="Welcome to the documentation for the Redis object Mapper"
              accesskey="P">previous</a> |</li>
-        <li><a href="index.html">rom 0.11 documentation</a> &raquo;</li> 
+        <li><a href="index.html">rom 0.12 documentation</a> &raquo;</li> 
       </ul>
     </div>  
 
@@ -100,19 +100,14 @@ entities)</li>
 </li>
 <li><p class="first">Make sure that you have a Redis server installed and available remotely</p>
 </li>
-<li><p class="first">Update/replace the <tt class="docutils literal"><span class="pre">rom.util.get_connection()</span></tt> function via monkeypatch
-using something like the below:</p>
+<li><p class="first">Update the Redis connection settings for <tt class="docutils literal"><span class="pre">rom</span></tt> via
+<tt class="docutils literal"><span class="pre">rom.util.set_connection_settings()</span></tt> (other connection update options,
+including per-model connections, can be read about in the <tt class="docutils literal"><span class="pre">rom.util</span></tt>
+documentation):</p>
 <div class="highlight-python"><div class="highlight"><pre><span class="kn">import</span> <span class="nn">redis</span>
 <span class="kn">from</span> <span class="nn">rom</span> <span class="kn">import</span> <span class="n">util</span>
 
-<span class="n">CONNECTION</span> <span class="o">=</span> <span class="bp">None</span>
-<span class="k">def</span> <span class="nf">my_get_connection</span><span class="p">():</span>
-    <span class="k">global</span> <span class="n">CONNECTION</span>
-    <span class="k">if</span> <span class="ow">not</span> <span class="n">CONNECTION</span><span class="p">:</span>
-        <span class="n">CONNECTION</span> <span class="o">=</span> <span class="n">redis</span><span class="o">.</span><span class="n">Redis</span><span class="p">(</span><span class="o">**</span><span class="n">my_connection_settings</span><span class="p">)</span>
-    <span class="k">return</span> <span class="n">CONNECTION</span>
-
-<span class="n">util</span><span class="o">.</span><span class="n">get_connection</span> <span class="o">=</span> <span class="n">my_get_connection</span>
+<span class="n">util</span><span class="o">.</span><span class="n">set_connection_settings</span><span class="p">(</span><span class="n">host</span><span class="o">=</span><span class="s">&#39;myhost&#39;</span><span class="p">,</span> <span class="n">db</span><span class="o">=</span><span class="mi">7</span><span class="p">)</span>
 </pre></div>
 </div>
 </li>
@@ -199,7 +194,7 @@ retrieved from a OneToMany relationship will not be copied).</p>
 
 <dl class="classmethod">
 <dt id="rom.__init__.Model.get">
-<em class="property">classmethod </em><tt class="descname">get</tt><big>(</big><em>sc</em>, <em>*args</em>, <em>**kwargs</em><big>)</big><a class="headerlink" href="#rom.__init__.Model.get" title="Permalink to this definition">¶</a></dt>
+<em class="property">classmethod </em><tt class="descname">get</tt><big>(</big><em>ids</em><big>)</big><a class="headerlink" href="#rom.__init__.Model.get" title="Permalink to this definition">¶</a></dt>
 <dd><p>Will fetch one or more entities of this type from the session or
 Redis.</p>
 <p>Used like:</p>
@@ -213,7 +208,7 @@ order that the ids were passed.</p>
 
 <dl class="classmethod">
 <dt id="rom.__init__.Model.get_by">
-<em class="property">classmethod </em><tt class="descname">get_by</tt><big>(</big><em>sc</em>, <em>*args</em>, <em>**kwargs</em><big>)</big><a class="headerlink" href="#rom.__init__.Model.get_by" title="Permalink to this definition">¶</a></dt>
+<em class="property">classmethod </em><tt class="descname">get_by</tt><big>(</big><em>**kwargs</em><big>)</big><a class="headerlink" href="#rom.__init__.Model.get_by" title="Permalink to this definition">¶</a></dt>
 <dd><p>This method offers a simple query method for fetching entities of this
 type via attribute numeric ranges (such columns must be <tt class="docutils literal"><span class="pre">indexed</span></tt>),
 or via <tt class="docutils literal"><span class="pre">unique</span></tt> columns.</p>
@@ -231,7 +226,7 @@ multiple criteria, look into the Model.query class property.</p>
 
 <dl class="attribute">
 <dt id="rom.__init__.Model.query">
-<tt class="descname">query</tt><em class="property"> = &lt;rom.__init__.Query object at 0x915b414&gt;</em><a class="headerlink" href="#rom.__init__.Model.query" title="Permalink to this definition">¶</a></dt>
+<tt class="descname">query</tt><em class="property"> = &lt;rom.__init__.Query object at 0xad9caa4&gt;</em><a class="headerlink" href="#rom.__init__.Model.query" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
@@ -253,7 +248,7 @@ entity, you should look at the <tt class="docutils literal"><span class="pre">.c
 
 <dl class="class">
 <dt id="rom.__init__.Column">
-<em class="property">class </em><tt class="descclassname">rom.__init__.</tt><tt class="descname">Column</tt><big>(</big><em>required=False</em>, <em>default=&lt;object object at 0x8f2b258&gt;</em>, <em>unique=False</em>, <em>index=False</em>, <em>keygen=None</em><big>)</big><a class="headerlink" href="#rom.__init__.Column" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><tt class="descclassname">rom.__init__.</tt><tt class="descname">Column</tt><big>(</big><em>required=False</em>, <em>default=&lt;object object at 0xacbb260&gt;</em>, <em>unique=False</em>, <em>index=False</em>, <em>keygen=None</em><big>)</big><a class="headerlink" href="#rom.__init__.Column" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <tt class="xref py py-class docutils literal"><span class="pre">object</span></tt></p>
 <p>Column objects handle data conversion to/from strings, store metadata
 about indices, etc. Note that these are &#8220;heavy&#8221; columns, in that whenever
@@ -299,7 +294,7 @@ during object construction: <tt class="docutils literal"><span class="pre">MyMod
 
 <dl class="class">
 <dt id="rom.__init__.Integer">
-<em class="property">class </em><tt class="descclassname">rom.__init__.</tt><tt class="descname">Integer</tt><big>(</big><em>required=False</em>, <em>default=&lt;object object at 0x8f2b258&gt;</em>, <em>unique=False</em>, <em>index=False</em>, <em>keygen=None</em><big>)</big><a class="headerlink" href="#rom.__init__.Integer" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><tt class="descclassname">rom.__init__.</tt><tt class="descname">Integer</tt><big>(</big><em>required=False</em>, <em>default=&lt;object object at 0xacbb260&gt;</em>, <em>unique=False</em>, <em>index=False</em>, <em>keygen=None</em><big>)</big><a class="headerlink" href="#rom.__init__.Integer" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#rom.__init__.Column" title="rom.__init__.Column"><tt class="xref py py-class docutils literal"><span class="pre">rom.__init__.Column</span></tt></a></p>
 <p>Used for integer numeric columns.</p>
 <p>All standard arguments supported.</p>
@@ -312,7 +307,7 @@ during object construction: <tt class="docutils literal"><span class="pre">MyMod
 
 <dl class="class">
 <dt id="rom.__init__.Float">
-<em class="property">class </em><tt class="descclassname">rom.__init__.</tt><tt class="descname">Float</tt><big>(</big><em>required=False</em>, <em>default=&lt;object object at 0x8f2b258&gt;</em>, <em>unique=False</em>, <em>index=False</em>, <em>keygen=None</em><big>)</big><a class="headerlink" href="#rom.__init__.Float" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><tt class="descclassname">rom.__init__.</tt><tt class="descname">Float</tt><big>(</big><em>required=False</em>, <em>default=&lt;object object at 0xacbb260&gt;</em>, <em>unique=False</em>, <em>index=False</em>, <em>keygen=None</em><big>)</big><a class="headerlink" href="#rom.__init__.Float" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#rom.__init__.Column" title="rom.__init__.Column"><tt class="xref py py-class docutils literal"><span class="pre">rom.__init__.Column</span></tt></a></p>
 <p>Numeric column that supports integers and floats (values are turned into
 floats on load from Redis).</p>
@@ -326,7 +321,7 @@ floats on load from Redis).</p>
 
 <dl class="class">
 <dt id="rom.__init__.Decimal">
-<em class="property">class </em><tt class="descclassname">rom.__init__.</tt><tt class="descname">Decimal</tt><big>(</big><em>required=False</em>, <em>default=&lt;object object at 0x8f2b258&gt;</em>, <em>unique=False</em>, <em>index=False</em>, <em>keygen=None</em><big>)</big><a class="headerlink" href="#rom.__init__.Decimal" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><tt class="descclassname">rom.__init__.</tt><tt class="descname">Decimal</tt><big>(</big><em>required=False</em>, <em>default=&lt;object object at 0xacbb260&gt;</em>, <em>unique=False</em>, <em>index=False</em>, <em>keygen=None</em><big>)</big><a class="headerlink" href="#rom.__init__.Decimal" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#rom.__init__.Column" title="rom.__init__.Column"><tt class="xref py py-class docutils literal"><span class="pre">rom.__init__.Column</span></tt></a></p>
 <p>A Decimal-only numeric column (converts ints/longs into Decimals
 automatically). Attempts to assign Python float will fail.</p>
@@ -340,7 +335,7 @@ automatically). Attempts to assign Python float will fail.</p>
 
 <dl class="class">
 <dt id="rom.__init__.String">
-<em class="property">class </em><tt class="descclassname">rom.__init__.</tt><tt class="descname">String</tt><big>(</big><em>required=False</em>, <em>default=&lt;object object at 0x8f2b258&gt;</em>, <em>unique=False</em>, <em>index=False</em>, <em>keygen=None</em><big>)</big><a class="headerlink" href="#rom.__init__.String" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><tt class="descclassname">rom.__init__.</tt><tt class="descname">String</tt><big>(</big><em>required=False</em>, <em>default=&lt;object object at 0xacbb260&gt;</em>, <em>unique=False</em>, <em>index=False</em>, <em>keygen=None</em><big>)</big><a class="headerlink" href="#rom.__init__.String" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#rom.__init__.Column" title="rom.__init__.Column"><tt class="xref py py-class docutils literal"><span class="pre">rom.__init__.Column</span></tt></a></p>
 <p>A plain string column. Trying to save unicode strings will probably result
 in an error, if not bad data. This is the only type of column that can
@@ -364,7 +359,7 @@ contained in the column, extracted via:</p>
 
 <dl class="class">
 <dt id="rom.__init__.Text">
-<em class="property">class </em><tt class="descclassname">rom.__init__.</tt><tt class="descname">Text</tt><big>(</big><em>required=False</em>, <em>default=&lt;object object at 0x8f2b258&gt;</em>, <em>unique=False</em>, <em>index=False</em>, <em>keygen=None</em><big>)</big><a class="headerlink" href="#rom.__init__.Text" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><tt class="descclassname">rom.__init__.</tt><tt class="descname">Text</tt><big>(</big><em>required=False</em>, <em>default=&lt;object object at 0xacbb260&gt;</em>, <em>unique=False</em>, <em>index=False</em>, <em>keygen=None</em><big>)</big><a class="headerlink" href="#rom.__init__.Text" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#rom.__init__.Column" title="rom.__init__.Column"><tt class="xref py py-class docutils literal"><span class="pre">rom.__init__.Column</span></tt></a></p>
 <p>A unicode string column.</p>
 <p>All standard arguments supported, except for <tt class="docutils literal"><span class="pre">unique</span></tt>.</p>
@@ -382,7 +377,7 @@ how to do it.</p>
 
 <dl class="class">
 <dt id="rom.__init__.Json">
-<em class="property">class </em><tt class="descclassname">rom.__init__.</tt><tt class="descname">Json</tt><big>(</big><em>required=False</em>, <em>default=&lt;object object at 0x8f2b258&gt;</em>, <em>unique=False</em>, <em>index=False</em>, <em>keygen=None</em><big>)</big><a class="headerlink" href="#rom.__init__.Json" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><tt class="descclassname">rom.__init__.</tt><tt class="descname">Json</tt><big>(</big><em>required=False</em>, <em>default=&lt;object object at 0xacbb260&gt;</em>, <em>unique=False</em>, <em>index=False</em>, <em>keygen=None</em><big>)</big><a class="headerlink" href="#rom.__init__.Json" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#rom.__init__.Column" title="rom.__init__.Column"><tt class="xref py py-class docutils literal"><span class="pre">rom.__init__.Column</span></tt></a></p>
 <p>Allows for more complicated nested structures as attributes.</p>
 <p>All standard arguments supported. The <tt class="docutils literal"><span class="pre">keygen</span></tt> argument must be provided
@@ -415,7 +410,7 @@ results by primary key.</p>
 
 <dl class="class">
 <dt id="rom.__init__.ManyToOne">
-<em class="property">class </em><tt class="descclassname">rom.__init__.</tt><tt class="descname">ManyToOne</tt><big>(</big><em>ftable</em>, <em>required=False</em>, <em>default=&lt;object object at 0x8f2b258&gt;</em><big>)</big><a class="headerlink" href="#rom.__init__.ManyToOne" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><tt class="descclassname">rom.__init__.</tt><tt class="descname">ManyToOne</tt><big>(</big><em>ftable</em>, <em>required=False</em>, <em>default=&lt;object object at 0xacbb260&gt;</em><big>)</big><a class="headerlink" href="#rom.__init__.ManyToOne" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#rom.__init__.Column" title="rom.__init__.Column"><tt class="xref py py-class docutils literal"><span class="pre">rom.__init__.Column</span></tt></a></p>
 <p>This ManyToOne column allows for one model to reference another model.
 While a ManyToOne column does not require a reverse OneToMany column
@@ -427,6 +422,25 @@ defined.</p>
 <p>Used via:</p>
 <div class="highlight-python"><div class="highlight"><pre><span class="k">class</span> <span class="nc">MyModel</span><span class="p">(</span><span class="n">Model</span><span class="p">):</span>
     <span class="n">col</span> <span class="o">=</span> <span class="n">ManyToOne</span><span class="p">(</span><span class="s">&#39;OtherModelName&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="class">
+<dt id="rom.__init__.ForeignModel">
+<em class="property">class </em><tt class="descclassname">rom.__init__.</tt><tt class="descname">ForeignModel</tt><big>(</big><em>fmodel</em>, <em>required=False</em>, <em>default=&lt;object object at 0xacbb260&gt;</em><big>)</big><a class="headerlink" href="#rom.__init__.ForeignModel" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#rom.__init__.Column" title="rom.__init__.Column"><tt class="xref py py-class docutils literal"><span class="pre">rom.__init__.Column</span></tt></a></p>
+<p>This column allows for <tt class="docutils literal"><span class="pre">rom</span></tt> models to reference an instance of another
+model from an unrelated ORM or otherwise.</p>
+<p>Used via:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="k">class</span> <span class="nc">MyModel</span><span class="p">(</span><span class="n">Model</span><span class="p">):</span>
+    <span class="n">col</span> <span class="o">=</span> <span class="n">ForeignModel</span><span class="p">(</span><span class="n">DjangoModel</span><span class="p">)</span>
+
+<span class="n">dm</span> <span class="o">=</span> <span class="n">DjangoModel</span><span class="p">(</span><span class="n">col1</span><span class="o">=</span><span class="s">&#39;foo&#39;</span><span class="p">)</span>
+<span class="n">django</span><span class="o">.</span><span class="n">db</span><span class="o">.</span><span class="n">transaction</span><span class="o">.</span><span class="n">commit</span><span class="p">()</span>
+
+<span class="n">x</span> <span class="o">=</span> <span class="n">MyModel</span><span class="p">(</span><span class="n">col</span><span class="o">=</span><span class="n">dm</span><span class="p">)</span>
+<span class="n">x</span><span class="o">.</span><span class="n">save</span><span class="p">()</span>
 </pre></div>
 </div>
 </dd></dl>
@@ -614,7 +628,7 @@ removing items outside the requested range after each intersection.</p>
 prior to performing the search to improve performance.</p>
 <dl class="method">
 <dt id="rom.index.GeneralIndex.count">
-<tt class="descname">count</tt><big>(</big><em>filters</em><big>)</big><a class="headerlink" href="#rom.index.GeneralIndex.count" title="Permalink to this definition">¶</a></dt>
+<tt class="descname">count</tt><big>(</big><em>conn</em>, <em>filters</em><big>)</big><a class="headerlink" href="#rom.index.GeneralIndex.count" title="Permalink to this definition">¶</a></dt>
 <dd><p>Returns the count of the items that match the provided filters.</p>
 <p>For the meaning of what the <tt class="docutils literal"><span class="pre">filters</span></tt> argument means, see the
 <tt class="docutils literal"><span class="pre">.search()</span></tt> method docs.</p>
@@ -622,7 +636,7 @@ prior to performing the search to improve performance.</p>
 
 <dl class="method">
 <dt id="rom.index.GeneralIndex.index">
-<tt class="descname">index</tt><big>(</big><em>sc</em>, <em>*args</em>, <em>**kwargs</em><big>)</big><a class="headerlink" href="#rom.index.GeneralIndex.index" title="Permalink to this definition">¶</a></dt>
+<tt class="descname">index</tt><big>(</big><em>conn</em>, <em>id</em>, <em>keys</em>, <em>scores</em>, <em>pipe=None</em><big>)</big><a class="headerlink" href="#rom.index.GeneralIndex.index" title="Permalink to this definition">¶</a></dt>
 <dd><p>Will index the provided data atomically.</p>
 <p>Arguments:</p>
 <blockquote>
@@ -642,7 +656,7 @@ keys that were provided.</p>
 
 <dl class="method">
 <dt id="rom.index.GeneralIndex.search">
-<tt class="descname">search</tt><big>(</big><em>filters</em>, <em>order_by</em>, <em>offset=None</em>, <em>count=None</em><big>)</big><a class="headerlink" href="#rom.index.GeneralIndex.search" title="Permalink to this definition">¶</a></dt>
+<tt class="descname">search</tt><big>(</big><em>conn</em>, <em>filters</em>, <em>order_by</em>, <em>offset=None</em>, <em>count=None</em><big>)</big><a class="headerlink" href="#rom.index.GeneralIndex.search" title="Permalink to this definition">¶</a></dt>
 <dd><p>Search for model ids that match the provided filters.</p>
 <p>Arguments:</p>
 <blockquote>
@@ -678,7 +692,7 @@ descending order</p>
 
 <dl class="method">
 <dt id="rom.index.GeneralIndex.unindex">
-<tt class="descname">unindex</tt><big>(</big><em>sc</em>, <em>*args</em>, <em>**kwargs</em><big>)</big><a class="headerlink" href="#rom.index.GeneralIndex.unindex" title="Permalink to this definition">¶</a></dt>
+<tt class="descname">unindex</tt><big>(</big><em>conn</em>, <em>id</em><big>)</big><a class="headerlink" href="#rom.index.GeneralIndex.unindex" title="Permalink to this definition">¶</a></dt>
 <dd><p>Will unindex an entity atomically.</p>
 <p>Arguments:</p>
 <blockquote>
@@ -693,12 +707,58 @@ descending order</p>
 </div>
 <div class="section" id="module-rom.util">
 <span id="util-module"></span><h2><tt class="xref py py-mod docutils literal"><span class="pre">util</span></tt> Module<a class="headerlink" href="#module-rom.util" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="changing-connection-settings">
+<h3>Changing connection settings<a class="headerlink" href="#changing-connection-settings" title="Permalink to this headline">¶</a></h3>
+<p>There are 4 ways to change the way that <tt class="docutils literal"><span class="pre">rom</span></tt> connects to Redis.</p>
+<ol class="arabic">
+<li><p class="first">Set the global default connection settings by calling
+<tt class="docutils literal"><span class="pre">rom.util.set_connection_settings()`</span></tt> with the same arguments you would
+pass to the redis.Redis() constructor:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="kn">import</span> <span class="nn">rom.util</span>
+
+<span class="n">rom</span><span class="o">.</span><span class="n">util</span><span class="o">.</span><span class="n">set_connection_settings</span><span class="p">(</span><span class="n">host</span><span class="o">=</span><span class="s">&#39;myhost&#39;</span><span class="p">,</span> <span class="n">db</span><span class="o">=</span><span class="mi">7</span><span class="p">)</span>
+</pre></div>
+</div>
+</li>
+<li><p class="first">Give each model its own Redis connection on creation, called _connection,
+which will be used whenever any Redis-related calls are made on instances
+of that model:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="kn">import</span> <span class="nn">rom</span>
+
+<span class="k">class</span> <span class="nc">MyModel</span><span class="p">(</span><span class="n">rom</span><span class="o">.</span><span class="n">Model</span><span class="p">):</span>
+    <span class="n">_conn</span> <span class="o">=</span> <span class="n">redis</span><span class="o">.</span><span class="n">Redis</span><span class="p">(</span><span class="n">host</span><span class="o">=</span><span class="s">&#39;myhost&#39;</span><span class="p">,</span> <span class="n">db</span><span class="o">=</span><span class="mi">7</span><span class="p">)</span>
+
+    <span class="n">attribute</span> <span class="o">=</span> <span class="n">rom</span><span class="o">.</span><span class="n">String</span><span class="p">()</span>
+    <span class="n">other_attribute</span> <span class="o">=</span> <span class="n">rom</span><span class="o">.</span><span class="n">String</span><span class="p">()</span>
+</pre></div>
+</div>
+</li>
+<li><p class="first">Replace the <tt class="docutils literal"><span class="pre">CONNECTION</span></tt> object in <tt class="docutils literal"><span class="pre">rom.util</span></tt>:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="kn">import</span> <span class="nn">rom.util</span>
+
+<span class="n">rom</span><span class="o">.</span><span class="n">util</span><span class="o">.</span><span class="n">CONNECTION</span> <span class="o">=</span> <span class="n">redis</span><span class="o">.</span><span class="n">Redis</span><span class="p">(</span><span class="n">host</span><span class="o">=</span><span class="s">&#39;myhost&#39;</span><span class="p">,</span> <span class="n">db</span><span class="o">=</span><span class="mi">7</span><span class="p">)</span>
+</pre></div>
+</div>
+</li>
+<li><p class="first">Monkey-patch <tt class="docutils literal"><span class="pre">rom.util.get_connection</span></tt> with a function that takes no
+arguments and returns a Redis connection:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="kn">import</span> <span class="nn">rom.util</span>
+
+<span class="k">def</span> <span class="nf">my_connection</span><span class="p">():</span>
+    <span class="c"># Note that this function doesn&#39;t use connection pooling,</span>
+    <span class="c"># you would want to instantiate and cache a real connection</span>
+    <span class="c"># as necessary.</span>
+    <span class="k">return</span> <span class="n">redis</span><span class="o">.</span><span class="n">Redis</span><span class="p">(</span><span class="n">host</span><span class="o">=</span><span class="s">&#39;myhost&#39;</span><span class="p">,</span> <span class="n">db</span><span class="o">=</span><span class="mi">7</span><span class="p">)</span>
+
+<span class="n">rom</span><span class="o">.</span><span class="n">util</span><span class="o">.</span><span class="n">get_connection</span> <span class="o">=</span> <span class="n">my_connection</span>
+</pre></div>
+</div>
+</li>
+</ol>
 <dl class="function">
 <dt id="rom.util.get_connection">
 <tt class="descclassname">rom.util.</tt><tt class="descname">get_connection</tt><big>(</big><big>)</big><a class="headerlink" href="#rom.util.get_connection" title="Permalink to this definition">¶</a></dt>
-<dd><p>Replace me with a function that takes no arguments in order to change the
-way I connect to Redis. Alternatively, replace the global <tt class="docutils literal"><span class="pre">CONNECTION</span></tt>
-object in this module for similar results</p>
+<dd><p>Override me for one of the ways to change the way I connect to Redis.</p>
 </dd></dl>
 
 <dl class="class">
@@ -782,7 +842,7 @@ meaning and semantics as the <tt class="docutils literal"><span class="pre">.com
 
 <dl class="function">
 <dt id="rom.util.refresh_indices">
-<tt class="descclassname">rom.util.</tt><tt class="descname">refresh_indices</tt><big>(</big><em>sc</em>, <em>*args</em>, <em>**kwargs</em><big>)</big><a class="headerlink" href="#rom.util.refresh_indices" title="Permalink to this definition">¶</a></dt>
+<tt class="descclassname">rom.util.</tt><tt class="descname">refresh_indices</tt><big>(</big><em>model</em>, <em>block_size=100</em><big>)</big><a class="headerlink" href="#rom.util.refresh_indices" title="Permalink to this definition">¶</a></dt>
 <dd><p>This utility function will iterate over all entities of a provided model,
 refreshing their indices. This is primarily useful after adding an index
 on a column.</p>
@@ -803,6 +863,14 @@ entities.</p>
 </div>
 </dd></dl>
 
+<dl class="function">
+<dt id="rom.util.set_connection_settings">
+<tt class="descclassname">rom.util.</tt><tt class="descname">set_connection_settings</tt><big>(</big><em>*args</em>, <em>**kwargs</em><big>)</big><a class="headerlink" href="#rom.util.set_connection_settings" title="Permalink to this definition">¶</a></dt>
+<dd><p>Update the global connection settings for models that don&#8217;t have
+model-specific connections.</p>
+</dd></dl>
+
+</div>
 </div>
 </div>
 
@@ -824,7 +892,10 @@ entities.</p>
 </li>
 <li><a class="reference internal" href="#module-rom.exceptions"><tt class="docutils literal"><span class="pre">exceptions</span></tt> Module</a></li>
 <li><a class="reference internal" href="#module-rom.index"><tt class="docutils literal"><span class="pre">index</span></tt> Module</a></li>
-<li><a class="reference internal" href="#module-rom.util"><tt class="docutils literal"><span class="pre">util</span></tt> Module</a></li>
+<li><a class="reference internal" href="#module-rom.util"><tt class="docutils literal"><span class="pre">util</span></tt> Module</a><ul>
+<li><a class="reference internal" href="#changing-connection-settings">Changing connection settings</a></li>
+</ul>
+</li>
 </ul>
 </li>
 </ul>
@@ -866,7 +937,7 @@ entities.</p>
         <li class="right" >
           <a href="index.html" title="Welcome to the documentation for the Redis object Mapper"
              >previous</a> |</li>
-        <li><a href="index.html">rom 0.11 documentation</a> &raquo;</li> 
+        <li><a href="index.html">rom 0.12 documentation</a> &raquo;</li> 
       </ul>
     </div>
     <div class="footer">

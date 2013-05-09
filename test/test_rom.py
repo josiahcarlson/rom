@@ -8,15 +8,14 @@ import redis
 from rom import util
 
 util.CONNECTION = redis.Redis(db=15)
-connect = util.connect
+connect = util._connect
 
 from rom import *
 from rom.exceptions import *
 
 class TestORM(unittest.TestCase):
-    @connect
-    def setUp(self, conn):
-        conn.flushdb()
+    def setUp(self):
+        connect(None).flushdb()
     def tearDown(self):
         self.setUp()
 
@@ -68,6 +67,7 @@ class TestORM(unittest.TestCase):
         m = IndexModel.get_by(key="hello")
         self.assertTrue(m)
         self.assertEquals(m.id, item.id)
+        self.assertTrue(m is item)
 
     def test_foreign_key(self):
         def foo():
@@ -97,6 +97,7 @@ class TestORM(unittest.TestCase):
         y = Fkey1.get(yid)
         self.assertEquals(y.fkey2.id, xid)
         fk1 = y.fkey2.fkey1
+
         self.assertEquals(len(fk1), 1)
         self.assertEquals(fk1[0].id, y.id)
 
@@ -120,6 +121,7 @@ class TestORM(unittest.TestCase):
         x = Normal()
         self.assertTrue(x.save())
         self.assertFalse(x.save())
+        session.commit()
 
         self.assertTrue(x is Normal.get(x.id))
 
@@ -131,13 +133,14 @@ class TestORM(unittest.TestCase):
             attr4 = Float(index=True)
             attr5 = Decimal(index=True)
 
-        IndexedModel(
+        x = IndexedModel(
             attr='hello world',
             attr2='how are you doing?',
             attr3=7,
             attr4=4.5,
             attr5=_Decimal('2.643'),
-        ).save()
+        )
+        x.save()
         IndexedModel(
             attr='world',
             attr3=100,
@@ -154,10 +157,71 @@ class TestORM(unittest.TestCase):
         self.assertEquals(IndexedModel.query.filter(attr='hello', attr3=(None, 10)).execute()[0].id, 1)
         self.assertEquals(IndexedModel.query.filter(attr='hello', attr3=(5, None)).count(), 1)
         self.assertEquals(IndexedModel.query.filter(attr='hello', attr3=(5, 10), attr4=(4,5), attr5=(2.5, 2.7)).count(), 1)
+        first = IndexedModel.query.filter(attr='hello', attr3=(5, 10), attr4=(4,5), attr5=(2.5, 2.7)).first()
+        self.assertTrue(first)
+        self.assertTrue(first is x)
         self.assertEquals(IndexedModel.query.filter(attr='hello', attr3=(10, 20), attr4=(4,5), attr5=(2.5, 2.7)).count(), 0)
 
         results = IndexedModel.query.filter(attr='world').order_by('attr4').execute()
         self.assertEquals([x.id for x in results], [2,1])
+
+    def test_alternate_models(self):
+        ctr = [0]
+        class Alternate(object):
+            def __init__(self, id=None):
+                if id is None:
+                    id = ctr[0]
+                    ctr[0] += 1
+                self.id = id
+
+            @classmethod
+            def get(self, id):
+                return Alternate(id)
+
+        class FModel(Model):
+            attr = ForeignModel(Alternate)
+
+        a = Alternate()
+        ai = a.id
+        i = FModel(attr=a).id
+        session.commit()   # two lines of magic to destroy session history
+        session.rollback() #
+        del a
+
+        f = FModel.get(i)
+        self.assertEquals(f.attr.id, ai)
+
+    def test_model_connection(self):
+        class Foo(Model):
+            pass
+
+        class Bar(Model):
+            _conn = redis.Redis(db=14)
+
+        Bar._conn.delete('Bar:id:')
+
+        Foo().save()
+        Bar().save()
+
+        self.assertEquals(Bar._conn.get('Bar:id:'), '1')
+        self.assertEquals(util.CONNECTION.get('Bar:id:'), None)
+        Bar.get(1).delete()
+        Bar._conn.delete('Bar:id:')
+
+    def test_entity_caching(self):
+        class Goo(Model):
+            pass
+
+        f = Goo()
+        i = f.id
+        p = id(f)
+        session.commit()
+
+        for j in xrange(10):
+            Goo()
+
+        g = Goo.get(i)
+        self.assertTrue(f is g)
 
 if __name__ == '__main__':
     import sys

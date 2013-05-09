@@ -1,31 +1,88 @@
 
-from functools import wraps
+'''
+Changing connection settings
+============================
+
+There are 4 ways to change the way that ``rom`` connects to Redis.
+
+1. Set the global default connection settings by calling
+   ``rom.util.set_connection_settings()``` with the same arguments you would
+   pass to the redis.Redis() constructor::
+
+    import rom.util
+
+    rom.util.set_connection_settings(host='myhost', db=7)
+
+2. Give each model its own Redis connection on creation, called _connection,
+   which will be used whenever any Redis-related calls are made on instances
+   of that model::
+
+    import rom
+
+    class MyModel(rom.Model):
+        _conn = redis.Redis(host='myhost', db=7)
+
+        attribute = rom.String()
+        other_attribute = rom.String()
+
+3. Replace the ``CONNECTION`` object in ``rom.util``::
+
+    import rom.util
+
+    rom.util.CONNECTION = redis.Redis(host='myhost', db=7)
+
+4. Monkey-patch ``rom.util.get_connection`` with a function that takes no
+   arguments and returns a Redis connection::
+
+    import rom.util
+
+    def my_connection():
+        # Note that this function doesn't use connection pooling,
+        # you would want to instantiate and cache a real connection
+        # as necessary.
+        return redis.Redis(host='myhost', db=7)
+
+    rom.util.get_connection = my_connection
+'''
+
 import string
 import threading
+import weakref
 
 import redis
 
 from .exceptions import ORMError
 
 __all__ = '''
-    get_connection Session refresh_indices'''.split()
+    get_connection Session refresh_indices set_connection_settings'''.split()
 
 CONNECTION = redis.Redis()
 
+def set_connection_settings(*args, **kwargs):
+    '''
+    Update the global connection settings for models that don't have
+    model-specific connections.
+    '''
+    global CONNECTION
+    CONNECTION = redis.Redis(*args, **kwargs)
+
 def get_connection():
     '''
-    Replace me with a function that takes no arguments in order to change the
-    way I connect to Redis. Alternatively, replace the global ``CONNECTION``
-    object in this module for similar results
+    Override me for one of the ways to change the way I connect to Redis.
     '''
     return CONNECTION
 
-def connect(f):
-    @wraps(f)
-    def call(sc, *args, **kwargs):
-        conn = kwargs.pop('conn', None) or get_connection()
-        return f(sc, conn, *args, **kwargs)
-    return call
+def _connect(obj):
+    '''
+    Tries to get the _conn attribute from a model. Barring that, gets the
+    global default connection using other methods.
+    '''
+    from .__init__ import Model
+    if isinstance(obj, Model):
+        obj = obj.__class__
+    if hasattr(obj, '_conn'):
+        return obj._conn
+    return get_connection()
 
 class ClassProperty(object):
     '''
@@ -57,11 +114,6 @@ class ClassProperty(object):
 
     def deleter(self, delete):
         return ClassProperty(self.get, self.set, delete)
-
-def _model(obj):
-    if type(obj) is type:
-        return obj.__name__
-    return obj.__class__.__name__
 
 # These are just the default index key generators for numeric and string
 # types. Numeric keys are used as values in a ZSET, for range searching and
@@ -95,7 +147,9 @@ def _string_keygen(val):
 def _many_to_one_keygen(val):
     if val is None:
         return []
-    return {'': val._data[val._pkey]}
+    if hasattr(val, '_data') and hasattr(val, '_pkey'):
+        return {'': val._data[val._pkey]}
+    return {'': val.id}
 
 def _to_score(v, s=False):
     v = repr(v) if isinstance(v, float) else str(v)
@@ -113,15 +167,20 @@ class Session(threading.local):
     This is exposed via the ``session`` global variable, which is available
     when you ``import rom`` as ``rom.session``.
     '''
-    def add(self, obj):
-        '''
-        Adds an entity to the session.
-        '''
+    def _init(self):
         try:
             self.known
         except AttributeError:
             self.known = {}
+            self.wknown = weakref.WeakValueDictionary()
+
+    def add(self, obj):
+        '''
+        Adds an entity to the session.
+        '''
+        self._init()
         self.known[obj._pk] = obj
+        self.wknown[obj._pk] = obj
 
     def forget(self, obj):
         '''
@@ -129,20 +188,16 @@ class Session(threading.local):
         deleted). Call this to ensure that an entity that you've modified is
         not automatically saved on ``session.commit()`` .
         '''
-        try:
-            self.known
-        except AttributeError:
-            self.known = {}
+        self._init()
         self.known.pop(obj._pk, None)
+        self.wknown.pop(obj._pk, None)
 
     def get(self, pk):
         '''
         Fetches an entity from the session based on primary key.
         '''
-        try:
-            return self.known.get(pk)
-        except AttributeError:
-            self.known = {}
+        self._init()
+        return self.known.get(pk) or self.wknown.get(pk)
 
     def rollback(self):
         '''
@@ -150,6 +205,7 @@ class Session(threading.local):
         nothing).
         '''
         self.known = {}
+        self.wknown = weakref.WeakValueDictionary()
 
     def flush(self, full=False, all=False):
         '''
@@ -159,10 +215,7 @@ class Session(threading.local):
 
         See the ``.commit()`` method for arguments and their meanings.
         '''
-        try:
-            self.known
-        except AttributeError:
-            self.known = {}
+        self._init()
         changes = 0
         for value in self.known.values():
             if all or value._modified:
@@ -218,8 +271,7 @@ class Session(threading.local):
 
 session = Session()
 
-@connect
-def refresh_indices(model, conn, block_size=100):
+def refresh_indices(model, block_size=100):
     '''
     This utility function will iterate over all entities of a provided model,
     refreshing their indices. This is primarily useful after adding an index
@@ -244,7 +296,8 @@ def refresh_indices(model, conn, block_size=100):
       session, they will be committed.
 
     '''
-    max_id = int(conn.get('%s:%s:'%(_model(model), model._pkey)) or '0')
+    conn = _connect(model)
+    max_id = int(conn.get('%s:%s:'%(model.__name__, model._pkey)) or '0')
     block_size = max(block_size, 10)
     for i in xrange(1, max_id+1, block_size):
         # fetches entities, keeping a record in the session

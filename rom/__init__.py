@@ -50,20 +50,15 @@ Getting started
    https://pypi.python.org/pypi/redis
 3. (optional) Make sure that you have the hiredis library installed for Python
 4. Make sure that you have a Redis server installed and available remotely
-5. Update/replace the ``rom.util.get_connection()`` function via monkeypatch
-   using something like the below::
+5. Update the Redis connection settings for ``rom`` via
+   ``rom.util.set_connection_settings()`` (other connection update options,
+   including per-model connections, can be read about in the ``rom.util``
+   documentation)::
 
     import redis
     from rom import util
 
-    CONNECTION = None
-    def my_get_connection():
-        global CONNECTION
-        if not CONNECTION:
-            CONNECTION = redis.Redis(**my_connection_settings)
-        return CONNECTION
-
-    util.get_connection = my_get_connection
+    util.set_connection_settings(host='myhost', db=7)
 
 .. warning:: If you forget to update the connection function, rom will attempt
  to connect to localhost:6379 .
@@ -106,17 +101,17 @@ import redis
 from .exceptions import (ORMError, UniqueKeyViolation, InvalidOperation,
     QueryError, ColumnError, MissingColumn, InvalidColumnValue)
 from .index import GeneralIndex
-from .util import (_model, _numeric_keygen, _string_keygen, _to_score,
-    ClassProperty, connect, session, _many_to_one_keygen)
+from .util import (_numeric_keygen, _string_keygen, ClassProperty, _connect,
+    session, _many_to_one_keygen)
 
-VERSION = '0.11'
+VERSION = '0.12'
 
 NULL = object()
 MODELS = {}
 
 __all__ = '''
     Model Column Integer Float Decimal String Text Json PrimaryKey ManyToOne
-    OneToMany Query session'''.split()
+    ForeignModel OneToMany Query session'''.split()
 
 class Column(object):
     '''
@@ -391,12 +386,11 @@ class PrimaryKey(Column):
     def __init__(self, index=False):
         Column.__init__(self, required=False, default=None, unique=False, index=index)
 
-    @connect
-    def _init_(self, conn, obj, model, attr, value, loading):
+    def _init_(self, obj, model, attr, value, loading):
         self._model = model
         self._attr = attr
         if value is None:
-            value = conn.incr('%s:%s:'%(model, attr))
+            value = _connect(obj).incr('%s:%s:'%(model, attr))
             obj._modified = True
         else:
             value = int(value)
@@ -457,7 +451,7 @@ class ManyToOne(Column):
 
     def _to_redis(self, value):
         if not value:
-            return ''
+            return None
         if isinstance(value, (int, long)):
             return str(value)
         if value._new:
@@ -465,6 +459,53 @@ class ManyToOne(Column):
             value.save()
         v = str(getattr(value, value._pkey))
         return v
+
+class ForeignModel(Column):
+    '''
+    This column allows for ``rom`` models to reference an instance of another
+    model from an unrelated ORM or otherwise.
+
+    .. note: In order for this mechanism to work, the foreign model *must*
+      have an ``id`` attribute or property represents its primary key, and
+      *must* have a classmethod or staticmethod named ``get()`` that returns
+      the proper database entity.
+
+    Used via::
+
+        class MyModel(Model):
+            col = ForeignModel(DjangoModel)
+
+        dm = DjangoModel(col1='foo')
+        django.db.transaction.commit()
+
+        x = MyModel(col=dm)
+        x.save()
+    '''
+    __slots__ = Column.__slots__ + ['_fmodel']
+    def __init__(self, fmodel, required=False, default=NULL):
+        self._fmodel = fmodel
+        Column.__init__(self, required, default, index=True, keygen=_many_to_one_keygen)
+
+    def _from_redis(self, value):
+        if isinstance(value, self._fmodel):
+            return value
+        if isinstance(value, str) and value.isdigit():
+            value = int(value, 10)
+        return self._fmodel.get(value)
+
+    def _validate(self, value):
+        if not self._required and value is None:
+            return
+        if not isinstance(value, self._fmodel):
+            raise InvalidColumnValue("%s.%s has type %r but must be of type %r"%(
+                self._model, self._attr, type(value), self._fmodel))
+
+    def _to_redis(self, value):
+        if not value:
+            return None
+        if isinstance(value, (int, long, str)):
+            return str(value)
+        return str(value.id)
 
 class OneToMany(Column):
     '''
@@ -603,7 +644,7 @@ class Model(object):
     __metaclass__ = _ModelMetaclass
     def __init__(self, **kwargs):
         self._new = not kwargs.pop('_loading', False)
-        model = _model(self)
+        model = self.__class__.__name__
         self._data = {}
         self._last = {}
         self._modified = False
@@ -623,16 +664,16 @@ class Model(object):
 
     @property
     def _pk(self):
-        return '%s:%s'%(_model(self), getattr(self, self._pkey))
+        return '%s:%s'%(self.__class__.__name__, getattr(self, self._pkey))
 
     @classmethod
-    @connect
-    def _apply_changes(cls, conn, old, new, full=False, delete=False):
+    def _apply_changes(cls, old, new, full=False, delete=False):
+        conn = _connect(cls)
         pk = old.get(cls._pkey) or new.get(cls._pkey)
         if not pk:
             raise ColumnError("Missing primary key value")
 
-        model = _model(cls)
+        model = cls.__name__
         key = '%s:%s'%(model, pk)
         pipe = conn.pipeline(True)
 
@@ -720,7 +761,7 @@ class Model(object):
             else:
                 if data:
                     pipe.hmset(key, data)
-                cls._gindex.index(id_only, keys, scores, conn=conn, pipe=pipe)
+                cls._gindex.index(conn, id_only, keys, scores, pipe=pipe)
 
             try:
                 pipe.execute()
@@ -768,8 +809,7 @@ class Model(object):
         return self.__class__(**x)
 
     @classmethod
-    @connect
-    def get(cls, conn, ids):
+    def get(cls, ids):
         '''
         Will fetch one or more entities of this type from the session or
         Redis.
@@ -782,11 +822,12 @@ class Model(object):
         Passing a list or a tuple will return multiple entities, in the same
         order that the ids were passed.
         '''
+        conn = _connect(cls)
         # prepare the ids
         single = not isinstance(ids, (list, tuple))
         if single:
             ids = [ids]
-        pks = ['%s:%s'%(_model(cls), id) for id in ids]
+        pks = ['%s:%s'%(cls.__name__, id) for id in ids]
         # get from the session, if possible
         out = map(session.get, pks)
         # if we couldn't get an instance from the session, load from Redis
@@ -809,8 +850,7 @@ class Model(object):
         return out
 
     @classmethod
-    @connect
-    def get_by(cls, conn, **kwargs):
+    def get_by(cls, **kwargs):
         '''
         This method offers a simple query method for fetching entities of this
         type via attribute numeric ranges (such columns must be ``indexed``),
@@ -827,6 +867,8 @@ class Model(object):
         If you would like to make queries against multiple columns or with
         multiple criteria, look into the Model.query class property.
         '''
+        conn = _connect(cls)
+        model = cls.__name__
         # handle limits and query requirements
         _limit = kwargs.pop('_limit', ())
         if _limit and len(_limit) != 2:
@@ -859,7 +901,7 @@ class Model(object):
                 qval0 = cls._columns[plain_attr]._to_redis(qval0)
                 qval1 = cls._columns[plain_attr]._to_redis(qval1)
 
-                ids = conn.zrangebyscore('%s:%s:idx'%(_model(cls), attr), qval0, qval1, *_limit)
+                ids = conn.zrangebyscore('%s:%s:idx'%(model, attr), qval0, qval1, *_limit)
                 if ids:
                     return cls.get(ids)
                 return []
@@ -869,7 +911,7 @@ class Model(object):
                 if isinstance(value, tuple):
                     raise QueryError("Cannot query a unique index with a range of values")
                 qvalue = cls._columns[attr]._to_redis(value)
-                id = conn.hget('%s:%s:uidx'%(_model(cls), attr), qvalue)
+                id = conn.hget('%s:%s:uidx'%(model, attr), qvalue)
                 if not id:
                     return None
                 return cls.get(id)
@@ -975,7 +1017,12 @@ class Query(object):
         filters = self._filters
         if self._order_by:
             filters += (self._order_by.lstrip('-'),)
-        return self._model._gindex.count(filters)
+        return self._model._gindex.count(_connect(self._model), filters)
+
+    def _search(self):
+        limit = () if not self._limit else self._limit
+        return self._model._gindex.search(
+            _connect(self._model), self._filters, self._order_by, *limit)
 
     def execute(self):
         '''
@@ -983,9 +1030,7 @@ class Query(object):
         filters, ordered by the specified ordering (if any), limited by any
         earlier limit calls.
         '''
-        limit = () if not self._limit else self._limit
-        ids = self._model._gindex.search(self._filters, self._order_by, *limit)
-        return self._model.get(ids)
+        return self._model.get(self._search())
 
     def all(self):
         '''
@@ -997,8 +1042,10 @@ class Query(object):
         '''
         Returns only the first result from the query, if any.
         '''
-        limit = (0, 1) if not self.limit else (self._limit[0], 1)
-        ids = self._model._gindex.search(self._filters, self._order_by, *limit)
+        lim = [0, 1]
+        if self._limit:
+            lim[0] = self._limit[0]
+        ids = self.limit(*lim)._search()
         if ids:
-            return self.model.get(ids[0])
+            return self._model.get(ids[0])
         return None
