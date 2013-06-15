@@ -223,6 +223,24 @@ class TestORM(unittest.TestCase):
         g = Goo.get(i)
         self.assertTrue(f is g)
 
+    def test_index_preservation(self):
+        """ Edits to unrelated columns should not remove the index of other
+        columns. Issue: https://github.com/josiahcarlson/rom/issues/2. """
+
+        class M(Model):
+            u = String(unique=True)
+            i = Integer(index=True)
+            unrelated = String()
+
+        M(u='foo', i=11).save()
+
+        m = M.get_by(u='foo')
+        m.unrelated = 'foobar'
+        self.assertEqual(len(M.get_by(i=11)), 1)
+        m.save()
+        self.assertEqual(len(M.get_by(i=11)), 1)
+
+
 if __name__ == '__main__':
     import sys
     if '--really-run' in sys.argv:

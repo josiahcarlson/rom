@@ -35,18 +35,19 @@ class GeneralIndex(object):
     def __init__(self, namespace):
         self.namespace = namespace
 
-    def _unindex(self, conn, pipe, id):
-        known = conn.hget(self.namespace + '::', id)
-        if not known:
-            return 0
-        keys, scored = json.loads(known)
+    def _unindex(self, conn, pipe, id, keys=None, scored=None):
+        if keys is None and scored is None:
+            known = conn.hget(self.namespace + '::', id)
+            if not known:
+                return 0
+            keys, scored = json.loads(known)
 
         for key in keys:
             pipe.srem('%s:%s:idx'%(self.namespace, key), id)
         for key in scored:
             pipe.zrem('%s:%s:idx'%(self.namespace, key), id)
         pipe.hdel(self.namespace + '::', id)
-        return len(known) + len(scored)
+        return len(keys) + len(scored)
 
     def unindex(self, conn, id):
         '''
@@ -81,7 +82,7 @@ class GeneralIndex(object):
         '''
         had_pipe = bool(pipe)
         pipe = pipe or conn.pipeline(True)
-        self._unindex(conn, pipe, id)
+        self._unindex(conn, pipe, id, keys=keys, scored=scores)
 
         for key in keys:
             pipe.sadd('%s:%s:idx'%(self.namespace, key), id)
