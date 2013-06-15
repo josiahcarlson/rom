@@ -2,13 +2,14 @@
 
 from distutils.core import setup
 
-import rom
+with open('README.rst') as f:
+    long_description = f.read()
 
-long_description = rom.__doc__
+version = '0.12'
 
 setup(
     name='rom',
-    version=rom.VERSION,
+    version=version,
     description='A Redis object mapper for Python',
     author='Josiah Carlson',
     author_email='josiah.carlson@gmail.com',
