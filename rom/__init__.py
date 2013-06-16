@@ -104,7 +104,7 @@ from .index import GeneralIndex
 from .util import (_numeric_keygen, _string_keygen, ClassProperty, _connect,
     session, _many_to_one_keygen)
 
-VERSION = '0.12'
+VERSION = '0.13'
 
 NULL = object()
 MODELS = {}
@@ -713,10 +713,28 @@ class Model(object):
                 nval = new.get(attr)
                 rnval = ca._to_redis(nval) if nval is not None else None
 
+                # Add/update standard index
+                if hasattr(ca, '_keygen') and ca._keygen and not delete and nval is not None:
+                    generated = ca._keygen(nval)
+                    if isinstance(generated, (list, tuple, set)):
+                        for k in generated:
+                            keys.add('%s:%s'%(attr, k))
+                    elif isinstance(generated, dict):
+                        for k, v in generated.iteritems():
+                            if not k:
+                                scores[attr] = v
+                            else:
+                                scores['%s:%s'%(attr, k)] = v
+                    elif not generated:
+                        pass
+                    else:
+                        raise ColumnError("Don't know how to turn %r into a sequence of keys"%(generated,))
+
                 if nval == oval and not full:
                     continue
 
                 changes += 1
+
                 # Delete removed columns
                 if nval is None and oval is not None:
                     pipe.hdel(key, attr)
@@ -735,23 +753,6 @@ class Model(object):
                     if oval is not None:
                         pipe.hdel(ikey, roval)
                     pipe.hset(ikey, rnval, pk)
-
-                # Add/update standard index
-                if hasattr(ca, '_keygen') and ca._keygen and not delete:
-                    generated = ca._keygen(nval)
-                    if isinstance(generated, (list, tuple, set)):
-                        for k in generated:
-                            keys.add('%s:%s'%(attr, k))
-                    elif isinstance(generated, dict):
-                        for k, v in generated.iteritems():
-                            if not k:
-                                scores[attr] = v
-                            else:
-                                scores['%s:%s'%(attr, k)] = v
-                    elif not generated:
-                        pass
-                    else:
-                        raise ColumnError("Don't know how to turn %r into a sequence of keys"%(generated,))
 
             id_only = str(pk)
             if delete:
@@ -880,43 +881,30 @@ class Model(object):
 
         for attr, value in kwargs.iteritems():
             plain_attr = attr.partition(':')[0]
-            if isinstance(value, tuple):
-                if len(tuple) != 2:
-                    raise QueryError("Range queries must include exactly two endpoints")
-
-            # handle numeric index lookups
-            if plain_attr in cls._index:
-                col = cls._columns[plain_attr]
-                if not any(isinstance(i, col._allowed) for i in (0L, 0, 0.0, _Decimal('0'))):
-                    if not isinstance(col, ManyToOne):
-                        raise QueryError("Cannot query on a non-numeric index")
-
-                if isinstance(value, tuple):
-                    qval0, qval1 = value
-                else:
-                    qval0 = qval1 = value
-                if not isinstance(qval0, (int, long, float, _Decimal)) or not isinstance(qval1, (int, long, float, _Decimal)):
-                    raise QueryError("Cannot query on an index without a numeric value")
-
-                qval0 = cls._columns[plain_attr]._to_redis(qval0)
-                qval1 = cls._columns[plain_attr]._to_redis(qval1)
-
-                ids = conn.zrangebyscore('%s:%s:idx'%(model, attr), qval0, qval1, *_limit)
-                if ids:
-                    return cls.get(ids)
-                return []
+            if isinstance(value, tuple) and len(value) != 2:
+                raise QueryError("Range queries must include exactly two endpoints")
 
             # handle unique index lookups
-            elif attr == cls._unique:
+            if attr == cls._unique:
                 if isinstance(value, tuple):
                     raise QueryError("Cannot query a unique index with a range of values")
-                qvalue = cls._columns[attr]._to_redis(value)
-                id = conn.hget('%s:%s:uidx'%(model, attr), qvalue)
-                if not id:
-                    return None
-                return cls.get(id)
+                single = not isinstance(value, list)
+                if single:
+                    value = [value]
+                qvalues = map(cls._columns[attr]._to_redis, value)
+                ids = filter(None, conn.hmget('%s:%s:uidx'%(model, attr), qvalues))
+                if not ids:
+                    return None if single else []
+                return cls.get(ids[0] if single else ids)
 
-            raise QueryError("Cannot query on a column without an index")
+            if plain_attr not in cls._index:
+                raise QueryError("Cannot query on a column without an index")
+
+            # defer other index lookups to the query object
+            query = cls.query.filter(**{attr: value})
+            if _limit:
+                query = query.limit(*_limit)
+            return query.all()
 
     @ClassProperty
     def query(cls):
@@ -966,23 +954,38 @@ class Query(object):
         ``Numeric`` column ``ncol`` with value between 2 and 10 (including the
         endpoints)::
 
-            # The following
             results = MyModel.query \\
                 .filter(scol='hello') \\
                 .filter(scol='world') \\
                 .filter(ncol=(2, 10)) \\
                 .execute()
+
+        If you only want to match a single value as part of your range query,
+        you can pass an integer, float, or Decimal object by itself, similar
+        to the ``Model.get_by()`` method::
+
+            results = MyModel.query \\
+                .filter(ncol=5) \\
+                .execute()
+
         '''
         cur_filters = list(self._filters)
         for attr, value in kwargs.iteritems():
+            if isinstance(value, (int, float, _Decimal)):
+                # for simple numeric equiality filters
+                value = (value, value)
+
             if isinstance(value, (str, unicode)):
                 cur_filters.append('%s:%s'%(attr, value))
+
             elif isinstance(value, tuple):
                 if len(value) != 2:
                     raise QueryError("Numeric ranges require 2 endpoints, you provided %s with %r"%(len(value), value))
                 cur_filters.append((attr, value[0], value[1]))
+
             elif isinstance(value, list) and value:
                 cur_filters.append(['%s:%s'%(attr, v) for v in value])
+
             else:
                 raise QueryError("Sorry, we don't know how to filter %r by %r"%(attr, value))
         return Query(self._model, tuple(cur_filters), self._order_by, self._limit)

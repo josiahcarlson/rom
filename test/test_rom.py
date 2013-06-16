@@ -161,6 +161,8 @@ class TestORM(unittest.TestCase):
         self.assertTrue(first)
         self.assertTrue(first is x)
         self.assertEquals(IndexedModel.query.filter(attr='hello', attr3=(10, 20), attr4=(4,5), attr5=(2.5, 2.7)).count(), 0)
+        self.assertEquals(IndexedModel.query.filter(attr3=100).count(), 1)
+        self.assertEquals(IndexedModel.query.filter(attr='world', attr5=_Decimal('2.643')).count(), 2)
 
         results = IndexedModel.query.filter(attr='world').order_by('attr4').execute()
         self.assertEquals([x.id for x in results], [2,1])
@@ -222,6 +224,24 @@ class TestORM(unittest.TestCase):
 
         g = Goo.get(i)
         self.assertTrue(f is g)
+
+    def test_index_preservation(self):
+        """ Edits to unrelated columns should not remove the index of other
+        columns. Issue: https://github.com/josiahcarlson/rom/issues/2. """
+
+        class M(Model):
+            u = String(unique=True)
+            i = Integer(index=True)
+            unrelated = String()
+
+        M(u='foo', i=11).save()
+
+        m = M.get_by(u='foo')
+        m.unrelated = 'foobar'
+        self.assertEqual(len(M.get_by(i=11)), 1)
+        m.save()
+        self.assertEqual(len(M.get_by(i=11)), 1)
+        self.assertEqual(len(M.get_by(i=(10, 12))), 1)
 
 if __name__ == '__main__':
     import sys

@@ -1,3 +1,4 @@
+
 Rom - the Redis object mapper for Python
 
 Copyright 2013 Josiah Carlson
@@ -88,3 +89,4 @@ Getting started
 8. Load and use the object later::
 
     user = User.get_by(email_address='user@host.com')
+

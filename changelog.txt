@@ -1,0 +1,14 @@
+#----------------------------------- 0.13 ------------------------------------
+[fixed] updating a model will no longer unindex the model on attributes that
+    weren't updated. Thanks to https://github.com/mayfield for the bug report,
+    analysis, and initial pull request that ultimately resulted in the fix.
+[fixed] pip requires, versioning, etc., thanks to fixes from
+    https://github.com/mayfield
+[changed] Model.get_by() will now work on any type of indexed columns. Unique
+    columns work as before, and other columns get pass-through to the
+    Model.query interface.
+[changed] Model.get_by() and Model.query.filter() will both accept single
+    numbers as the value to match on (you don't need to specify a range if you
+    are querying by equality).
+[changed] all changes will be documented in this changelog.txt file to keep a
+    list of everything that is going on with the project.

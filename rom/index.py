@@ -46,7 +46,7 @@ class GeneralIndex(object):
         for key in scored:
             pipe.zrem('%s:%s:idx'%(self.namespace, key), id)
         pipe.hdel(self.namespace + '::', id)
-        return len(known) + len(scored)
+        return len(keys) + len(scored)
 
     def unindex(self, conn, id):
         '''
