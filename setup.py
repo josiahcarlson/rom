@@ -3,7 +3,7 @@
 from distutils.core import setup
 
 long_description = open('README.rst').read()
-version = open('VERSION').read()
+version = open('VERSION').read().strip()
 
 setup(
     name='rom',
