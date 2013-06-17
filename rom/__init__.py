@@ -104,7 +104,7 @@ from .index import GeneralIndex
 from .util import (_numeric_keygen, _string_keygen, ClassProperty, _connect,
     session, _many_to_one_keygen)
 
-VERSION = '0.13'
+VERSION = '0.14'
 
 NULL = object()
 MODELS = {}
