@@ -1,3 +1,6 @@
+#----------------------------------- 0.14 ------------------------------------
+[fixed] Thanks to https://github.com/mayfield the manifest is fixed for the
+    source installation
 #----------------------------------- 0.13 ------------------------------------
 [fixed] updating a model will no longer unindex the model on attributes that
     weren't updated. Thanks to https://github.com/mayfield for the bug report,
