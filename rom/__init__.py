@@ -1,4 +1,3 @@
-
 '''
 Rom - the Redis object mapper for Python
 
@@ -364,6 +363,8 @@ class Json(Column):
     def _to_redis(self, value):
         return json.dumps(value)
     def _from_redis(self, value):
+        if isinstance(value, self._allowed):
+            return value
         return json.loads(value)
 
 class PrimaryKey(Column):
