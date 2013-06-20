@@ -243,6 +243,20 @@ class TestORM(unittest.TestCase):
         self.assertEqual(len(M.get_by(i=11)), 1)
         self.assertEqual(len(M.get_by(i=(10, 12))), 1)
 
+    def test_json_multisave(self):
+        class JsonTest(Model):
+            col = Json()
+
+        d = {'hello': 'world'}
+        x = JsonTest(col=d)
+        x.save()
+        del x
+        for i in xrange(5):
+            x = JsonTest.get(1)
+            self.assertEquals(x.col, d)
+            x.save(full=True)
+            session.rollback()
+
 if __name__ == '__main__':
     import sys
     if '--really-run' in sys.argv:
