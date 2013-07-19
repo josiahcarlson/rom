@@ -26,7 +26,8 @@ What is available
 
 Data types:
 
-* Strings, ints, floats, decimals
+* Strings, ints, floats, decimals, booleans
+* datetime.datetime, datetime.date, datetime.time
 * Json columns (for nested structures)
 * OneToMany and ManyToOne columns (for model references)
 
@@ -92,6 +93,7 @@ Getting started
 
 '''
 
+from datetime import datetime, date, time as dtime
 from decimal import Decimal as _Decimal
 import json
 
@@ -101,16 +103,18 @@ from .exceptions import (ORMError, UniqueKeyViolation, InvalidOperation,
     QueryError, ColumnError, MissingColumn, InvalidColumnValue)
 from .index import GeneralIndex
 from .util import (_numeric_keygen, _string_keygen, ClassProperty, _connect,
-    session, _many_to_one_keygen)
+    session, _many_to_one_keygen, _boolean_keygen, dt2ts, ts2dt, t2ts, ts2t)
 
-VERSION = '0.15'
+VERSION = '0.16'
 
 NULL = object()
 MODELS = {}
 
 __all__ = '''
     Model Column Integer Float Decimal String Text Json PrimaryKey ManyToOne
-    ForeignModel OneToMany Query session'''.split()
+    ForeignModel OneToMany Query session Boolean DateTime Date Time'''.split()
+
+_NUMERIC = (0, 0.0, _Decimal('0'), datetime(1970, 1, 1), date(1970, 1, 1), dtime(0, 0, 0))
 
 class Column(object):
     '''
@@ -172,8 +176,10 @@ class Column(object):
 
         numeric = True
         if index and not isinstance(self, ManyToOne):
-            if not any(isinstance(i, self._allowed) for i in (0, 0.0, _Decimal('0'))):
+            if not any(isinstance(i, self._allowed) for i in _NUMERIC):
                 numeric = False
+                if isinstance(True, self._allowed):
+                    keygen = keygen or _boolean_keygen
                 if self._allowed not in (str, unicode) and not keygen:
                     raise ColumnError("Non-numeric/string indexed columns must provide keygen argument on creation")
 
@@ -266,6 +272,32 @@ class Integer(Column):
     '''
     _allowed = (int, long)
 
+class Boolean(Column):
+    '''
+    Used for boolean columns.
+
+    All standard arguments supported.
+
+    All values passed in on creation are casted via bool(), with the exception
+    of None (which behaves as though the value was missing), and any existing
+    data in Redis is considered ``False`` if empty, and ``True`` otherwise.
+
+    Used via::
+
+        class MyModel(Model):
+            col = Boolean()
+
+    Queries via ``MyModel.get_by(...)`` and ``MyModel.query.filter(...)`` work
+    as expected when passed ``True`` or ``False``.
+
+    .. note: these columns are not sortable by default.
+    '''
+    _allowed = bool
+    def _to_redis(self, obj):
+        return '1' if obj else ''
+    def _from_redis(self, obj):
+        return bool(obj)
+
 class Float(Column):
     '''
     Numeric column that supports integers and floats (values are turned into
@@ -297,6 +329,61 @@ class Decimal(Column):
         return _Decimal(value)
     def _to_redis(self, value):
         return str(value)
+
+class DateTime(Column):
+    '''
+    A datetime column.
+
+    All standard arguments supported.
+
+    Used via::
+
+        class MyModel(Model):
+            col = DateTime()
+
+    .. note:: tzinfo objects are not stored
+    '''
+    _allowed = datetime
+    def _from_redis(self, value):
+        return ts2dt(float(value))
+    def _to_redis(self, value):
+        return repr(dt2ts(value))
+
+class Date(Column):
+    '''
+    A date column.
+
+    All standard arguments supported.
+
+    Used via::
+
+        class MyModel(Model):
+            col = Date()
+    '''
+    _allowed = date
+    def _from_redis(self, value):
+        return ts2dt(float(value)).date()
+    def _to_redis(self, value):
+        return repr(dt2ts(value))
+
+class Time(Column):
+    '''
+    A time column. Timezones are ignored.
+
+    All standard arguments supported.
+
+    Used via::
+
+        class MyModel(Model):
+            col = Time()
+
+    .. note:: tzinfo objects are not stored
+    '''
+    _allowed = dtime
+    def _from_redis(self, value):
+        return ts2t(float(value))
+    def _to_redis(self, value):
+        return repr(t2ts(value))
 
 class String(Column):
     '''
@@ -942,6 +1029,9 @@ class Query(object):
             # for numeric ranges, use None for open-ended ranges
             attribute=(min, max)
 
+            # you can also query for equality by passing a single number
+            attribute=value
+
             # for string searches, passing a plain string will require that
             # string to be in the index as a literal
             attribute=string
@@ -972,7 +1062,10 @@ class Query(object):
         '''
         cur_filters = list(self._filters)
         for attr, value in kwargs.iteritems():
-            if isinstance(value, (int, float, _Decimal)):
+            if isinstance(value, bool):
+                value = str(bool(value))
+
+            if isinstance(value, (int, long, float, _Decimal, datetime, date, dtime)):
                 # for simple numeric equiality filters
                 value = (value, value)
 
@@ -982,6 +1075,18 @@ class Query(object):
             elif isinstance(value, tuple):
                 if len(value) != 2:
                     raise QueryError("Numeric ranges require 2 endpoints, you provided %s with %r"%(len(value), value))
+
+                tt = []
+                for v in value:
+                    if isinstance(v, date):
+                        v = dt2ts(v)
+
+                    if isinstance(v, dtime):
+                        v = t2ts(v)
+                    tt.append(v)
+
+                value = tt
+
                 cur_filters.append((attr, value[0], value[1]))
 
             elif isinstance(value, list) and value:

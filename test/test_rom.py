@@ -1,4 +1,5 @@
 
+from datetime import datetime, date, time as dtime
 from decimal import Decimal as _Decimal
 import time
 import unittest
@@ -256,6 +257,47 @@ class TestORM(unittest.TestCase):
             self.assertEquals(x.col, d)
             x.save(full=True)
             session.rollback()
+
+    def test_boolean(self):
+        class BooleanTest(Model):
+            col = Boolean(index=True)
+
+        BooleanTest(col=True).save()
+        BooleanTest(col=1).save()
+        BooleanTest(col=False).save()
+        BooleanTest(col='').save()
+        BooleanTest(col=None).save() # None is considered "not data", so is ignored
+        y = BooleanTest()
+        yid = y.id
+        y.save()
+        del y
+        self.assertEquals(len(BooleanTest.get_by(col=True)), 2)
+        self.assertEquals(len(BooleanTest.get_by(col=False)), 2)
+        session.rollback()
+        x = BooleanTest.get(1)
+        x.col = False
+        x.save()
+        self.assertEquals(len(BooleanTest.get_by(col=True)), 1)
+        self.assertEquals(len(BooleanTest.get_by(col=False)), 3)
+        self.assertEquals(len(BooleanTest.get_by(col=True)), 1)
+        self.assertEquals(len(BooleanTest.get_by(col=False)), 3)
+        y = BooleanTest.get(yid)
+        self.assertEquals(y.col, None)
+
+    def test_datetimes(self):
+        class DateTimesTest(Model):
+            col1 = DateTime(index=True)
+            col2 = Date(index=True)
+            col3 = Time(index=True)
+
+        now = datetime.utcnow()
+        dtt = DateTimesTest(col1=now, col2=now.date(), col3=now.time())
+        dtt.save()
+        session.commit()
+        del dtt
+        self.assertEquals(len(DateTimesTest.get_by(col1=now)), 1)
+        self.assertEquals(len(DateTimesTest.get_by(col2=now.date())), 1)
+        self.assertEquals(len(DateTimesTest.get_by(col3=now.time())), 1)
 
 if __name__ == '__main__':
     import sys

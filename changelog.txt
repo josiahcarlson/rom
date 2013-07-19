@@ -1,3 +1,8 @@
+#----------------------------------- 0.16 ------------------------------------
+[added] Thanks to a feature request from https://github.com/jrsmith , Boolean
+    column support is now available.
+[added] DateTime, Date, and Time column types because I was already adding
+    Boolean columns.
 #----------------------------------- 0.15 ------------------------------------
 [fixed] Thanks to https://github.com/MickeyKim who fixed Json columns so that
     they round-trip after multiple saves.

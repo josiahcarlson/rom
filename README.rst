@@ -26,7 +26,8 @@ What is available
 
 Data types:
 
-* Strings, ints, floats, decimals
+* Strings, ints, floats, decimals, booleans
+* datetime.datetime, datetime.date, datetime.time
 * Json columns (for nested structures)
 * OneToMany and ManyToOne columns (for model references)
 

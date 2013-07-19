@@ -45,6 +45,7 @@ There are 4 ways to change the way that ``rom`` connects to Redis.
     rom.util.get_connection = my_connection
 '''
 
+from datetime import datetime, date, time as dtime
 import string
 import threading
 import weakref
@@ -134,7 +135,14 @@ class ClassProperty(object):
 def _numeric_keygen(val):
     if val is None:
         return None
+    if isinstance(val, (datetime, date)):
+        val = dt2ts(val)
+    elif isinstance(val, dtime):
+        val = t2ts(val)
     return {'': repr(val) if isinstance(val, float) else str(val)}
+
+def _boolean_keygen(val):
+    return [str(bool(val))]
 
 def _string_keygen(val):
     if val in (None, ''):
@@ -158,6 +166,27 @@ def _to_score(v, s=False):
             return '(' + v
     return v.lstrip('(')
 
+_epoch = datetime(1970, 1, 1)
+_epochd = _epoch.date()
+def dt2ts(value):
+    if isinstance(value, datetime):
+        delta = value - _epoch
+    else:
+        delta = value - _epochd
+    return delta.days * 86400 + delta.seconds + delta.microseconds / 1000000.
+
+def ts2dt(value):
+    return datetime.utcfromtimestamp(value)
+
+def t2ts(value):
+    return value.hour*3600 + value.minute * 60 + value.second + value.microsecond / 1000000.
+
+def ts2t(value):
+    hour, value = divmod(value, 3600)
+    minute, value = divmod(value, 60)
+    second, value = divmod(value, 1)
+    return dtime(*map(int, [hour, minute, second, value*1000000]))
+
 class Session(threading.local):
     '''
     This is a very dumb session. All it tries to do is to keep a cache of
@@ -166,6 +195,10 @@ class Session(threading.local):
 
     This is exposed via the ``session`` global variable, which is available
     when you ``import rom`` as ``rom.session``.
+
+    .. note: calling ``.flush()`` or ``.commit()`` doesn't cause all objects
+        to be written simultanously. They are written one-by-one, with any
+        error causing the call to fail.
     '''
     def _init(self):
         try:
