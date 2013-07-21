@@ -3,7 +3,8 @@ Rom - the Redis object mapper for Python
 
 Copyright 2013 Josiah Carlson
 
-Released under the LGPL license.
+Released under the LGPL license version 2.1 and version 3 (you can choose
+which you'd like to be bound under).
 
 
 What
@@ -105,7 +106,7 @@ from .index import GeneralIndex
 from .util import (_numeric_keygen, _string_keygen, ClassProperty, _connect,
     session, _many_to_one_keygen, _boolean_keygen, dt2ts, ts2dt, t2ts, ts2t)
 
-VERSION = '0.16'
+VERSION = '0.17'
 
 NULL = object()
 MODELS = {}

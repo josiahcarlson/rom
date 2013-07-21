@@ -1,3 +1,5 @@
+#----------------------------------- 0.17 ------------------------------------
+[added] LGPL 3 licensing option.
 #----------------------------------- 0.16 ------------------------------------
 [added] Thanks to a feature request from https://github.com/jrsmith , Boolean
     column support is now available.
