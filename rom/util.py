@@ -251,7 +251,7 @@ class Session(threading.local):
         self._init()
         changes = 0
         for value in self.known.values():
-            if all or value._modified:
+            if not value._deleted and (all or value._modified):
                 changes += value.save(full)
         return changes
 
@@ -294,7 +294,7 @@ class Session(threading.local):
             if isinstance(o, (list, tuple)):
                 changes += self.save(*o, full=full, all=all)
             elif isinstance(o, Model):
-                if all or o._modified:
+                if not o._deleted and (all or o._modified):
                     changes += o.save(full)
             else:
                 raise ORMError(

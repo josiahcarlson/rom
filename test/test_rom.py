@@ -299,6 +299,20 @@ class TestORM(unittest.TestCase):
         self.assertEquals(len(DateTimesTest.get_by(col2=now.date())), 1)
         self.assertEquals(len(DateTimesTest.get_by(col3=now.time())), 1)
 
+    def test_deletion(self):
+        class DeletionTest(Model):
+            col1 = String(index=True)
+
+        x = DeletionTest(col1="this is a test string that should be indexed")
+        session.commit()
+        self.assertEquals(len(DeletionTest.get_by(col1='this')), 1)
+
+        x.delete()
+        self.assertEquals(len(DeletionTest.get_by(col1='this')), 0)
+
+        session.commit()
+        self.assertEquals(len(DeletionTest.get_by(col1='this')), 0)
+
 if __name__ == '__main__':
     import sys
     if '--really-run' in sys.argv:

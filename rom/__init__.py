@@ -737,6 +737,7 @@ class Model(object):
         self._data = {}
         self._last = {}
         self._modified = False
+        self._deleted = False
         self._init = False
         for attr in self._columns:
             cval = kwargs.get(attr, None)
@@ -878,6 +879,7 @@ class Model(object):
         self._new = False
         self._last = new
         self._modified = False
+        self._deleted = False
         return ret
 
     def delete(self):
@@ -887,6 +889,7 @@ class Model(object):
         session.forget(self)
         self._apply_changes(self._last, {}, delete=True)
         self._modified = True
+        self._deleted = True
         session.add(self)
 
     def copy(self):

@@ -1,3 +1,8 @@
+#----------------------------------- 0.18 ------------------------------------
+[fixed] Thanks to a bug report by https://github.com/MickeyKim , was notified
+    and received an interim patch for a bug that could cause deleted entities
+    to be resurrected on session.commit() or session.flush() . This has now
+    been fixed and a testcase has been added.
 #----------------------------------- 0.17 ------------------------------------
 [added] LGPL 3 licensing option.
 #----------------------------------- 0.16 ------------------------------------
