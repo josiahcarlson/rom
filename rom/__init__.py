@@ -852,7 +852,7 @@ class Model(object):
             else:
                 if data:
                     pipe.hmset(key, data)
-                cls._gindex.index(conn, id_only, keys, scores, pipe=pipe)
+                    cls._gindex.index(conn, id_only, keys, scores, pipe=pipe)
 
             try:
                 pipe.execute()
