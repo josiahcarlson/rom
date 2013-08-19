@@ -106,7 +106,7 @@ from .index import GeneralIndex
 from .util import (_numeric_keygen, _string_keygen, ClassProperty, _connect,
     session, _many_to_one_keygen, _boolean_keygen, dt2ts, ts2dt, t2ts, ts2t)
 
-VERSION = '0.17'
+VERSION = '0.18'
 
 NULL = object()
 MODELS = {}

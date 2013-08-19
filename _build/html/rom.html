@@ -6,7 +6,7 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>rom Package &mdash; rom 0.17 documentation</title>
+    <title>rom Package &mdash; rom 0.18 documentation</title>
     
     <link rel="stylesheet" href="_static/default.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
@@ -14,7 +14,7 @@
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    './',
-        VERSION:     '0.17',
+        VERSION:     '0.18',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -23,7 +23,7 @@
     <script type="text/javascript" src="_static/jquery.js"></script>
     <script type="text/javascript" src="_static/underscore.js"></script>
     <script type="text/javascript" src="_static/doctools.js"></script>
-    <link rel="top" title="rom 0.17 documentation" href="index.html" />
+    <link rel="top" title="rom 0.18 documentation" href="index.html" />
     <link rel="prev" title="Welcome to the documentation for the Redis object Mapper" href="index.html" /> 
   </head>
   <body>
@@ -39,7 +39,7 @@
         <li class="right" >
           <a href="index.html" title="Welcome to the documentation for the Redis object Mapper"
              accesskey="P">previous</a> |</li>
-        <li><a href="index.html">rom 0.17 documentation</a> &raquo;</li> 
+        <li><a href="index.html">rom 0.18 documentation</a> &raquo;</li> 
       </ul>
     </div>  
 
@@ -228,7 +228,7 @@ multiple criteria, look into the Model.query class property.</p>
 
 <dl class="attribute">
 <dt id="rom.__init__.Model.query">
-<tt class="descname">query</tt><em class="property"> = &lt;rom.__init__.Query object at 0xaa00234&gt;</em><a class="headerlink" href="#rom.__init__.Model.query" title="Permalink to this definition">¶</a></dt>
+<tt class="descname">query</tt><em class="property"> = &lt;rom.__init__.Query object at 0xac8f11c&gt;</em><a class="headerlink" href="#rom.__init__.Model.query" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
@@ -250,7 +250,7 @@ entity, you should look at the <tt class="docutils literal"><span class="pre">.c
 
 <dl class="class">
 <dt id="rom.__init__.Column">
-<em class="property">class </em><tt class="descclassname">rom.__init__.</tt><tt class="descname">Column</tt><big>(</big><em>required=False</em>, <em>default=&lt;object object at 0xa7c4258&gt;</em>, <em>unique=False</em>, <em>index=False</em>, <em>keygen=None</em><big>)</big><a class="headerlink" href="#rom.__init__.Column" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><tt class="descclassname">rom.__init__.</tt><tt class="descname">Column</tt><big>(</big><em>required=False</em>, <em>default=&lt;object object at 0xabab268&gt;</em>, <em>unique=False</em>, <em>index=False</em>, <em>keygen=None</em><big>)</big><a class="headerlink" href="#rom.__init__.Column" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <tt class="xref py py-class docutils literal"><span class="pre">object</span></tt></p>
 <p>Column objects handle data conversion to/from strings, store metadata
 about indices, etc. Note that these are &#8220;heavy&#8221; columns, in that whenever
@@ -296,7 +296,7 @@ during object construction: <tt class="docutils literal"><span class="pre">MyMod
 
 <dl class="class">
 <dt id="rom.__init__.Integer">
-<em class="property">class </em><tt class="descclassname">rom.__init__.</tt><tt class="descname">Integer</tt><big>(</big><em>required=False</em>, <em>default=&lt;object object at 0xa7c4258&gt;</em>, <em>unique=False</em>, <em>index=False</em>, <em>keygen=None</em><big>)</big><a class="headerlink" href="#rom.__init__.Integer" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><tt class="descclassname">rom.__init__.</tt><tt class="descname">Integer</tt><big>(</big><em>required=False</em>, <em>default=&lt;object object at 0xabab268&gt;</em>, <em>unique=False</em>, <em>index=False</em>, <em>keygen=None</em><big>)</big><a class="headerlink" href="#rom.__init__.Integer" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#rom.__init__.Column" title="rom.__init__.Column"><tt class="xref py py-class docutils literal"><span class="pre">rom.__init__.Column</span></tt></a></p>
 <p>Used for integer numeric columns.</p>
 <p>All standard arguments supported.</p>
@@ -309,7 +309,7 @@ during object construction: <tt class="docutils literal"><span class="pre">MyMod
 
 <dl class="class">
 <dt id="rom.__init__.Float">
-<em class="property">class </em><tt class="descclassname">rom.__init__.</tt><tt class="descname">Float</tt><big>(</big><em>required=False</em>, <em>default=&lt;object object at 0xa7c4258&gt;</em>, <em>unique=False</em>, <em>index=False</em>, <em>keygen=None</em><big>)</big><a class="headerlink" href="#rom.__init__.Float" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><tt class="descclassname">rom.__init__.</tt><tt class="descname">Float</tt><big>(</big><em>required=False</em>, <em>default=&lt;object object at 0xabab268&gt;</em>, <em>unique=False</em>, <em>index=False</em>, <em>keygen=None</em><big>)</big><a class="headerlink" href="#rom.__init__.Float" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#rom.__init__.Column" title="rom.__init__.Column"><tt class="xref py py-class docutils literal"><span class="pre">rom.__init__.Column</span></tt></a></p>
 <p>Numeric column that supports integers and floats (values are turned into
 floats on load from Redis).</p>
@@ -323,7 +323,7 @@ floats on load from Redis).</p>
 
 <dl class="class">
 <dt id="rom.__init__.Decimal">
-<em class="property">class </em><tt class="descclassname">rom.__init__.</tt><tt class="descname">Decimal</tt><big>(</big><em>required=False</em>, <em>default=&lt;object object at 0xa7c4258&gt;</em>, <em>unique=False</em>, <em>index=False</em>, <em>keygen=None</em><big>)</big><a class="headerlink" href="#rom.__init__.Decimal" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><tt class="descclassname">rom.__init__.</tt><tt class="descname">Decimal</tt><big>(</big><em>required=False</em>, <em>default=&lt;object object at 0xabab268&gt;</em>, <em>unique=False</em>, <em>index=False</em>, <em>keygen=None</em><big>)</big><a class="headerlink" href="#rom.__init__.Decimal" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#rom.__init__.Column" title="rom.__init__.Column"><tt class="xref py py-class docutils literal"><span class="pre">rom.__init__.Column</span></tt></a></p>
 <p>A Decimal-only numeric column (converts ints/longs into Decimals
 automatically). Attempts to assign Python float will fail.</p>
@@ -337,7 +337,7 @@ automatically). Attempts to assign Python float will fail.</p>
 
 <dl class="class">
 <dt id="rom.__init__.String">
-<em class="property">class </em><tt class="descclassname">rom.__init__.</tt><tt class="descname">String</tt><big>(</big><em>required=False</em>, <em>default=&lt;object object at 0xa7c4258&gt;</em>, <em>unique=False</em>, <em>index=False</em>, <em>keygen=None</em><big>)</big><a class="headerlink" href="#rom.__init__.String" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><tt class="descclassname">rom.__init__.</tt><tt class="descname">String</tt><big>(</big><em>required=False</em>, <em>default=&lt;object object at 0xabab268&gt;</em>, <em>unique=False</em>, <em>index=False</em>, <em>keygen=None</em><big>)</big><a class="headerlink" href="#rom.__init__.String" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#rom.__init__.Column" title="rom.__init__.Column"><tt class="xref py py-class docutils literal"><span class="pre">rom.__init__.Column</span></tt></a></p>
 <p>A plain string column. Trying to save unicode strings will probably result
 in an error, if not bad data. This is the only type of column that can
@@ -361,7 +361,7 @@ contained in the column, extracted via:</p>
 
 <dl class="class">
 <dt id="rom.__init__.Text">
-<em class="property">class </em><tt class="descclassname">rom.__init__.</tt><tt class="descname">Text</tt><big>(</big><em>required=False</em>, <em>default=&lt;object object at 0xa7c4258&gt;</em>, <em>unique=False</em>, <em>index=False</em>, <em>keygen=None</em><big>)</big><a class="headerlink" href="#rom.__init__.Text" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><tt class="descclassname">rom.__init__.</tt><tt class="descname">Text</tt><big>(</big><em>required=False</em>, <em>default=&lt;object object at 0xabab268&gt;</em>, <em>unique=False</em>, <em>index=False</em>, <em>keygen=None</em><big>)</big><a class="headerlink" href="#rom.__init__.Text" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#rom.__init__.Column" title="rom.__init__.Column"><tt class="xref py py-class docutils literal"><span class="pre">rom.__init__.Column</span></tt></a></p>
 <p>A unicode string column.</p>
 <p>All standard arguments supported, except for <tt class="docutils literal"><span class="pre">unique</span></tt>.</p>
@@ -379,7 +379,7 @@ how to do it.</p>
 
 <dl class="class">
 <dt id="rom.__init__.Json">
-<em class="property">class </em><tt class="descclassname">rom.__init__.</tt><tt class="descname">Json</tt><big>(</big><em>required=False</em>, <em>default=&lt;object object at 0xa7c4258&gt;</em>, <em>unique=False</em>, <em>index=False</em>, <em>keygen=None</em><big>)</big><a class="headerlink" href="#rom.__init__.Json" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><tt class="descclassname">rom.__init__.</tt><tt class="descname">Json</tt><big>(</big><em>required=False</em>, <em>default=&lt;object object at 0xabab268&gt;</em>, <em>unique=False</em>, <em>index=False</em>, <em>keygen=None</em><big>)</big><a class="headerlink" href="#rom.__init__.Json" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#rom.__init__.Column" title="rom.__init__.Column"><tt class="xref py py-class docutils literal"><span class="pre">rom.__init__.Column</span></tt></a></p>
 <p>Allows for more complicated nested structures as attributes.</p>
 <p>All standard arguments supported. The <tt class="docutils literal"><span class="pre">keygen</span></tt> argument must be provided
@@ -412,7 +412,7 @@ results by primary key.</p>
 
 <dl class="class">
 <dt id="rom.__init__.ManyToOne">
-<em class="property">class </em><tt class="descclassname">rom.__init__.</tt><tt class="descname">ManyToOne</tt><big>(</big><em>ftable</em>, <em>required=False</em>, <em>default=&lt;object object at 0xa7c4258&gt;</em><big>)</big><a class="headerlink" href="#rom.__init__.ManyToOne" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><tt class="descclassname">rom.__init__.</tt><tt class="descname">ManyToOne</tt><big>(</big><em>ftable</em>, <em>required=False</em>, <em>default=&lt;object object at 0xabab268&gt;</em><big>)</big><a class="headerlink" href="#rom.__init__.ManyToOne" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#rom.__init__.Column" title="rom.__init__.Column"><tt class="xref py py-class docutils literal"><span class="pre">rom.__init__.Column</span></tt></a></p>
 <p>This ManyToOne column allows for one model to reference another model.
 While a ManyToOne column does not require a reverse OneToMany column
@@ -430,7 +430,7 @@ defined.</p>
 
 <dl class="class">
 <dt id="rom.__init__.ForeignModel">
-<em class="property">class </em><tt class="descclassname">rom.__init__.</tt><tt class="descname">ForeignModel</tt><big>(</big><em>fmodel</em>, <em>required=False</em>, <em>default=&lt;object object at 0xa7c4258&gt;</em><big>)</big><a class="headerlink" href="#rom.__init__.ForeignModel" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><tt class="descclassname">rom.__init__.</tt><tt class="descname">ForeignModel</tt><big>(</big><em>fmodel</em>, <em>required=False</em>, <em>default=&lt;object object at 0xabab268&gt;</em><big>)</big><a class="headerlink" href="#rom.__init__.ForeignModel" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#rom.__init__.Column" title="rom.__init__.Column"><tt class="xref py py-class docutils literal"><span class="pre">rom.__init__.Column</span></tt></a></p>
 <p>This column allows for <tt class="docutils literal"><span class="pre">rom</span></tt> models to reference an instance of another
 model from an unrelated ORM or otherwise.</p>
@@ -565,7 +565,7 @@ to the <tt class="docutils literal"><span class="pre">Model.get_by()</span></tt>
 
 <dl class="class">
 <dt id="rom.__init__.Boolean">
-<em class="property">class </em><tt class="descclassname">rom.__init__.</tt><tt class="descname">Boolean</tt><big>(</big><em>required=False</em>, <em>default=&lt;object object at 0xa7c4258&gt;</em>, <em>unique=False</em>, <em>index=False</em>, <em>keygen=None</em><big>)</big><a class="headerlink" href="#rom.__init__.Boolean" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><tt class="descclassname">rom.__init__.</tt><tt class="descname">Boolean</tt><big>(</big><em>required=False</em>, <em>default=&lt;object object at 0xabab268&gt;</em>, <em>unique=False</em>, <em>index=False</em>, <em>keygen=None</em><big>)</big><a class="headerlink" href="#rom.__init__.Boolean" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#rom.__init__.Column" title="rom.__init__.Column"><tt class="xref py py-class docutils literal"><span class="pre">rom.__init__.Column</span></tt></a></p>
 <p>Used for boolean columns.</p>
 <p>All standard arguments supported.</p>
@@ -583,7 +583,7 @@ as expected when passed <tt class="docutils literal"><span class="pre">True</spa
 
 <dl class="class">
 <dt id="rom.__init__.DateTime">
-<em class="property">class </em><tt class="descclassname">rom.__init__.</tt><tt class="descname">DateTime</tt><big>(</big><em>required=False</em>, <em>default=&lt;object object at 0xa7c4258&gt;</em>, <em>unique=False</em>, <em>index=False</em>, <em>keygen=None</em><big>)</big><a class="headerlink" href="#rom.__init__.DateTime" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><tt class="descclassname">rom.__init__.</tt><tt class="descname">DateTime</tt><big>(</big><em>required=False</em>, <em>default=&lt;object object at 0xabab268&gt;</em>, <em>unique=False</em>, <em>index=False</em>, <em>keygen=None</em><big>)</big><a class="headerlink" href="#rom.__init__.DateTime" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#rom.__init__.Column" title="rom.__init__.Column"><tt class="xref py py-class docutils literal"><span class="pre">rom.__init__.Column</span></tt></a></p>
 <p>A datetime column.</p>
 <p>All standard arguments supported.</p>
@@ -600,7 +600,7 @@ as expected when passed <tt class="docutils literal"><span class="pre">True</spa
 
 <dl class="class">
 <dt id="rom.__init__.Date">
-<em class="property">class </em><tt class="descclassname">rom.__init__.</tt><tt class="descname">Date</tt><big>(</big><em>required=False</em>, <em>default=&lt;object object at 0xa7c4258&gt;</em>, <em>unique=False</em>, <em>index=False</em>, <em>keygen=None</em><big>)</big><a class="headerlink" href="#rom.__init__.Date" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><tt class="descclassname">rom.__init__.</tt><tt class="descname">Date</tt><big>(</big><em>required=False</em>, <em>default=&lt;object object at 0xabab268&gt;</em>, <em>unique=False</em>, <em>index=False</em>, <em>keygen=None</em><big>)</big><a class="headerlink" href="#rom.__init__.Date" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#rom.__init__.Column" title="rom.__init__.Column"><tt class="xref py py-class docutils literal"><span class="pre">rom.__init__.Column</span></tt></a></p>
 <p>A date column.</p>
 <p>All standard arguments supported.</p>
@@ -613,7 +613,7 @@ as expected when passed <tt class="docutils literal"><span class="pre">True</spa
 
 <dl class="class">
 <dt id="rom.__init__.Time">
-<em class="property">class </em><tt class="descclassname">rom.__init__.</tt><tt class="descname">Time</tt><big>(</big><em>required=False</em>, <em>default=&lt;object object at 0xa7c4258&gt;</em>, <em>unique=False</em>, <em>index=False</em>, <em>keygen=None</em><big>)</big><a class="headerlink" href="#rom.__init__.Time" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><tt class="descclassname">rom.__init__.</tt><tt class="descname">Time</tt><big>(</big><em>required=False</em>, <em>default=&lt;object object at 0xabab268&gt;</em>, <em>unique=False</em>, <em>index=False</em>, <em>keygen=None</em><big>)</big><a class="headerlink" href="#rom.__init__.Time" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#rom.__init__.Column" title="rom.__init__.Column"><tt class="xref py py-class docutils literal"><span class="pre">rom.__init__.Column</span></tt></a></p>
 <p>A time column. Timezones are ignored.</p>
 <p>All standard arguments supported.</p>
@@ -1014,7 +1014,7 @@ model-specific connections.</p>
         <li class="right" >
           <a href="index.html" title="Welcome to the documentation for the Redis object Mapper"
              >previous</a> |</li>
-        <li><a href="index.html">rom 0.17 documentation</a> &raquo;</li> 
+        <li><a href="index.html">rom 0.18 documentation</a> &raquo;</li> 
       </ul>
     </div>
     <div class="footer">
