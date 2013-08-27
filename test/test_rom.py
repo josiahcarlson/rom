@@ -113,6 +113,9 @@ class TestORM(unittest.TestCase):
         b.attr = 'hello'
         self.assertRaises(UniqueKeyViolation, b.save)
 
+        c = Unique(attr='hello')
+        self.assertRaises(UniqueKeyViolation, c.save)
+
     def test_saving(self):
         class Normal(Model):
             attr = String()

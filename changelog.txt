@@ -1,3 +1,6 @@
+#----------------------------------- 0.19 ------------------------------------
+[fixed] Thanks to a bug report by https://github.com/MickeyKim , was notified
+    of a bug when using unique indexes, which is now fixed and has a testcase.
 #----------------------------------- 0.18 ------------------------------------
 [fixed] Thanks to a bug report by https://github.com/MickeyKim , was notified
     and received an interim patch for a bug that could cause deleted entities

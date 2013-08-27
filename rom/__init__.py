@@ -106,7 +106,7 @@ from .index import GeneralIndex
 from .util import (_numeric_keygen, _string_keygen, ClassProperty, _connect,
     session, _many_to_one_keygen, _boolean_keygen, dt2ts, ts2dt, t2ts, ts2t)
 
-VERSION = '0.18'
+VERSION = '0.19'
 
 NULL = object()
 MODELS = {}
@@ -780,7 +780,7 @@ class Model(object):
                 nuval = new.get(cls._unique)
                 nuvale = columns[cls._unique]._to_redis(nuval)
 
-                if nuval and ouval != nuvale:
+                if nuval and (ouval != nuvale or full):
                     ikey = "%s:%s:uidx"%(model, cls._unique)
                     pipe.watch(ikey)
                     ival = pipe.hget(ikey, nuvale)
