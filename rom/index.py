@@ -1,9 +1,7 @@
 
 import json
 import uuid
-
 from .exceptions import QueryError
-from .util import _to_score
 
 class GeneralIndex(object):
     '''
@@ -205,3 +203,12 @@ class GeneralIndex(object):
         pipe.zcard(temp_id)
         pipe.delete(temp_id)
         return pipe.execute()[-2]
+
+
+def _to_score(v, s=False):
+    v = repr(v) if isinstance(v, float) else str(v)
+    if s:
+        if v[:1] != '(':
+            return '(' + v
+    return v.lstrip('(')
+
