@@ -1,7 +1,6 @@
 import redis
 import os
 import sys
-from pprint import pprint as p
 
 # put our path in front so we can be sure we are testing locally not against the global package
 sys.path.insert(1, os.path.dirname(os.path.dirname(__file__)))

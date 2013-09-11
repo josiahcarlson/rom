@@ -47,15 +47,13 @@ There are 4 ways to change the way that ``rom`` connects to Redis.
 
 from datetime import datetime, date, time as dtime
 import string
-import threading
-import weakref
-
 import redis
 
 from .exceptions import ORMError
+from .session import session
 
 __all__ = '''
-    get_connection Session refresh_indices set_connection_settings'''.split()
+    get_connection refresh_indices set_connection_settings'''.split()
 
 CONNECTION = redis.Redis()
 
@@ -84,37 +82,6 @@ def _connect(obj):
     if hasattr(obj, '_conn'):
         return obj._conn
     return get_connection()
-
-class ClassProperty(object):
-    '''
-    Borrowed from: https://gist.github.com/josiahcarlson/1561563
-    '''
-    def __init__(self, get, set=None, delete=None):
-        self.get = get
-        self.set = set
-        self.delete = delete
-
-    def __get__(self, obj, cls=None):
-        if cls is None:
-            cls = type(obj)
-        return self.get(cls)
-
-    def __set__(self, obj, value):
-        cls = type(obj)
-        self.set(cls, value)
-
-    def __delete__(self, obj):
-        cls = type(obj)
-        self.delete(cls)
-
-    def getter(self, get):
-        return ClassProperty(get, self.set, self.delete)
-
-    def setter(self, set):
-        return ClassProperty(self.get, set, self.delete)
-
-    def deleter(self, delete):
-        return ClassProperty(self.get, self.set, delete)
 
 # These are just the default index key generators for numeric and string
 # types. Numeric keys are used as values in a ZSET, for range searching and
@@ -159,13 +126,6 @@ def _many_to_one_keygen(val):
         return {'': val._data[val._pkey]}
     return {'': val.id}
 
-def _to_score(v, s=False):
-    v = repr(v) if isinstance(v, float) else str(v)
-    if s:
-        if v[:1] != '(':
-            return '(' + v
-    return v.lstrip('(')
-
 _epoch = datetime(1970, 1, 1)
 _epochd = _epoch.date()
 def dt2ts(value):
@@ -187,122 +147,6 @@ def ts2t(value):
     second, value = divmod(value, 1)
     return dtime(*map(int, [hour, minute, second, value*1000000]))
 
-class Session(threading.local):
-    '''
-    This is a very dumb session. All it tries to do is to keep a cache of
-    loaded entities, offering the ability to call ``.save()`` on modified (or
-    all) entities with ``.flush()`` or ``.commit()``.
-
-    This is exposed via the ``session`` global variable, which is available
-    when you ``import rom`` as ``rom.session``.
-
-    .. note: calling ``.flush()`` or ``.commit()`` doesn't cause all objects
-        to be written simultanously. They are written one-by-one, with any
-        error causing the call to fail.
-    '''
-    def _init(self):
-        try:
-            self.known
-        except AttributeError:
-            self.known = {}
-            self.wknown = weakref.WeakValueDictionary()
-
-    def add(self, obj):
-        '''
-        Adds an entity to the session.
-        '''
-        self._init()
-        self.known[obj._pk] = obj
-        self.wknown[obj._pk] = obj
-
-    def forget(self, obj):
-        '''
-        Forgets about an entity (automatically called when an entity is
-        deleted). Call this to ensure that an entity that you've modified is
-        not automatically saved on ``session.commit()`` .
-        '''
-        self._init()
-        self.known.pop(obj._pk, None)
-        self.wknown.pop(obj._pk, None)
-
-    def get(self, pk):
-        '''
-        Fetches an entity from the session based on primary key.
-        '''
-        self._init()
-        return self.known.get(pk) or self.wknown.get(pk)
-
-    def rollback(self):
-        '''
-        Forget about all entities in the session (``.commit()`` will do
-        nothing).
-        '''
-        self.known = {}
-        self.wknown = weakref.WeakValueDictionary()
-
-    def flush(self, full=False, all=False):
-        '''
-        Call ``.save()`` on all modified entities in the session. Use when you
-        want to flush changes to Redis, but don't want to lose your local
-        session cache.
-
-        See the ``.commit()`` method for arguments and their meanings.
-        '''
-        self._init()
-        changes = 0
-        for value in self.known.values():
-            if not value._deleted and (all or value._modified):
-                changes += value.save(full)
-        return changes
-
-    def commit(self, full=False, all=False):
-        '''
-        Call ``.save()`` on all modified entities in the session. Also forgets
-        all known entities in the session, so this should only be called at
-        the end of a request.
-
-        Arguments:
-
-            * *full* - pass ``True`` to force save full entities, not only
-              changes
-            * *all* - pass ``True`` to save all entities known, not only those
-              entities that have been modified.
-        '''
-        changes = self.flush(full, all)
-        self.known = {}
-        return changes
-
-    def save(self, *objects, **kwargs):
-        '''
-        This method an alternate API for saving many entities (possibly not
-        tracked by the session). You can call::
-
-            session.save(obj)
-            session.save(obj1, obj2, ...)
-            session.save([obj1, obj2, ...])
-
-        And the entities will be flushed to Redis.
-
-        You can pass the keyword arguments ``full`` and ``all`` with the same
-        meaning and semantics as the ``.commit()`` method.
-        '''
-        from rom import Model
-        full = kwargs.get('full')
-        all = kwargs.get('all')
-        changes = 0
-        for o in objects:
-            if isinstance(o, (list, tuple)):
-                changes += self.save(*o, full=full, all=all)
-            elif isinstance(o, Model):
-                if not o._deleted and (all or o._modified):
-                    changes += o.save(full)
-            else:
-                raise ORMError(
-                    "Cannot save an object that is not an instance of a Model (you provided %r)"%(
-                        o,))
-        return changes
-
-session = Session()
 
 def refresh_indices(model, block_size=100):
     '''
