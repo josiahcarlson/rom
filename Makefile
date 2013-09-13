@@ -18,7 +18,7 @@ ALLSPHINXOPTS   = -d $(BUILDDIR)/doctrees $(PAPEROPT_$(PAPER)) $(SPHINXOPTS) sou
 # the i18n builder cannot share the environment and doctrees with the others
 I18NSPHINXOPTS  = $(PAPEROPT_$(PAPER)) $(SPHINXOPTS) source
 
-.PHONY: clean install upload docs
+.PHONY: clean install upload docs test
 
 default:
 	find . -type f | xargs chmod -x
@@ -32,6 +32,9 @@ install:
 
 upload:
 	python setup.py sdist upload
+
+test:
+	PYTHONPATH=`pwd` python test/test_rom.py
 
 docs:
 	python -c "import rom; open('README.rst', 'wb').write(rom.__doc__); open('VERSION', 'wb').write(rom.VERSION);"

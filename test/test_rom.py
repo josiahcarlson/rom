@@ -12,32 +12,66 @@ util.CONNECTION = redis.Redis(db=15)
 connect = util._connect
 
 from rom import *
+from rom import _enable_lua_writes
 from rom.exceptions import *
+
+def global_setup():
+    c = connect(None)
+    keys = c.keys('RomTest*')
+    if keys:
+        c.delete(*keys)
+    from rom.columns import MODELS
+    Model = MODELS['Model']
+    for k,v in MODELS.items():
+        if v is not Model:
+            del MODELS[k]
+
+def get_state():
+    c = connect(None)
+    data = []
+    for k in c.keys('*'):
+        t = c.type(k)
+        if t == 'string':
+            data.append((k, c.get(k)))
+        elif t == 'list':
+            data.append((k, c.lrange(k, 0, -1)))
+        elif t == 'set':
+            data.append((k, c.smembers(k)))
+        elif t == 'hash':
+            data.append((k, c.hgetall(k)))
+        else:
+            data.append((k, c.zrange(k, 0, -1, withscores=True)))
+    data.sort()
+    return data
+
+_now = datetime.utcnow()
+_now_time = time.time()
+
+def _default_time():
+    return _now_time
 
 class TestORM(unittest.TestCase):
     def setUp(self):
-        connect(None).flushdb()
-    def tearDown(self):
-        self.setUp()
+        session.rollback()
 
     def test_basic_model(self):
-        class BasicModel(Model):
+        class RomTestBasicModel(Model):
             val = Integer()
             oval = Integer(default=7)
-            created_at = Float(default=time.time)
+            created_at = Float(default=_default_time)
             req = String(required=True)
 
-        self.assertRaises(ColumnError, BasicModel)
-        self.assertRaises(InvalidColumnValue, lambda: BasicModel(oval='t'))
-        self.assertRaises(MissingColumn, lambda: BasicModel(created_at=7))
+        self.assertRaises(ColumnError, RomTestBasicModel)
+        self.assertRaises(InvalidColumnValue, lambda: RomTestBasicModel(oval='t'))
+        self.assertRaises(MissingColumn, lambda: RomTestBasicModel(created_at=7))
 
         # try object saving/loading
-        x = BasicModel(val=1, req="hello")
+        x = RomTestBasicModel(val=1, req="hello")
         x.save()
         id = x.id
         x = x.to_dict()
 
-        y = BasicModel.get(id)
+        y = RomTestBasicModel.get(id)
         yd = y.to_dict()
         ## cax = x.pop('created_at'); cay = yd.pop('created_at')
         self.assertEqual(x, yd)
@@ -54,48 +88,48 @@ class TestORM(unittest.TestCase):
 
     def test_unique_index(self):
         def foo2():
-            class BadIndexModel2(Model):
+            class RomTestBadIndexModel2(Model):
                 bad = Integer(unique=True)
         self.assertRaises(ColumnError, foo2)
 
-        class IndexModel(Model):
+        class RomTestIndexModel(Model):
             key = String(required=True, unique=True)
 
-        self.assertRaises(MissingColumn, IndexModel)
-        item = IndexModel(key="hello")
+        self.assertRaises(MissingColumn, RomTestIndexModel)
+        item = RomTestIndexModel(key="hello")
         item.save()
 
-        m = IndexModel.get_by(key="hello")
+        m = RomTestIndexModel.get_by(key="hello")
         self.assertTrue(m)
         self.assertEquals(m.id, item.id)
         self.assertTrue(m is item)
 
     def test_foreign_key(self):
         def foo():
-            class BFkey1(Model):
-                bad = ManyToOne("Bad")
-            BFkey1()
+            class RomTestBFkey1(Model):
+                bad = ManyToOne("RomTestBad")
+            RomTestBFkey1()
         self.assertRaises(ORMError, foo)
 
         def foo2():
-            class BFkey2(Model):
-                bad = OneToMany("Bad")
-            BFkey2()
+            class RomTestBFkey2(Model):
+                bad = OneToMany("RomTestBad")
+            RomTestBFkey2()
         self.assertRaises(ORMError, foo2)
 
-        class Fkey1(Model):
-            fkey2 = ManyToOne("Fkey2")
-        class Fkey2(Model):
-            fkey1 = OneToMany("Fkey1")
+        class RomTestFkey1(Model):
+            fkey2 = ManyToOne("RomTestFkey2")
+        class RomTestFkey2(Model):
+            fkey1 = OneToMany("RomTestFkey1")
 
-        x = Fkey2()
-        y = Fkey1(fkey2=x) # implicitly saves x
+        x = RomTestFkey2()
+        y = RomTestFkey1(fkey2=x) # implicitly saves x
         y.save()
 
         xid = x.id
         yid = y.id
         x = y = None
-        y = Fkey1.get(yid)
+        y = RomTestFkey1.get(yid)
         self.assertEquals(y.fkey2.id, xid)
         fk1 = y.fkey2.fkey1
 
@@ -103,41 +137,41 @@ class TestORM(unittest.TestCase):
         self.assertEquals(fk1[0].id, y.id)
 
     def test_unique(self):
-        class Unique(Model):
+        class RomTestUnique(Model):
             attr = String(unique=True)
 
-        a = Unique(attr='hello')
-        b = Unique(attr='hello2')
+        a = RomTestUnique(attr='hello')
+        b = RomTestUnique(attr='hello2')
         a.save()
         b.save()
         b.attr = 'hello'
         self.assertRaises(UniqueKeyViolation, b.save)
 
-        c = Unique(attr='hello')
+        c = RomTestUnique(attr='hello')
         self.assertRaises(UniqueKeyViolation, c.save)
 
     def test_saving(self):
-        class Normal(Model):
+        class RomTestNormal(Model):
             attr = String()
 
-        self.assertTrue(Normal().save())
-        self.assertTrue(Normal(attr='hello').save())
-        x = Normal()
+        self.assertTrue(RomTestNormal().save())
+        self.assertTrue(RomTestNormal(attr='hello').save())
+        x = RomTestNormal()
         self.assertTrue(x.save())
         self.assertFalse(x.save())
         session.commit()
 
-        self.assertTrue(x is Normal.get(x.id))
+        self.assertTrue(x is RomTestNormal.get(x.id))
 
     def test_index(self):
-        class IndexedModel(Model):
+        class RomTestIndexedModel(Model):
             attr = String(index=True)
             attr2 = String(index=True)
             attr3 = Integer(index=True)
             attr4 = Float(index=True)
             attr5 = Decimal(index=True)
 
-        x = IndexedModel(
+        x = RomTestIndexedModel(
             attr='hello world',
             attr2='how are you doing?',
             attr3=7,
@@ -145,35 +179,35 @@ class TestORM(unittest.TestCase):
             attr5=_Decimal('2.643'),
         )
         x.save()
-        IndexedModel(
+        RomTestIndexedModel(
             attr='world',
             attr3=100,
             attr4=-1000,
             attr5=_Decimal('2.643'),
         ).save()
 
-        self.assertEquals(IndexedModel.query.filter(attr='hello').count(), 1)
-        self.assertEquals(IndexedModel.query.filter(attr2='how').filter(attr2='are').count(), 1)
-        self.assertEquals(IndexedModel.query.filter(attr='hello').filter(attr2='how').filter(attr2='are').count(), 1)
-        self.assertEquals(IndexedModel.query.filter(attr='hello', noattr='bad').filter(attr2='how').filter(attr2='are').count(), 0)
-        self.assertEquals(IndexedModel.query.filter(attr='hello', attr3=(None, None)).count(), 1)
-        self.assertEquals(IndexedModel.query.filter(attr='hello', attr3=(None, 10)).count(), 1)
-        self.assertEquals(IndexedModel.query.filter(attr='hello', attr3=(None, 10)).execute()[0].id, 1)
-        self.assertEquals(IndexedModel.query.filter(attr='hello', attr3=(5, None)).count(), 1)
-        self.assertEquals(IndexedModel.query.filter(attr='hello', attr3=(5, 10), attr4=(4,5), attr5=(2.5, 2.7)).count(), 1)
-        first = IndexedModel.query.filter(attr='hello', attr3=(5, 10), attr4=(4,5), attr5=(2.5, 2.7)).first()
+        self.assertEquals(RomTestIndexedModel.query.filter(attr='hello').count(), 1)
+        self.assertEquals(RomTestIndexedModel.query.filter(attr2='how').filter(attr2='are').count(), 1)
+        self.assertEquals(RomTestIndexedModel.query.filter(attr='hello').filter(attr2='how').filter(attr2='are').count(), 1)
+        self.assertEquals(RomTestIndexedModel.query.filter(attr='hello', noattr='bad').filter(attr2='how').filter(attr2='are').count(), 0)
+        self.assertEquals(RomTestIndexedModel.query.filter(attr='hello', attr3=(None, None)).count(), 1)
+        self.assertEquals(RomTestIndexedModel.query.filter(attr='hello', attr3=(None, 10)).count(), 1)
+        self.assertEquals(RomTestIndexedModel.query.filter(attr='hello', attr3=(None, 10)).execute()[0].id, 1)
+        self.assertEquals(RomTestIndexedModel.query.filter(attr='hello', attr3=(5, None)).count(), 1)
+        self.assertEquals(RomTestIndexedModel.query.filter(attr='hello', attr3=(5, 10), attr4=(4,5), attr5=(2.5, 2.7)).count(), 1)
+        first = RomTestIndexedModel.query.filter(attr='hello', attr3=(5, 10), attr4=(4,5), attr5=(2.5, 2.7)).first()
         self.assertTrue(first)
         self.assertTrue(first is x)
-        self.assertEquals(IndexedModel.query.filter(attr='hello', attr3=(10, 20), attr4=(4,5), attr5=(2.5, 2.7)).count(), 0)
-        self.assertEquals(IndexedModel.query.filter(attr3=100).count(), 1)
-        self.assertEquals(IndexedModel.query.filter(attr='world', attr5=_Decimal('2.643')).count(), 2)
+        self.assertEquals(RomTestIndexedModel.query.filter(attr='hello', attr3=(10, 20), attr4=(4,5), attr5=(2.5, 2.7)).count(), 0)
+        self.assertEquals(RomTestIndexedModel.query.filter(attr3=100).count(), 1)
+        self.assertEquals(RomTestIndexedModel.query.filter(attr='world', attr5=_Decimal('2.643')).count(), 2)
 
-        results = IndexedModel.query.filter(attr='world').order_by('attr4').execute()
+        results = RomTestIndexedModel.query.filter(attr='world').order_by('attr4').execute()
         self.assertEquals([x.id for x in results], [2,1])
 
     def test_alternate_models(self):
         ctr = [0]
-        class Alternate(object):
+        class RomTestAlternate(object):
             def __init__(self, id=None):
                 if id is None:
                     id = ctr[0]
@@ -182,147 +216,187 @@ class TestORM(unittest.TestCase):
 
             @classmethod
             def get(self, id):
-                return Alternate(id)
+                return RomTestAlternate(id)
 
-        class FModel(Model):
-            attr = ForeignModel(Alternate)
+        class RomTestFModel(Model):
+            attr = ForeignModel(RomTestAlternate)
 
-        a = Alternate()
+        a = RomTestAlternate()
         ai = a.id
-        i = FModel(attr=a).id
+        i = RomTestFModel(attr=a).id
         session.commit()   # two lines of magic to destroy session history
         session.rollback() #
         del a
 
-        f = FModel.get(i)
+        f = RomTestFModel.get(i)
         self.assertEquals(f.attr.id, ai)
 
     def test_model_connection(self):
-        class Foo(Model):
+        class RomTestFoo(Model):
             pass
 
-        class Bar(Model):
+        class RomTestBar(Model):
             _conn = redis.Redis(db=14)
 
-        Bar._conn.delete('Bar:id:')
+        RomTestBar._conn.delete('RomTestBar:id:')
 
-        Foo().save()
-        Bar().save()
+        RomTestFoo().save()
+        RomTestBar().save()
 
-        self.assertEquals(Bar._conn.get('Bar:id:'), '1')
-        self.assertEquals(util.CONNECTION.get('Bar:id:'), None)
-        Bar.get(1).delete()
-        Bar._conn.delete('Bar:id:')
+        self.assertEquals(RomTestBar._conn.get('RomTestBar:id:'), '1')
+        self.assertEquals(util.CONNECTION.get('RomTestBar:id:'), None)
+        RomTestBar.get(1).delete()
+        RomTestBar._conn.delete('RomTestBar:id:')
+        k = RomTestBar._conn.keys('RomTest*')
+        if k:
+            RomTestBar._conn.delete(*k)
 
     def test_entity_caching(self):
-        class Goo(Model):
+        class RomTestGoo(Model):
             pass
 
-        f = Goo()
+        f = RomTestGoo()
         i = f.id
         p = id(f)
         session.commit()
 
         for j in xrange(10):
-            Goo()
+            RomTestGoo()
 
-        g = Goo.get(i)
+        g = RomTestGoo.get(i)
         self.assertTrue(f is g)
 
     def test_index_preservation(self):
         """ Edits to unrelated columns should not remove the index of other
         columns. Issue: https://github.com/josiahcarlson/rom/issues/2. """
 
-        class M(Model):
+        class RomTestM(Model):
             u = String(unique=True)
             i = Integer(index=True)
             unrelated = String()
 
-        M(u='foo', i=11).save()
+        RomTestM(u='foo', i=11).save()
 
-        m = M.get_by(u='foo')
+        m = RomTestM.get_by(u='foo')
         m.unrelated = 'foobar'
-        self.assertEqual(len(M.get_by(i=11)), 1)
+        self.assertEqual(len(RomTestM.get_by(i=11)), 1)
         m.save()
-        self.assertEqual(len(M.get_by(i=11)), 1)
-        self.assertEqual(len(M.get_by(i=(10, 12))), 1)
+        self.assertEqual(len(RomTestM.get_by(i=11)), 1)
+        self.assertEqual(len(RomTestM.get_by(i=(10, 12))), 1)
 
     def test_json_multisave(self):
-        class JsonTest(Model):
+        class RomTestJsonTest(Model):
             col = Json()
 
         d = {'hello': 'world'}
-        x = JsonTest(col=d)
+        x = RomTestJsonTest(col=d)
         x.save()
         del x
         for i in xrange(5):
-            x = JsonTest.get(1)
+            x = RomTestJsonTest.get(1)
             self.assertEquals(x.col, d)
             x.save(full=True)
             session.rollback()
 
     def test_boolean(self):
-        class BooleanTest(Model):
+        class RomTestBooleanTest(Model):
             col = Boolean(index=True)
 
-        BooleanTest(col=True).save()
-        BooleanTest(col=1).save()
-        BooleanTest(col=False).save()
-        BooleanTest(col='').save()
-        BooleanTest(col=None).save() # None is considered "not data", so is ignored
-        y = BooleanTest()
+        RomTestBooleanTest(col=True).save()
+        RomTestBooleanTest(col=1).save()
+        RomTestBooleanTest(col=False).save()
+        RomTestBooleanTest(col='').save()
+        RomTestBooleanTest(col=None).save() # None is considered "not data", so is ignored
+        y = RomTestBooleanTest()
         yid = y.id
         y.save()
         del y
-        self.assertEquals(len(BooleanTest.get_by(col=True)), 2)
-        self.assertEquals(len(BooleanTest.get_by(col=False)), 2)
+        self.assertEquals(len(RomTestBooleanTest.get_by(col=True)), 2)
+        self.assertEquals(len(RomTestBooleanTest.get_by(col=False)), 2)
         session.rollback()
-        x = BooleanTest.get(1)
+        x = RomTestBooleanTest.get(1)
         x.col = False
         x.save()
-        self.assertEquals(len(BooleanTest.get_by(col=True)), 1)
-        self.assertEquals(len(BooleanTest.get_by(col=False)), 3)
-        self.assertEquals(len(BooleanTest.get_by(col=True)), 1)
-        self.assertEquals(len(BooleanTest.get_by(col=False)), 3)
-        y = BooleanTest.get(yid)
+        self.assertEquals(len(RomTestBooleanTest.get_by(col=True)), 1)
+        self.assertEquals(len(RomTestBooleanTest.get_by(col=False)), 3)
+        self.assertEquals(len(RomTestBooleanTest.get_by(col=True)), 1)
+        self.assertEquals(len(RomTestBooleanTest.get_by(col=False)), 3)
+        y = RomTestBooleanTest.get(yid)
         self.assertEquals(y.col, None)
 
     def test_datetimes(self):
-        class DateTimesTest(Model):
+        class RomTestDateTimesTest(Model):
             col1 = DateTime(index=True)
             col2 = Date(index=True)
             col3 = Time(index=True)
 
-        now = datetime.utcnow()
-        dtt = DateTimesTest(col1=now, col2=now.date(), col3=now.time())
+        dtt = RomTestDateTimesTest(col1=_now, col2=_now.date(), col3=_now.time())
         dtt.save()
         session.commit()
         del dtt
-        self.assertEquals(len(DateTimesTest.get_by(col1=now)), 1)
-        self.assertEquals(len(DateTimesTest.get_by(col2=now.date())), 1)
-        self.assertEquals(len(DateTimesTest.get_by(col3=now.time())), 1)
+        self.assertEquals(len(RomTestDateTimesTest.get_by(col1=_now)), 1)
+        self.assertEquals(len(RomTestDateTimesTest.get_by(col2=_now.date())), 1)
+        self.assertEquals(len(RomTestDateTimesTest.get_by(col3=_now.time())), 1)
 
     def test_deletion(self):
-        class DeletionTest(Model):
+        class RomTestDeletionTest(Model):
             col1 = String(index=True)
 
-        x = DeletionTest(col1="this is a test string that should be indexed")
+        x = RomTestDeletionTest(col1="this is a test string that should be indexed")
         session.commit()
-        self.assertEquals(len(DeletionTest.get_by(col1='this')), 1)
+        self.assertEquals(len(RomTestDeletionTest.get_by(col1='this')), 1)
 
         x.delete()
-        self.assertEquals(len(DeletionTest.get_by(col1='this')), 0)
+        self.assertEquals(len(RomTestDeletionTest.get_by(col1='this')), 0)
 
         session.commit()
-        self.assertEquals(len(DeletionTest.get_by(col1='this')), 0)
+        self.assertEquals(len(RomTestDeletionTest.get_by(col1='this')), 0)
+
+    def test_empty_query(self):
+        class RomTestEmptyQueryTest(Model):
+            col1 = String()
+
+        RomTestEmptyQueryTest().save()
+        self.assertRaises(QueryError, RomTestEmptyQueryTest.query.all)
+        self.assertRaises(QueryError, RomTestEmptyQueryTest.query.count)
+        self.assertRaises(QueryError, RomTestEmptyQueryTest.query.limit(0, 10).count)
+
+    def test_refresh(self):
+        class RomTestRefresh(Model):
+            col = String()
+
+        d = RomTestRefresh(col='hello')
+        d.save()
+        d.col = 'world'
+        self.assertRaises(InvalidOperation, d.refresh)
+        d.refresh(True)
+        self.assertEquals(d.col, 'hello')
+        d.col = 'world'
+        session.refresh(d, force=True)
+        self.assertEquals(d.col, 'hello')
+        d.col = 'world'
+        session.refresh_all(force=True)
+        self.assertEquals(d.col, 'hello')
+        self.assertRaises(InvalidOperation, RomTestRefresh(col='boo').refresh)
 
 if __name__ == '__main__':
-    import sys
-    if '--really-run' in sys.argv:
-        del sys.argv[1:]
+    global_setup()
+    print "Testing standard writing"
+    try:
         unittest.main()
-    else:
-        print '''
-Because we perform database flushes during testing, to ensure that you don't
-accidentally blow away data that is important to you, we have disabled
-testing. You can, of course, bypass this. But it is discouraged.'''
+    except:
+        data = get_state()
+    global_setup()
+    _enable_lua_writes()
+    print "Testing Lua writing"
+    try:
+        unittest.main()
+    except:
+        lua_data = get_state()
+    global_setup()
+
+    ## if data != lua_data:
+        ## print "WARNING: Regular/Lua data writing does not match!"
+        ## import pprint
+        ## pprint.pprint(data)
+        ## pprint.pprint(lua_data)

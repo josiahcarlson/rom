@@ -31,6 +31,7 @@ Data types:
 * datetime.datetime, datetime.date, datetime.time
 * Json columns (for nested structures)
 * OneToMany and ManyToOne columns (for model references)
+* Non-rom ForeignModel reference support
 
 Indexes:
 
@@ -91,4 +92,21 @@ Getting started
 8. Load and use the object later::
 
     user = User.get_by(email_address='user@host.com')
+
+Enabling Lua writing to support multiple unique columns
+=======================================================
+
+If you are interested in having multiple unique columns, you can enable a beta
+feature that uses Lua to update all data written by rom. This eliminates any
+race conditions that could lead to unique index retries, allowing writes to
+succeed or fail much faster.
+
+To enable this beta support, you only need to do::
+
+    import rom
+    rom._enable_lua_writes()
+
+.. note:: You must be using Redis version 2.6 or later to be able to use this
+ feature. If you are using a previous version without Lua support on the
+ server side, this will not work.
 

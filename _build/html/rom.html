@@ -6,7 +6,7 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>rom Package &mdash; rom 0.19 documentation</title>
+    <title>rom Package &mdash; rom 0.20 documentation</title>
     
     <link rel="stylesheet" href="_static/default.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
@@ -14,7 +14,7 @@
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    './',
-        VERSION:     '0.19',
+        VERSION:     '0.20',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -23,7 +23,7 @@
     <script type="text/javascript" src="_static/jquery.js"></script>
     <script type="text/javascript" src="_static/underscore.js"></script>
     <script type="text/javascript" src="_static/doctools.js"></script>
-    <link rel="top" title="rom 0.19 documentation" href="index.html" />
+    <link rel="top" title="rom 0.20 documentation" href="index.html" />
     <link rel="prev" title="Welcome to the documentation for the Redis object Mapper" href="index.html" /> 
   </head>
   <body>
@@ -39,7 +39,7 @@
         <li class="right" >
           <a href="index.html" title="Welcome to the documentation for the Redis object Mapper"
              accesskey="P">previous</a> |</li>
-        <li><a href="index.html">rom 0.19 documentation</a> &raquo;</li> 
+        <li><a href="index.html">rom 0.20 documentation</a> &raquo;</li> 
       </ul>
     </div>  
 
@@ -52,583 +52,6 @@
 <h1>rom Package<a class="headerlink" href="#rom-package" title="Permalink to this headline">¶</a></h1>
 <div class="section" id="id1">
 <h2><tt class="xref py py-mod docutils literal"><span class="pre">rom</span></tt> Package<a class="headerlink" href="#id1" title="Permalink to this headline">¶</a></h2>
-<span class="target" id="module-rom.__init__"></span><p>Rom - the Redis object mapper for Python</p>
-<p>Copyright 2013 Josiah Carlson</p>
-<p>Released under the LGPL license version 2.1 and version 3 (you can choose
-which you&#8217;d like to be bound under).</p>
-<div class="section" id="what">
-<h3>What<a class="headerlink" href="#what" title="Permalink to this headline">¶</a></h3>
-<p>Rom is a package whose purpose is to offer active-record style data modeling
-within Redis from Python, similar to the semantics of Django ORM, SQLAlchemy +
-Elixir, Google&#8217;s Appengine datastore, and others.</p>
-</div>
-<div class="section" id="why">
-<h3>Why<a class="headerlink" href="#why" title="Permalink to this headline">¶</a></h3>
-<p>I was building a personal project, wanted to use Redis to store some of my
-data, but didn&#8217;t want to hack it poorly. I looked at the existing Redis object
-mappers available in Python, but didn&#8217;t like the features and functionality
-offered.</p>
-</div>
-<div class="section" id="what-is-available">
-<h3>What is available<a class="headerlink" href="#what-is-available" title="Permalink to this headline">¶</a></h3>
-<p>Data types:</p>
-<ul class="simple">
-<li>Strings, ints, floats, decimals, booleans</li>
-<li>datetime.datetime, datetime.date, datetime.time</li>
-<li>Json columns (for nested structures)</li>
-<li>OneToMany and ManyToOne columns (for model references)</li>
-</ul>
-<p>Indexes:</p>
-<ul class="simple">
-<li>Numeric range fetches, searches, and ordering</li>
-<li>Full-word text search (find me entries with col X having words A and B)</li>
-</ul>
-<p>Other features:</p>
-<ul class="simple">
-<li>Per-thread entity cache (to minimize round-trips, easy saving of all
-entities)</li>
-</ul>
-</div>
-<div class="section" id="getting-started">
-<h3>Getting started<a class="headerlink" href="#getting-started" title="Permalink to this headline">¶</a></h3>
-<ol class="arabic">
-<li><p class="first">Make sure you have Python 2.6 or 2.7 installed</p>
-</li>
-<li><p class="first">Make sure that you have Andy McCurdy&#8217;s Redis library installed:
-<a class="reference external" href="https://github.com/andymccurdy/redis-py/">https://github.com/andymccurdy/redis-py/</a> or
-<a class="reference external" href="https://pypi.python.org/pypi/redis">https://pypi.python.org/pypi/redis</a></p>
-</li>
-<li><p class="first">(optional) Make sure that you have the hiredis library installed for Python</p>
-</li>
-<li><p class="first">Make sure that you have a Redis server installed and available remotely</p>
-</li>
-<li><p class="first">Update the Redis connection settings for <tt class="docutils literal"><span class="pre">rom</span></tt> via
-<tt class="docutils literal"><span class="pre">rom.util.set_connection_settings()</span></tt> (other connection update options,
-including per-model connections, can be read about in the <tt class="docutils literal"><span class="pre">rom.util</span></tt>
-documentation):</p>
-<div class="highlight-python"><div class="highlight"><pre><span class="kn">import</span> <span class="nn">redis</span>
-<span class="kn">from</span> <span class="nn">rom</span> <span class="kn">import</span> <span class="n">util</span>
-
-<span class="n">util</span><span class="o">.</span><span class="n">set_connection_settings</span><span class="p">(</span><span class="n">host</span><span class="o">=</span><span class="s">&#39;myhost&#39;</span><span class="p">,</span> <span class="n">db</span><span class="o">=</span><span class="mi">7</span><span class="p">)</span>
-</pre></div>
-</div>
-</li>
-</ol>
-<div class="admonition warning">
-<p class="first admonition-title">Warning</p>
-<p class="last">If you forget to update the connection function, rom will attempt
-to connect to localhost:6379 .</p>
-</div>
-<ol class="arabic" start="6">
-<li><p class="first">Create a model:</p>
-<div class="highlight-python"><div class="highlight"><pre><span class="k">class</span> <span class="nc">User</span><span class="p">(</span><span class="n">Model</span><span class="p">):</span>
-    <span class="n">email_address</span> <span class="o">=</span> <span class="n">String</span><span class="p">(</span><span class="n">required</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span> <span class="n">unique</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
-    <span class="n">salt</span> <span class="o">=</span> <span class="n">String</span><span class="p">()</span>
-    <span class="nb">hash</span> <span class="o">=</span> <span class="n">String</span><span class="p">()</span>
-    <span class="n">created_at</span> <span class="o">=</span> <span class="n">Float</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">)</span>
-</pre></div>
-</div>
-</li>
-<li><p class="first">Create an instance of the model and save it:</p>
-<div class="highlight-python"><div class="highlight"><pre><span class="n">PASSES</span> <span class="o">=</span> <span class="mi">32768</span>
-<span class="k">def</span> <span class="nf">gen_hash</span><span class="p">(</span><span class="n">password</span><span class="p">,</span> <span class="n">salt</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
-    <span class="n">salt</span> <span class="o">=</span> <span class="n">salt</span> <span class="ow">or</span> <span class="n">os</span><span class="o">.</span><span class="n">urandom</span><span class="p">(</span><span class="mi">16</span><span class="p">)</span>
-    <span class="n">comp</span> <span class="o">=</span> <span class="n">salt</span> <span class="o">+</span> <span class="n">password</span>
-    <span class="n">out</span> <span class="o">=</span> <span class="n">sha256</span><span class="p">(</span><span class="n">comp</span><span class="p">)</span><span class="o">.</span><span class="n">digest</span><span class="p">()</span>
-    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">xrange</span><span class="p">(</span><span class="n">PASSES</span><span class="o">-</span><span class="mi">1</span><span class="p">):</span>
-        <span class="n">out</span> <span class="o">=</span> <span class="n">sha256</span><span class="p">(</span><span class="n">out</span> <span class="o">+</span> <span class="n">comp</span><span class="p">)</span><span class="o">.</span><span class="n">digest</span><span class="p">()</span>
-    <span class="k">return</span> <span class="n">salt</span><span class="p">,</span> <span class="n">out</span>
-
-<span class="n">user</span> <span class="o">=</span> <span class="n">User</span><span class="p">(</span><span class="n">email_address</span><span class="o">=</span><span class="s">&#39;user@host.com&#39;</span><span class="p">)</span>
-<span class="n">user</span><span class="o">.</span><span class="n">salt</span><span class="p">,</span> <span class="n">user</span><span class="o">.</span><span class="n">hash</span> <span class="o">=</span> <span class="n">gen_hash</span><span class="p">(</span><span class="n">password</span><span class="p">)</span>
-<span class="n">user</span><span class="o">.</span><span class="n">save</span><span class="p">()</span>
-<span class="c"># session.commit() or session.flush() works too</span>
-</pre></div>
-</div>
-</li>
-<li><p class="first">Load and use the object later:</p>
-<div class="highlight-python"><div class="highlight"><pre><span class="n">user</span> <span class="o">=</span> <span class="n">User</span><span class="o">.</span><span class="n">get_by</span><span class="p">(</span><span class="n">email_address</span><span class="o">=</span><span class="s">&#39;user@host.com&#39;</span><span class="p">)</span>
-</pre></div>
-</div>
-</li>
-</ol>
-<dl class="class">
-<dt id="rom.__init__.Model">
-<em class="property">class </em><tt class="descclassname">rom.__init__.</tt><tt class="descname">Model</tt><big>(</big><em>**kwargs</em><big>)</big><a class="headerlink" href="#rom.__init__.Model" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <tt class="xref py py-class docutils literal"><span class="pre">object</span></tt></p>
-<p>This is the base class for all models. You subclass from this base Model
-in order to create a model with columns. As an example:</p>
-<div class="highlight-python"><div class="highlight"><pre><span class="k">class</span> <span class="nc">User</span><span class="p">(</span><span class="n">Model</span><span class="p">):</span>
-    <span class="n">email_address</span> <span class="o">=</span> <span class="n">String</span><span class="p">(</span><span class="n">required</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span> <span class="n">unique</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
-    <span class="n">salt</span> <span class="o">=</span> <span class="n">String</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="s">&#39;&#39;</span><span class="p">)</span>
-    <span class="nb">hash</span> <span class="o">=</span> <span class="n">String</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="s">&#39;&#39;</span><span class="p">)</span>
-    <span class="n">created_at</span> <span class="o">=</span> <span class="n">Float</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
-</pre></div>
-</div>
-<p>Which can then be used like:</p>
-<div class="highlight-python"><div class="highlight"><pre><span class="n">user</span> <span class="o">=</span> <span class="n">User</span><span class="p">(</span><span class="n">email_addrss</span><span class="o">=</span><span class="s">&#39;user@domain.com&#39;</span><span class="p">)</span>
-<span class="n">user</span><span class="o">.</span><span class="n">save</span><span class="p">()</span> <span class="c"># session.commit() or session.flush() works too</span>
-<span class="n">user</span> <span class="o">=</span> <span class="n">User</span><span class="o">.</span><span class="n">get_by</span><span class="p">(</span><span class="n">email_address</span><span class="o">=</span><span class="s">&#39;user@domain.com&#39;</span><span class="p">)</span>
-<span class="n">user</span> <span class="o">=</span> <span class="n">User</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="mi">5</span><span class="p">)</span>
-<span class="n">users</span> <span class="o">=</span> <span class="n">User</span><span class="o">.</span><span class="n">get</span><span class="p">([</span><span class="mi">2</span><span class="p">,</span> <span class="mi">6</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">7</span><span class="p">])</span>
-</pre></div>
-</div>
-<p>To perform arbitrary queries on entities involving the indices that you
-defined (by passing <tt class="docutils literal"><span class="pre">index=True</span></tt> on column creation), you access the
-<tt class="docutils literal"><span class="pre">.query</span></tt> class property on the model:</p>
-<div class="highlight-python"><div class="highlight"><pre><span class="n">query</span> <span class="o">=</span> <span class="n">User</span><span class="o">.</span><span class="n">query</span>
-<span class="n">query</span> <span class="o">=</span> <span class="n">query</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">created_at</span><span class="o">=</span><span class="p">(</span><span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span><span class="o">-</span><span class="mi">86400</span><span class="p">,</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()))</span>
-<span class="n">users</span> <span class="o">=</span> <span class="n">query</span><span class="o">.</span><span class="n">execute</span><span class="p">()</span>
-</pre></div>
-</div>
-<dl class="method">
-<dt id="rom.__init__.Model.copy">
-<tt class="descname">copy</tt><big>(</big><big>)</big><a class="headerlink" href="#rom.__init__.Model.copy" title="Permalink to this definition">¶</a></dt>
-<dd><p>Creates a shallow copy of the given entity (any entities that can be
-retrieved from a OneToMany relationship will not be copied).</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="rom.__init__.Model.delete">
-<tt class="descname">delete</tt><big>(</big><big>)</big><a class="headerlink" href="#rom.__init__.Model.delete" title="Permalink to this definition">¶</a></dt>
-<dd><p>Deletes the entity immediately.</p>
-</dd></dl>
-
-<dl class="classmethod">
-<dt id="rom.__init__.Model.get">
-<em class="property">classmethod </em><tt class="descname">get</tt><big>(</big><em>ids</em><big>)</big><a class="headerlink" href="#rom.__init__.Model.get" title="Permalink to this definition">¶</a></dt>
-<dd><p>Will fetch one or more entities of this type from the session or
-Redis.</p>
-<p>Used like:</p>
-<div class="highlight-python"><div class="highlight"><pre><span class="n">MyModel</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="mi">5</span><span class="p">)</span>
-<span class="n">MyModel</span><span class="o">.</span><span class="n">get</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span> <span class="mi">6</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">4</span><span class="p">])</span>
-</pre></div>
-</div>
-<p>Passing a list or a tuple will return multiple entities, in the same
-order that the ids were passed.</p>
-</dd></dl>
-
-<dl class="classmethod">
-<dt id="rom.__init__.Model.get_by">
-<em class="property">classmethod </em><tt class="descname">get_by</tt><big>(</big><em>**kwargs</em><big>)</big><a class="headerlink" href="#rom.__init__.Model.get_by" title="Permalink to this definition">¶</a></dt>
-<dd><p>This method offers a simple query method for fetching entities of this
-type via attribute numeric ranges (such columns must be <tt class="docutils literal"><span class="pre">indexed</span></tt>),
-or via <tt class="docutils literal"><span class="pre">unique</span></tt> columns.</p>
-<p>Some examples:</p>
-<div class="highlight-python"><div class="highlight"><pre><span class="n">user</span> <span class="o">=</span> <span class="n">User</span><span class="o">.</span><span class="n">get_by</span><span class="p">(</span><span class="n">email_address</span><span class="o">=</span><span class="s">&#39;user@domain.com&#39;</span><span class="p">)</span>
-<span class="c"># gets up to 25 users created in the last 24 hours</span>
-<span class="n">users</span> <span class="o">=</span> <span class="n">User</span><span class="o">.</span><span class="n">get_by</span><span class="p">(</span>
-    <span class="n">created_at</span><span class="o">=</span><span class="p">(</span><span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span><span class="o">-</span><span class="mi">86400</span><span class="p">,</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()),</span>
-    <span class="n">_limit</span><span class="o">=</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">25</span><span class="p">))</span>
-</pre></div>
-</div>
-<p>If you would like to make queries against multiple columns or with
-multiple criteria, look into the Model.query class property.</p>
-</dd></dl>
-
-<dl class="attribute">
-<dt id="rom.__init__.Model.query">
-<tt class="descname">query</tt><em class="property"> = &lt;rom.__init__.Query object at 0x99b50f4&gt;</em><a class="headerlink" href="#rom.__init__.Model.query" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="method">
-<dt id="rom.__init__.Model.save">
-<tt class="descname">save</tt><big>(</big><em>full=False</em><big>)</big><a class="headerlink" href="#rom.__init__.Model.save" title="Permalink to this definition">¶</a></dt>
-<dd><p>Saves the current entity to Redis. Will only save changed data by
-default, but you can force a full save by passing <tt class="docutils literal"><span class="pre">full=True</span></tt>.</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="rom.__init__.Model.to_dict">
-<tt class="descname">to_dict</tt><big>(</big><big>)</big><a class="headerlink" href="#rom.__init__.Model.to_dict" title="Permalink to this definition">¶</a></dt>
-<dd><p>Returns a copy of all data assigned to columns in this entity. Useful
-for returning items to JSON-enabled APIs. If you want to copy an
-entity, you should look at the <tt class="docutils literal"><span class="pre">.copy()</span></tt> method.</p>
-</dd></dl>
-
-</dd></dl>
-
-<dl class="class">
-<dt id="rom.__init__.Column">
-<em class="property">class </em><tt class="descclassname">rom.__init__.</tt><tt class="descname">Column</tt><big>(</big><em>required=False</em>, <em>default=&lt;object object at 0x98d2268&gt;</em>, <em>unique=False</em>, <em>index=False</em>, <em>keygen=None</em><big>)</big><a class="headerlink" href="#rom.__init__.Column" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <tt class="xref py py-class docutils literal"><span class="pre">object</span></tt></p>
-<p>Column objects handle data conversion to/from strings, store metadata
-about indices, etc. Note that these are &#8220;heavy&#8221; columns, in that whenever
-data is read/written, it must go through descriptor processing. This is
-primarily so that (for example) if you try to write a Decimal to a Float
-column, you get an error the moment you try to do it, not some time later
-when you try to save the object (though saving can still cause an error
-during the conversion process).</p>
-<p>Standard Arguments:</p>
-<blockquote>
-<div><ul class="simple">
-<li><em>required</em> - determines whether this column is required on
-creation</li>
-<li><em>default</em> - a default value (either a callable or a simple value)
-when this column is not provided</li>
-<li><em>unique</em> - can only be enabled on <tt class="docutils literal"><span class="pre">String</span></tt> columns, allows for
-required distinct column values (like an email address on a User
-model)</li>
-<li><em>index</em> - can be enabled on numeric, string, and unicode columns.
-Will create a ZSET-based numeric index for numeric columns and a
-&#8220;full word&#8221;-based search for string/unicode columns. If enabled
-for other (or custom) columns, remember to provide the
-<tt class="docutils literal"><span class="pre">keygen</span></tt> argument</li>
-<li><em>keygen</em> - pass a function that takes your column&#8217;s value and
-returns the data that you want to index (see the keygen docs for
-what kinds of data to return)</li>
-</ul>
-</div></blockquote>
-<p>Notes:</p>
-<blockquote>
-<div><ul class="simple">
-<li>Columns with &#8216;unique&#8217; set to True can only be string columns</li>
-<li>You can only have one unique column on any model</li>
-<li>Unique and index are not mutually exclusive</li>
-<li>The keygen argument determines how index values are generated
-from column data (with reasonably sensible defaults for numeric
-and string columns)</li>
-<li>If you set required to True, then you must have the column set
-during object construction: <tt class="docutils literal"><span class="pre">MyModel(col=val)</span></tt></li>
-</ul>
-</div></blockquote>
-</dd></dl>
-
-<dl class="class">
-<dt id="rom.__init__.Integer">
-<em class="property">class </em><tt class="descclassname">rom.__init__.</tt><tt class="descname">Integer</tt><big>(</big><em>required=False</em>, <em>default=&lt;object object at 0x98d2268&gt;</em>, <em>unique=False</em>, <em>index=False</em>, <em>keygen=None</em><big>)</big><a class="headerlink" href="#rom.__init__.Integer" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference internal" href="#rom.__init__.Column" title="rom.__init__.Column"><tt class="xref py py-class docutils literal"><span class="pre">rom.__init__.Column</span></tt></a></p>
-<p>Used for integer numeric columns.</p>
-<p>All standard arguments supported.</p>
-<p>Used via:</p>
-<div class="highlight-python"><div class="highlight"><pre><span class="k">class</span> <span class="nc">MyModel</span><span class="p">(</span><span class="n">Model</span><span class="p">):</span>
-    <span class="n">col</span> <span class="o">=</span> <span class="n">Integer</span><span class="p">()</span>
-</pre></div>
-</div>
-</dd></dl>
-
-<dl class="class">
-<dt id="rom.__init__.Float">
-<em class="property">class </em><tt class="descclassname">rom.__init__.</tt><tt class="descname">Float</tt><big>(</big><em>required=False</em>, <em>default=&lt;object object at 0x98d2268&gt;</em>, <em>unique=False</em>, <em>index=False</em>, <em>keygen=None</em><big>)</big><a class="headerlink" href="#rom.__init__.Float" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference internal" href="#rom.__init__.Column" title="rom.__init__.Column"><tt class="xref py py-class docutils literal"><span class="pre">rom.__init__.Column</span></tt></a></p>
-<p>Numeric column that supports integers and floats (values are turned into
-floats on load from Redis).</p>
-<p>All standard arguments supported.</p>
-<p>Used via:</p>
-<div class="highlight-python"><div class="highlight"><pre><span class="k">class</span> <span class="nc">MyModel</span><span class="p">(</span><span class="n">Model</span><span class="p">):</span>
-    <span class="n">col</span> <span class="o">=</span> <span class="n">Float</span><span class="p">()</span>
-</pre></div>
-</div>
-</dd></dl>
-
-<dl class="class">
-<dt id="rom.__init__.Decimal">
-<em class="property">class </em><tt class="descclassname">rom.__init__.</tt><tt class="descname">Decimal</tt><big>(</big><em>required=False</em>, <em>default=&lt;object object at 0x98d2268&gt;</em>, <em>unique=False</em>, <em>index=False</em>, <em>keygen=None</em><big>)</big><a class="headerlink" href="#rom.__init__.Decimal" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference internal" href="#rom.__init__.Column" title="rom.__init__.Column"><tt class="xref py py-class docutils literal"><span class="pre">rom.__init__.Column</span></tt></a></p>
-<p>A Decimal-only numeric column (converts ints/longs into Decimals
-automatically). Attempts to assign Python float will fail.</p>
-<p>All standard arguments supported.</p>
-<p>Used via:</p>
-<div class="highlight-python"><div class="highlight"><pre><span class="k">class</span> <span class="nc">MyModel</span><span class="p">(</span><span class="n">Model</span><span class="p">):</span>
-    <span class="n">col</span> <span class="o">=</span> <span class="n">Decimal</span><span class="p">()</span>
-</pre></div>
-</div>
-</dd></dl>
-
-<dl class="class">
-<dt id="rom.__init__.String">
-<em class="property">class </em><tt class="descclassname">rom.__init__.</tt><tt class="descname">String</tt><big>(</big><em>required=False</em>, <em>default=&lt;object object at 0x98d2268&gt;</em>, <em>unique=False</em>, <em>index=False</em>, <em>keygen=None</em><big>)</big><a class="headerlink" href="#rom.__init__.String" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference internal" href="#rom.__init__.Column" title="rom.__init__.Column"><tt class="xref py py-class docutils literal"><span class="pre">rom.__init__.Column</span></tt></a></p>
-<p>A plain string column. Trying to save unicode strings will probably result
-in an error, if not bad data. This is the only type of column that can
-have a unique index.</p>
-<p>All standard arguments supported.</p>
-<p>This column can be indexed, which will allow for searching for words
-contained in the column, extracted via:</p>
-<div class="highlight-python"><div class="highlight"><pre><span class="nb">filter</span><span class="p">(</span><span class="bp">None</span><span class="p">,</span> <span class="p">[</span><span class="n">s</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span><span class="o">.</span><span class="n">strip</span><span class="p">(</span><span class="n">string</span><span class="o">.</span><span class="n">punctuation</span><span class="p">)</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">val</span><span class="o">.</span><span class="n">split</span><span class="p">()])</span>
-</pre></div>
-</div>
-<div class="admonition note">
-<p class="first admonition-title">Note</p>
-<p class="last">only one column in any given model can be unique.</p>
-</div>
-<p>Used via:</p>
-<div class="highlight-python"><div class="highlight"><pre><span class="k">class</span> <span class="nc">MyModel</span><span class="p">(</span><span class="n">Model</span><span class="p">):</span>
-    <span class="n">col</span> <span class="o">=</span> <span class="n">String</span><span class="p">()</span>
-</pre></div>
-</div>
-</dd></dl>
-
-<dl class="class">
-<dt id="rom.__init__.Text">
-<em class="property">class </em><tt class="descclassname">rom.__init__.</tt><tt class="descname">Text</tt><big>(</big><em>required=False</em>, <em>default=&lt;object object at 0x98d2268&gt;</em>, <em>unique=False</em>, <em>index=False</em>, <em>keygen=None</em><big>)</big><a class="headerlink" href="#rom.__init__.Text" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference internal" href="#rom.__init__.Column" title="rom.__init__.Column"><tt class="xref py py-class docutils literal"><span class="pre">rom.__init__.Column</span></tt></a></p>
-<p>A unicode string column.</p>
-<p>All standard arguments supported, except for <tt class="docutils literal"><span class="pre">unique</span></tt>.</p>
-<p>Aside from not supporting <tt class="docutils literal"><span class="pre">unique</span></tt> indices, will generally have the same
-behavior as a <tt class="docutils literal"><span class="pre">String</span></tt> column, only supporting unicode strings. Data is
-encoded via utf-8 before writing to Redis. If you would like to create
-your own column to encode/decode differently, examine the source find out
-how to do it.</p>
-<p>Used via:</p>
-<div class="highlight-python"><div class="highlight"><pre><span class="k">class</span> <span class="nc">MyModel</span><span class="p">(</span><span class="n">Model</span><span class="p">):</span>
-    <span class="n">col</span> <span class="o">=</span> <span class="n">Text</span><span class="p">()</span>
-</pre></div>
-</div>
-</dd></dl>
-
-<dl class="class">
-<dt id="rom.__init__.Json">
-<em class="property">class </em><tt class="descclassname">rom.__init__.</tt><tt class="descname">Json</tt><big>(</big><em>required=False</em>, <em>default=&lt;object object at 0x98d2268&gt;</em>, <em>unique=False</em>, <em>index=False</em>, <em>keygen=None</em><big>)</big><a class="headerlink" href="#rom.__init__.Json" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference internal" href="#rom.__init__.Column" title="rom.__init__.Column"><tt class="xref py py-class docutils literal"><span class="pre">rom.__init__.Column</span></tt></a></p>
-<p>Allows for more complicated nested structures as attributes.</p>
-<p>All standard arguments supported. The <tt class="docutils literal"><span class="pre">keygen</span></tt> argument must be provided
-if <tt class="docutils literal"><span class="pre">index</span></tt> is <tt class="docutils literal"><span class="pre">True</span></tt>.</p>
-<p>Used via:</p>
-<div class="highlight-python"><div class="highlight"><pre><span class="k">class</span> <span class="nc">MyModel</span><span class="p">(</span><span class="n">Model</span><span class="p">):</span>
-    <span class="n">col</span> <span class="o">=</span> <span class="n">Json</span><span class="p">()</span>
-</pre></div>
-</div>
-</dd></dl>
-
-<dl class="class">
-<dt id="rom.__init__.PrimaryKey">
-<em class="property">class </em><tt class="descclassname">rom.__init__.</tt><tt class="descname">PrimaryKey</tt><big>(</big><em>index=False</em><big>)</big><a class="headerlink" href="#rom.__init__.PrimaryKey" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference internal" href="#rom.__init__.Column" title="rom.__init__.Column"><tt class="xref py py-class docutils literal"><span class="pre">rom.__init__.Column</span></tt></a></p>
-<p>This is a primary key column, used when you want the primary key to be
-named something other than &#8216;id&#8217;. If you omit a PrimaryKey column on your
-Model classes, one will be automatically cretaed for you.</p>
-<p>Only the <tt class="docutils literal"><span class="pre">index</span></tt> argument will be used. You may want to enable indexing
-on this column if you want to be able to perform queries and sort the
-results by primary key.</p>
-<p>Used via:</p>
-<blockquote>
-<div><dl class="docutils">
-<dt>class MyModel(Model):</dt>
-<dd>id = PrimaryKey()</dd>
-</dl>
-</div></blockquote>
-</dd></dl>
-
-<dl class="class">
-<dt id="rom.__init__.ManyToOne">
-<em class="property">class </em><tt class="descclassname">rom.__init__.</tt><tt class="descname">ManyToOne</tt><big>(</big><em>ftable</em>, <em>required=False</em>, <em>default=&lt;object object at 0x98d2268&gt;</em><big>)</big><a class="headerlink" href="#rom.__init__.ManyToOne" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference internal" href="#rom.__init__.Column" title="rom.__init__.Column"><tt class="xref py py-class docutils literal"><span class="pre">rom.__init__.Column</span></tt></a></p>
-<p>This ManyToOne column allows for one model to reference another model.
-While a ManyToOne column does not require a reverse OneToMany column
-(which will return a list of models that reference it via a ManyToOne), it
-is generally seen as being useful to have both sides of the relationship
-defined.</p>
-<p>Aside from the name of the other model, only the <tt class="docutils literal"><span class="pre">required</span></tt> and
-<tt class="docutils literal"><span class="pre">default</span></tt> arguments are accepted.</p>
-<p>Used via:</p>
-<div class="highlight-python"><div class="highlight"><pre><span class="k">class</span> <span class="nc">MyModel</span><span class="p">(</span><span class="n">Model</span><span class="p">):</span>
-    <span class="n">col</span> <span class="o">=</span> <span class="n">ManyToOne</span><span class="p">(</span><span class="s">&#39;OtherModelName&#39;</span><span class="p">)</span>
-</pre></div>
-</div>
-</dd></dl>
-
-<dl class="class">
-<dt id="rom.__init__.ForeignModel">
-<em class="property">class </em><tt class="descclassname">rom.__init__.</tt><tt class="descname">ForeignModel</tt><big>(</big><em>fmodel</em>, <em>required=False</em>, <em>default=&lt;object object at 0x98d2268&gt;</em><big>)</big><a class="headerlink" href="#rom.__init__.ForeignModel" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference internal" href="#rom.__init__.Column" title="rom.__init__.Column"><tt class="xref py py-class docutils literal"><span class="pre">rom.__init__.Column</span></tt></a></p>
-<p>This column allows for <tt class="docutils literal"><span class="pre">rom</span></tt> models to reference an instance of another
-model from an unrelated ORM or otherwise.</p>
-<p>Used via:</p>
-<div class="highlight-python"><div class="highlight"><pre><span class="k">class</span> <span class="nc">MyModel</span><span class="p">(</span><span class="n">Model</span><span class="p">):</span>
-    <span class="n">col</span> <span class="o">=</span> <span class="n">ForeignModel</span><span class="p">(</span><span class="n">DjangoModel</span><span class="p">)</span>
-
-<span class="n">dm</span> <span class="o">=</span> <span class="n">DjangoModel</span><span class="p">(</span><span class="n">col1</span><span class="o">=</span><span class="s">&#39;foo&#39;</span><span class="p">)</span>
-<span class="n">django</span><span class="o">.</span><span class="n">db</span><span class="o">.</span><span class="n">transaction</span><span class="o">.</span><span class="n">commit</span><span class="p">()</span>
-
-<span class="n">x</span> <span class="o">=</span> <span class="n">MyModel</span><span class="p">(</span><span class="n">col</span><span class="o">=</span><span class="n">dm</span><span class="p">)</span>
-<span class="n">x</span><span class="o">.</span><span class="n">save</span><span class="p">()</span>
-</pre></div>
-</div>
-</dd></dl>
-
-<dl class="class">
-<dt id="rom.__init__.OneToMany">
-<em class="property">class </em><tt class="descclassname">rom.__init__.</tt><tt class="descname">OneToMany</tt><big>(</big><em>ftable</em><big>)</big><a class="headerlink" href="#rom.__init__.OneToMany" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference internal" href="#rom.__init__.Column" title="rom.__init__.Column"><tt class="xref py py-class docutils literal"><span class="pre">rom.__init__.Column</span></tt></a></p>
-<p>OneToMany columns do not actually store any information. They rely on a
-properly defined reverse ManyToOne column on the referenced model in order
-to be able to fetch a list of referring entities.</p>
-<p>Only the name of the other model can be passed.</p>
-<p>Used via:</p>
-<div class="highlight-python"><div class="highlight"><pre><span class="k">class</span> <span class="nc">MyModel</span><span class="p">(</span><span class="n">Model</span><span class="p">):</span>
-    <span class="n">col</span> <span class="o">=</span> <span class="n">OneToMany</span><span class="p">(</span><span class="s">&#39;OtherModelName&#39;</span><span class="p">)</span>
-</pre></div>
-</div>
-</dd></dl>
-
-<dl class="class">
-<dt id="rom.__init__.Query">
-<em class="property">class </em><tt class="descclassname">rom.__init__.</tt><tt class="descname">Query</tt><big>(</big><em>model</em>, <em>filters=()</em>, <em>order_by=None</em>, <em>limit=None</em><big>)</big><a class="headerlink" href="#rom.__init__.Query" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <tt class="xref py py-class docutils literal"><span class="pre">object</span></tt></p>
-<p>This is a query object. It behaves a lot like other query objects. Every
-operation performed on Query objects returns a new Query object. The old
-Query object <em>does not</em> have any updated filters.</p>
-<dl class="method">
-<dt id="rom.__init__.Query.all">
-<tt class="descname">all</tt><big>(</big><big>)</big><a class="headerlink" href="#rom.__init__.Query.all" title="Permalink to this definition">¶</a></dt>
-<dd><p>Alias for <tt class="docutils literal"><span class="pre">execute()</span></tt>.</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="rom.__init__.Query.count">
-<tt class="descname">count</tt><big>(</big><big>)</big><a class="headerlink" href="#rom.__init__.Query.count" title="Permalink to this definition">¶</a></dt>
-<dd><p>Will return the total count of the objects that match the specified
-filters. If no filters are provided, will return 0:</p>
-<div class="highlight-python"><div class="highlight"><pre><span class="c"># counts the number of users created in the last 24 hours</span>
-<span class="n">User</span><span class="o">.</span><span class="n">query</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">created_at</span><span class="o">=</span><span class="p">(</span><span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span><span class="o">-</span><span class="mi">86400</span><span class="p">,</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()))</span><span class="o">.</span><span class="n">count</span><span class="p">()</span>
-</pre></div>
-</div>
-</dd></dl>
-
-<dl class="method">
-<dt id="rom.__init__.Query.execute">
-<tt class="descname">execute</tt><big>(</big><big>)</big><a class="headerlink" href="#rom.__init__.Query.execute" title="Permalink to this definition">¶</a></dt>
-<dd><p>Actually executes the query, returning any entities that match the
-filters, ordered by the specified ordering (if any), limited by any
-earlier limit calls.</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="rom.__init__.Query.filter">
-<tt class="descname">filter</tt><big>(</big><em>**kwargs</em><big>)</big><a class="headerlink" href="#rom.__init__.Query.filter" title="Permalink to this definition">¶</a></dt>
-<dd><p>Filters should be of the form:</p>
-<div class="highlight-python"><div class="highlight"><pre><span class="c"># for numeric ranges, use None for open-ended ranges</span>
-<span class="n">attribute</span><span class="o">=</span><span class="p">(</span><span class="nb">min</span><span class="p">,</span> <span class="nb">max</span><span class="p">)</span>
-
-<span class="c"># you can also query for equality by passing a single number</span>
-<span class="n">attribute</span><span class="o">=</span><span class="n">value</span>
-
-<span class="c"># for string searches, passing a plain string will require that</span>
-<span class="c"># string to be in the index as a literal</span>
-<span class="n">attribute</span><span class="o">=</span><span class="n">string</span>
-
-<span class="c"># to perform an &#39;or&#39; query on strings, you can pass a list of</span>
-<span class="c"># strings</span>
-<span class="n">attribute</span><span class="o">=</span><span class="p">[</span><span class="n">string1</span><span class="p">,</span> <span class="n">string2</span><span class="p">]</span>
-</pre></div>
-</div>
-<p>As an example, the following will return entities that have both
-<tt class="docutils literal"><span class="pre">hello</span></tt> and <tt class="docutils literal"><span class="pre">world</span></tt> in the <tt class="docutils literal"><span class="pre">String</span></tt> column <tt class="docutils literal"><span class="pre">scol</span></tt> and has a
-<tt class="docutils literal"><span class="pre">Numeric</span></tt> column <tt class="docutils literal"><span class="pre">ncol</span></tt> with value between 2 and 10 (including the
-endpoints):</p>
-<div class="highlight-python"><div class="highlight"><pre><span class="n">results</span> <span class="o">=</span> <span class="n">MyModel</span><span class="o">.</span><span class="n">query</span> \
-    <span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">scol</span><span class="o">=</span><span class="s">&#39;hello&#39;</span><span class="p">)</span> \
-    <span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">scol</span><span class="o">=</span><span class="s">&#39;world&#39;</span><span class="p">)</span> \
-    <span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">ncol</span><span class="o">=</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">10</span><span class="p">))</span> \
-    <span class="o">.</span><span class="n">execute</span><span class="p">()</span>
-</pre></div>
-</div>
-<p>If you only want to match a single value as part of your range query,
-you can pass an integer, float, or Decimal object by itself, similar
-to the <tt class="docutils literal"><span class="pre">Model.get_by()</span></tt> method:</p>
-<div class="highlight-python"><div class="highlight"><pre><span class="n">results</span> <span class="o">=</span> <span class="n">MyModel</span><span class="o">.</span><span class="n">query</span> \
-    <span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">ncol</span><span class="o">=</span><span class="mi">5</span><span class="p">)</span> \
-    <span class="o">.</span><span class="n">execute</span><span class="p">()</span>
-</pre></div>
-</div>
-</dd></dl>
-
-<dl class="method">
-<dt id="rom.__init__.Query.first">
-<tt class="descname">first</tt><big>(</big><big>)</big><a class="headerlink" href="#rom.__init__.Query.first" title="Permalink to this definition">¶</a></dt>
-<dd><p>Returns only the first result from the query, if any.</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="rom.__init__.Query.limit">
-<tt class="descname">limit</tt><big>(</big><em>offset</em>, <em>count</em><big>)</big><a class="headerlink" href="#rom.__init__.Query.limit" title="Permalink to this definition">¶</a></dt>
-<dd><p>Will limit the number of results returned from a query:</p>
-<div class="highlight-python"><div class="highlight"><pre><span class="c"># returns the most recent 25 users</span>
-<span class="n">User</span><span class="o">.</span><span class="n">query</span><span class="o">.</span><span class="n">order_by</span><span class="p">(</span><span class="s">&#39;-created_at&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">limit</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">25</span><span class="p">)</span><span class="o">.</span><span class="n">execute</span><span class="p">()</span>
-</pre></div>
-</div>
-</dd></dl>
-
-<dl class="method">
-<dt id="rom.__init__.Query.order_by">
-<tt class="descname">order_by</tt><big>(</big><em>column</em><big>)</big><a class="headerlink" href="#rom.__init__.Query.order_by" title="Permalink to this definition">¶</a></dt>
-<dd><p>When provided with a column name, will sort the results of your query:</p>
-<div class="highlight-python"><div class="highlight"><pre><span class="c"># returns all users, ordered by the created_at column in</span>
-<span class="c"># descending order</span>
-<span class="n">User</span><span class="o">.</span><span class="n">query</span><span class="o">.</span><span class="n">order_by</span><span class="p">(</span><span class="s">&#39;-created_at&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">execute</span><span class="p">()</span>
-</pre></div>
-</div>
-</dd></dl>
-
-</dd></dl>
-
-<dl class="class">
-<dt id="rom.__init__.Boolean">
-<em class="property">class </em><tt class="descclassname">rom.__init__.</tt><tt class="descname">Boolean</tt><big>(</big><em>required=False</em>, <em>default=&lt;object object at 0x98d2268&gt;</em>, <em>unique=False</em>, <em>index=False</em>, <em>keygen=None</em><big>)</big><a class="headerlink" href="#rom.__init__.Boolean" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference internal" href="#rom.__init__.Column" title="rom.__init__.Column"><tt class="xref py py-class docutils literal"><span class="pre">rom.__init__.Column</span></tt></a></p>
-<p>Used for boolean columns.</p>
-<p>All standard arguments supported.</p>
-<p>All values passed in on creation are casted via bool(), with the exception
-of None (which behaves as though the value was missing), and any existing
-data in Redis is considered <tt class="docutils literal"><span class="pre">False</span></tt> if empty, and <tt class="docutils literal"><span class="pre">True</span></tt> otherwise.</p>
-<p>Used via:</p>
-<div class="highlight-python"><div class="highlight"><pre><span class="k">class</span> <span class="nc">MyModel</span><span class="p">(</span><span class="n">Model</span><span class="p">):</span>
-    <span class="n">col</span> <span class="o">=</span> <span class="n">Boolean</span><span class="p">()</span>
-</pre></div>
-</div>
-<p>Queries via <tt class="docutils literal"><span class="pre">MyModel.get_by(...)</span></tt> and <tt class="docutils literal"><span class="pre">MyModel.query.filter(...)</span></tt> work
-as expected when passed <tt class="docutils literal"><span class="pre">True</span></tt> or <tt class="docutils literal"><span class="pre">False</span></tt>.</p>
-</dd></dl>
-
-<dl class="class">
-<dt id="rom.__init__.DateTime">
-<em class="property">class </em><tt class="descclassname">rom.__init__.</tt><tt class="descname">DateTime</tt><big>(</big><em>required=False</em>, <em>default=&lt;object object at 0x98d2268&gt;</em>, <em>unique=False</em>, <em>index=False</em>, <em>keygen=None</em><big>)</big><a class="headerlink" href="#rom.__init__.DateTime" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference internal" href="#rom.__init__.Column" title="rom.__init__.Column"><tt class="xref py py-class docutils literal"><span class="pre">rom.__init__.Column</span></tt></a></p>
-<p>A datetime column.</p>
-<p>All standard arguments supported.</p>
-<p>Used via:</p>
-<div class="highlight-python"><div class="highlight"><pre><span class="k">class</span> <span class="nc">MyModel</span><span class="p">(</span><span class="n">Model</span><span class="p">):</span>
-    <span class="n">col</span> <span class="o">=</span> <span class="n">DateTime</span><span class="p">()</span>
-</pre></div>
-</div>
-<div class="admonition note">
-<p class="first admonition-title">Note</p>
-<p class="last">tzinfo objects are not stored</p>
-</div>
-</dd></dl>
-
-<dl class="class">
-<dt id="rom.__init__.Date">
-<em class="property">class </em><tt class="descclassname">rom.__init__.</tt><tt class="descname">Date</tt><big>(</big><em>required=False</em>, <em>default=&lt;object object at 0x98d2268&gt;</em>, <em>unique=False</em>, <em>index=False</em>, <em>keygen=None</em><big>)</big><a class="headerlink" href="#rom.__init__.Date" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference internal" href="#rom.__init__.Column" title="rom.__init__.Column"><tt class="xref py py-class docutils literal"><span class="pre">rom.__init__.Column</span></tt></a></p>
-<p>A date column.</p>
-<p>All standard arguments supported.</p>
-<p>Used via:</p>
-<div class="highlight-python"><div class="highlight"><pre><span class="k">class</span> <span class="nc">MyModel</span><span class="p">(</span><span class="n">Model</span><span class="p">):</span>
-    <span class="n">col</span> <span class="o">=</span> <span class="n">Date</span><span class="p">()</span>
-</pre></div>
-</div>
-</dd></dl>
-
-<dl class="class">
-<dt id="rom.__init__.Time">
-<em class="property">class </em><tt class="descclassname">rom.__init__.</tt><tt class="descname">Time</tt><big>(</big><em>required=False</em>, <em>default=&lt;object object at 0x98d2268&gt;</em>, <em>unique=False</em>, <em>index=False</em>, <em>keygen=None</em><big>)</big><a class="headerlink" href="#rom.__init__.Time" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference internal" href="#rom.__init__.Column" title="rom.__init__.Column"><tt class="xref py py-class docutils literal"><span class="pre">rom.__init__.Column</span></tt></a></p>
-<p>A time column. Timezones are ignored.</p>
-<p>All standard arguments supported.</p>
-<p>Used via:</p>
-<div class="highlight-python"><div class="highlight"><pre><span class="k">class</span> <span class="nc">MyModel</span><span class="p">(</span><span class="n">Model</span><span class="p">):</span>
-    <span class="n">col</span> <span class="o">=</span> <span class="n">Time</span><span class="p">()</span>
-</pre></div>
-</div>
-<div class="admonition note">
-<p class="first admonition-title">Note</p>
-<p class="last">tzinfo objects are not stored</p>
-</div>
-</dd></dl>
-
-</div>
 </div>
 <div class="section" id="module-rom.exceptions">
 <span id="exceptions-module"></span><h2><tt class="xref py py-mod docutils literal"><span class="pre">exceptions</span></tt> Module<a class="headerlink" href="#module-rom.exceptions" title="Permalink to this headline">¶</a></h2>
@@ -894,6 +317,33 @@ not automatically saved on <tt class="docutils literal"><span class="pre">sessio
 </dd></dl>
 
 <dl class="method">
+<dt id="rom.util.Session.refresh">
+<tt class="descname">refresh</tt><big>(</big><em>*objects</em>, <em>**kwargs</em><big>)</big><a class="headerlink" href="#rom.util.Session.refresh" title="Permalink to this definition">¶</a></dt>
+<dd><p>This method is an alternate API for refreshing many entities (possibly
+not tracked by the session). You can call:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">session</span><span class="o">.</span><span class="n">refresh</span><span class="p">(</span><span class="n">obj</span><span class="p">)</span>
+<span class="n">session</span><span class="o">.</span><span class="n">refresh</span><span class="p">(</span><span class="n">obj1</span><span class="p">,</span> <span class="n">obj2</span><span class="p">,</span> <span class="o">...</span><span class="p">)</span>
+<span class="n">session</span><span class="o">.</span><span class="n">refresh</span><span class="p">([</span><span class="n">obj1</span><span class="p">,</span> <span class="n">obj2</span><span class="p">,</span> <span class="o">...</span><span class="p">])</span>
+</pre></div>
+</div>
+<p>And all provided entities will be reloaded from Redis.</p>
+<p>To force reloading for modified entities, you can pass <tt class="docutils literal"><span class="pre">force=True</span></tt>.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="rom.util.Session.refresh_all">
+<tt class="descname">refresh_all</tt><big>(</big><em>*objects</em>, <em>**kwargs</em><big>)</big><a class="headerlink" href="#rom.util.Session.refresh_all" title="Permalink to this definition">¶</a></dt>
+<dd><p>This method is an alternate API for refreshing all entities tracked
+by the session. You can call:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">session</span><span class="o">.</span><span class="n">refresh_all</span><span class="p">()</span>
+<span class="n">session</span><span class="o">.</span><span class="n">refresh_all</span><span class="p">(</span><span class="n">force</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>And all entities known by the session will be reloaded from Redis.</p>
+<p>To force reloading for modified entities, you can pass <tt class="docutils literal"><span class="pre">force=True</span></tt>.</p>
+</dd></dl>
+
+<dl class="method">
 <dt id="rom.util.Session.rollback">
 <tt class="descname">rollback</tt><big>(</big><big>)</big><a class="headerlink" href="#rom.util.Session.rollback" title="Permalink to this definition">¶</a></dt>
 <dd><p>Forget about all entities in the session (<tt class="docutils literal"><span class="pre">.commit()</span></tt> will do
@@ -960,13 +410,7 @@ model-specific connections.</p>
   <h3><a href="index.html">Table Of Contents</a></h3>
   <ul>
 <li><a class="reference internal" href="#">rom Package</a><ul>
-<li><a class="reference internal" href="#id1"><tt class="docutils literal"><span class="pre">rom</span></tt> Package</a><ul>
-<li><a class="reference internal" href="#what">What</a></li>
-<li><a class="reference internal" href="#why">Why</a></li>
-<li><a class="reference internal" href="#what-is-available">What is available</a></li>
-<li><a class="reference internal" href="#getting-started">Getting started</a></li>
-</ul>
-</li>
+<li><a class="reference internal" href="#id1"><tt class="docutils literal"><span class="pre">rom</span></tt> Package</a></li>
 <li><a class="reference internal" href="#module-rom.exceptions"><tt class="docutils literal"><span class="pre">exceptions</span></tt> Module</a></li>
 <li><a class="reference internal" href="#module-rom.index"><tt class="docutils literal"><span class="pre">index</span></tt> Module</a></li>
 <li><a class="reference internal" href="#module-rom.util"><tt class="docutils literal"><span class="pre">util</span></tt> Module</a><ul>
@@ -1014,7 +458,7 @@ model-specific connections.</p>
         <li class="right" >
           <a href="index.html" title="Welcome to the documentation for the Redis object Mapper"
              >previous</a> |</li>
-        <li><a href="index.html">rom 0.19 documentation</a> &raquo;</li> 
+        <li><a href="index.html">rom 0.20 documentation</a> &raquo;</li> 
       </ul>
     </div>
     <div class="footer">

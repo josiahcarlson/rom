@@ -1,3 +1,19 @@
+#----------------------------------- 0.20 ------------------------------------
+[changed] Added exception when performing .all(), .execute(), or .count() on
+    query objects that have had no filters or attribute ordering provided.
+    This addresses issue #12.
+[changed] Moved column definitions to their own module, shouldn't affect any
+    normal uses of rom.
+[added] For users of Redis 2.6 and later, there is a beta Lua-enabled writing
+    option that allows for multiple unique columns on models. In some cases,
+    this may improve performance when writing many entities very quickly.
+[added] The ability to reload an entity from Redis, optionally discarding any
+    modifications to the object itself. Check out the documentation for
+    Model.refresh(), Session.refresh(), and Session.refresh_all()
+[added] Tests for the newly changed/added features.
+[changed] Tests no longer use flushdb() - all test models/indexes/etc. are
+    prefixed with RomTest, and we find/delete such keys before and after any
+    tests are run. Now anyone can reasonably run the test suite.
 #----------------------------------- 0.19 ------------------------------------
 [fixed] Thanks to a bug report by https://github.com/MickeyKim , was notified
     of a bug when using unique indexes, which is now fixed and has a testcase.

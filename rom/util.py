@@ -78,8 +78,8 @@ def _connect(obj):
     Tries to get the _conn attribute from a model. Barring that, gets the
     global default connection using other methods.
     '''
-    from .__init__ import Model
-    if isinstance(obj, Model):
+    from .columns import MODELS
+    if isinstance(obj, MODELS['Model']):
         obj = obj.__class__
     if hasattr(obj, '_conn'):
         return obj._conn
@@ -302,6 +302,50 @@ class Session(threading.local):
                         o,))
         return changes
 
+    def refresh(self, *objects, **kwargs):
+        '''
+        This method is an alternate API for refreshing many entities (possibly
+        not tracked by the session). You can call::
+
+            session.refresh(obj)
+            session.refresh(obj1, obj2, ...)
+            session.refresh([obj1, obj2, ...])
+
+        And all provided entities will be reloaded from Redis.
+
+        To force reloading for modified entities, you can pass ``force=True``.
+        '''
+        from rom import Model
+        force = kwargs.get('force')
+        for o in objects:
+            if isinstance(o, (list, tuple)):
+                self.refresh(*o, force=force)
+            elif isinstance(o, Model):
+                if not o._new:
+                    o.refresh(force=force)
+                else:
+                    # all objects are re-added to the session after refresh,
+                    # except for deleted entities...
+                    self.add(o)
+            else:
+                raise ORMError(
+                    "Cannot refresh an object that is not an instance of a Model (you provided %r)"%(
+                        o,))
+
+    def refresh_all(self, *objects, **kwargs):
+        '''
+        This method is an alternate API for refreshing all entities tracked
+        by the session. You can call::
+
+            session.refresh_all()
+            session.refresh_all(force=True)
+
+        And all entities known by the session will be reloaded from Redis.
+
+        To force reloading for modified entities, you can pass ``force=True``.
+        '''
+        self.refresh(*self.known.values(), force=kwargs.get('force'))
+
 session = Session()
 
 def refresh_indices(model, block_size=100):
@@ -339,3 +383,32 @@ def refresh_indices(model, block_size=100):
         # re-save un-modified data, resulting in index-only updates
         session.commit(all=True)
         yield min(i+block_size, max_id), max_id
+
+def _script_load(script):
+    '''
+    Borrowed from my book, Redis in Action:
+    https://github.com/josiahcarlson/redis-in-action/blob/master/python/ch11_listing_source.py
+
+    Used for Lua scripting support when writing against Redis 2.6+ to allow
+    for multiple unique columns per model.
+    '''
+    sha = [None]
+    def call(conn, keys=[], args=[], force_eval=False):
+        if not force_eval:
+            if not sha[0]:
+                sha[0] = conn.execute_command(
+                    "SCRIPT", "LOAD", script, parse="LOAD")
+
+            try:
+                return conn.execute_command(
+                    "EVALSHA", sha[0], len(keys), *(keys+args))
+
+            except redis.exceptions.ResponseError as msg:
+                if not msg.args[0].startswith("NOSCRIPT"):
+                    raise
+
+        return conn.execute_command(
+            "EVAL", script, len(keys), *(keys+args))
+
+    return call
+
