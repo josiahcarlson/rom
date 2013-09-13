@@ -9,6 +9,14 @@ rom Package
     :undoc-members:
     :show-inheritance:
 
+:mod:`columns` Module
+------------------------
+
+.. automodule:: rom.columns
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
 :mod:`exceptions` Module
 ------------------------
 

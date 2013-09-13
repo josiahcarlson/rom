@@ -53,6 +53,288 @@
 <div class="section" id="id1">
 <h2><tt class="xref py py-mod docutils literal"><span class="pre">rom</span></tt> Package<a class="headerlink" href="#id1" title="Permalink to this headline">¶</a></h2>
 </div>
+<div class="section" id="module-rom.columns">
+<span id="columns-module"></span><h2><tt class="xref py py-mod docutils literal"><span class="pre">columns</span></tt> Module<a class="headerlink" href="#module-rom.columns" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="rom.columns.Boolean">
+<em class="property">class </em><tt class="descclassname">rom.columns.</tt><tt class="descname">Boolean</tt><big>(</big><em>required=False</em>, <em>default=&lt;object object at 0x403a9988&gt;</em>, <em>unique=False</em>, <em>index=False</em>, <em>keygen=None</em><big>)</big><a class="headerlink" href="#rom.columns.Boolean" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#rom.columns.Column" title="rom.columns.Column"><tt class="xref py py-class docutils literal"><span class="pre">rom.columns.Column</span></tt></a></p>
+<p>Used for boolean columns.</p>
+<p>All standard arguments supported.</p>
+<p>All values passed in on creation are casted via bool(), with the exception
+of None (which behaves as though the value was missing), and any existing
+data in Redis is considered <tt class="docutils literal"><span class="pre">False</span></tt> if empty, and <tt class="docutils literal"><span class="pre">True</span></tt> otherwise.</p>
+<p>Used via:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="k">class</span> <span class="nc">MyModel</span><span class="p">(</span><span class="n">Model</span><span class="p">):</span>
+    <span class="n">col</span> <span class="o">=</span> <span class="n">Boolean</span><span class="p">()</span>
+</pre></div>
+</div>
+<p>Queries via <tt class="docutils literal"><span class="pre">MyModel.get_by(...)</span></tt> and <tt class="docutils literal"><span class="pre">MyModel.query.filter(...)</span></tt> work
+as expected when passed <tt class="docutils literal"><span class="pre">True</span></tt> or <tt class="docutils literal"><span class="pre">False</span></tt>.</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="rom.columns.Column">
+<em class="property">class </em><tt class="descclassname">rom.columns.</tt><tt class="descname">Column</tt><big>(</big><em>required=False</em>, <em>default=&lt;object object at 0x403a9988&gt;</em>, <em>unique=False</em>, <em>index=False</em>, <em>keygen=None</em><big>)</big><a class="headerlink" href="#rom.columns.Column" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <tt class="xref py py-class docutils literal"><span class="pre">object</span></tt></p>
+<p>Column objects handle data conversion to/from strings, store metadata
+about indices, etc. Note that these are &#8220;heavy&#8221; columns, in that whenever
+data is read/written, it must go through descriptor processing. This is
+primarily so that (for example) if you try to write a Decimal to a Float
+column, you get an error the moment you try to do it, not some time later
+when you try to save the object (though saving can still cause an error
+during the conversion process).</p>
+<p>Standard Arguments:</p>
+<blockquote>
+<div><ul class="simple">
+<li><em>required</em> - determines whether this column is required on
+creation</li>
+<li><em>default</em> - a default value (either a callable or a simple value)
+when this column is not provided</li>
+<li><em>unique</em> - can only be enabled on <tt class="docutils literal"><span class="pre">String</span></tt> columns, allows for
+required distinct column values (like an email address on a User
+model)</li>
+<li><em>index</em> - can be enabled on numeric, string, and unicode columns.
+Will create a ZSET-based numeric index for numeric columns and a
+&#8220;full word&#8221;-based search for string/unicode columns. If enabled
+for other (or custom) columns, remember to provide the
+<tt class="docutils literal"><span class="pre">keygen</span></tt> argument</li>
+<li><em>keygen</em> - pass a function that takes your column&#8217;s value and
+returns the data that you want to index (see the keygen docs for
+what kinds of data to return)</li>
+</ul>
+</div></blockquote>
+<p>Notes:</p>
+<blockquote>
+<div><ul class="simple">
+<li>Columns with &#8216;unique&#8217; set to True can only be string columns</li>
+<li>You can only have one unique column on any model</li>
+<li>Unique and index are not mutually exclusive</li>
+<li>The keygen argument determines how index values are generated
+from column data (with reasonably sensible defaults for numeric
+and string columns)</li>
+<li>If you set required to True, then you must have the column set
+during object construction: <tt class="docutils literal"><span class="pre">MyModel(col=val)</span></tt></li>
+</ul>
+</div></blockquote>
+</dd></dl>
+
+<dl class="class">
+<dt id="rom.columns.Date">
+<em class="property">class </em><tt class="descclassname">rom.columns.</tt><tt class="descname">Date</tt><big>(</big><em>required=False</em>, <em>default=&lt;object object at 0x403a9988&gt;</em>, <em>unique=False</em>, <em>index=False</em>, <em>keygen=None</em><big>)</big><a class="headerlink" href="#rom.columns.Date" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#rom.columns.Column" title="rom.columns.Column"><tt class="xref py py-class docutils literal"><span class="pre">rom.columns.Column</span></tt></a></p>
+<p>A date column.</p>
+<p>All standard arguments supported.</p>
+<p>Used via:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="k">class</span> <span class="nc">MyModel</span><span class="p">(</span><span class="n">Model</span><span class="p">):</span>
+    <span class="n">col</span> <span class="o">=</span> <span class="n">Date</span><span class="p">()</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="class">
+<dt id="rom.columns.DateTime">
+<em class="property">class </em><tt class="descclassname">rom.columns.</tt><tt class="descname">DateTime</tt><big>(</big><em>required=False</em>, <em>default=&lt;object object at 0x403a9988&gt;</em>, <em>unique=False</em>, <em>index=False</em>, <em>keygen=None</em><big>)</big><a class="headerlink" href="#rom.columns.DateTime" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#rom.columns.Column" title="rom.columns.Column"><tt class="xref py py-class docutils literal"><span class="pre">rom.columns.Column</span></tt></a></p>
+<p>A datetime column.</p>
+<p>All standard arguments supported.</p>
+<p>Used via:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="k">class</span> <span class="nc">MyModel</span><span class="p">(</span><span class="n">Model</span><span class="p">):</span>
+    <span class="n">col</span> <span class="o">=</span> <span class="n">DateTime</span><span class="p">()</span>
+</pre></div>
+</div>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">tzinfo objects are not stored</p>
+</div>
+</dd></dl>
+
+<dl class="class">
+<dt id="rom.columns.Decimal">
+<em class="property">class </em><tt class="descclassname">rom.columns.</tt><tt class="descname">Decimal</tt><big>(</big><em>required=False</em>, <em>default=&lt;object object at 0x403a9988&gt;</em>, <em>unique=False</em>, <em>index=False</em>, <em>keygen=None</em><big>)</big><a class="headerlink" href="#rom.columns.Decimal" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#rom.columns.Column" title="rom.columns.Column"><tt class="xref py py-class docutils literal"><span class="pre">rom.columns.Column</span></tt></a></p>
+<p>A Decimal-only numeric column (converts ints/longs into Decimals
+automatically). Attempts to assign Python float will fail.</p>
+<p>All standard arguments supported.</p>
+<p>Used via:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="k">class</span> <span class="nc">MyModel</span><span class="p">(</span><span class="n">Model</span><span class="p">):</span>
+    <span class="n">col</span> <span class="o">=</span> <span class="n">Decimal</span><span class="p">()</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="class">
+<dt id="rom.columns.Float">
+<em class="property">class </em><tt class="descclassname">rom.columns.</tt><tt class="descname">Float</tt><big>(</big><em>required=False</em>, <em>default=&lt;object object at 0x403a9988&gt;</em>, <em>unique=False</em>, <em>index=False</em>, <em>keygen=None</em><big>)</big><a class="headerlink" href="#rom.columns.Float" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#rom.columns.Column" title="rom.columns.Column"><tt class="xref py py-class docutils literal"><span class="pre">rom.columns.Column</span></tt></a></p>
+<p>Numeric column that supports integers and floats (values are turned into
+floats on load from Redis).</p>
+<p>All standard arguments supported.</p>
+<p>Used via:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="k">class</span> <span class="nc">MyModel</span><span class="p">(</span><span class="n">Model</span><span class="p">):</span>
+    <span class="n">col</span> <span class="o">=</span> <span class="n">Float</span><span class="p">()</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="class">
+<dt id="rom.columns.ForeignModel">
+<em class="property">class </em><tt class="descclassname">rom.columns.</tt><tt class="descname">ForeignModel</tt><big>(</big><em>fmodel</em>, <em>required=False</em>, <em>default=&lt;object object at 0x403a9988&gt;</em><big>)</big><a class="headerlink" href="#rom.columns.ForeignModel" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#rom.columns.Column" title="rom.columns.Column"><tt class="xref py py-class docutils literal"><span class="pre">rom.columns.Column</span></tt></a></p>
+<p>This column allows for <tt class="docutils literal"><span class="pre">rom</span></tt> models to reference an instance of another
+model from an unrelated ORM or otherwise.</p>
+<p>Used via:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="k">class</span> <span class="nc">MyModel</span><span class="p">(</span><span class="n">Model</span><span class="p">):</span>
+    <span class="n">col</span> <span class="o">=</span> <span class="n">ForeignModel</span><span class="p">(</span><span class="n">DjangoModel</span><span class="p">)</span>
+
+<span class="n">dm</span> <span class="o">=</span> <span class="n">DjangoModel</span><span class="p">(</span><span class="n">col1</span><span class="o">=</span><span class="s">&#39;foo&#39;</span><span class="p">)</span>
+<span class="n">django</span><span class="o">.</span><span class="n">db</span><span class="o">.</span><span class="n">transaction</span><span class="o">.</span><span class="n">commit</span><span class="p">()</span>
+
+<span class="n">x</span> <span class="o">=</span> <span class="n">MyModel</span><span class="p">(</span><span class="n">col</span><span class="o">=</span><span class="n">dm</span><span class="p">)</span>
+<span class="n">x</span><span class="o">.</span><span class="n">save</span><span class="p">()</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="class">
+<dt id="rom.columns.Integer">
+<em class="property">class </em><tt class="descclassname">rom.columns.</tt><tt class="descname">Integer</tt><big>(</big><em>required=False</em>, <em>default=&lt;object object at 0x403a9988&gt;</em>, <em>unique=False</em>, <em>index=False</em>, <em>keygen=None</em><big>)</big><a class="headerlink" href="#rom.columns.Integer" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#rom.columns.Column" title="rom.columns.Column"><tt class="xref py py-class docutils literal"><span class="pre">rom.columns.Column</span></tt></a></p>
+<p>Used for integer numeric columns.</p>
+<p>All standard arguments supported.</p>
+<p>Used via:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="k">class</span> <span class="nc">MyModel</span><span class="p">(</span><span class="n">Model</span><span class="p">):</span>
+    <span class="n">col</span> <span class="o">=</span> <span class="n">Integer</span><span class="p">()</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="class">
+<dt id="rom.columns.Json">
+<em class="property">class </em><tt class="descclassname">rom.columns.</tt><tt class="descname">Json</tt><big>(</big><em>required=False</em>, <em>default=&lt;object object at 0x403a9988&gt;</em>, <em>unique=False</em>, <em>index=False</em>, <em>keygen=None</em><big>)</big><a class="headerlink" href="#rom.columns.Json" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#rom.columns.Column" title="rom.columns.Column"><tt class="xref py py-class docutils literal"><span class="pre">rom.columns.Column</span></tt></a></p>
+<p>Allows for more complicated nested structures as attributes.</p>
+<p>All standard arguments supported. The <tt class="docutils literal"><span class="pre">keygen</span></tt> argument must be provided
+if <tt class="docutils literal"><span class="pre">index</span></tt> is <tt class="docutils literal"><span class="pre">True</span></tt>.</p>
+<p>Used via:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="k">class</span> <span class="nc">MyModel</span><span class="p">(</span><span class="n">Model</span><span class="p">):</span>
+    <span class="n">col</span> <span class="o">=</span> <span class="n">Json</span><span class="p">()</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="class">
+<dt id="rom.columns.ManyToOne">
+<em class="property">class </em><tt class="descclassname">rom.columns.</tt><tt class="descname">ManyToOne</tt><big>(</big><em>ftable</em>, <em>required=False</em>, <em>default=&lt;object object at 0x403a9988&gt;</em><big>)</big><a class="headerlink" href="#rom.columns.ManyToOne" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#rom.columns.Column" title="rom.columns.Column"><tt class="xref py py-class docutils literal"><span class="pre">rom.columns.Column</span></tt></a></p>
+<p>This ManyToOne column allows for one model to reference another model.
+While a ManyToOne column does not require a reverse OneToMany column
+(which will return a list of models that reference it via a ManyToOne), it
+is generally seen as being useful to have both sides of the relationship
+defined.</p>
+<p>Aside from the name of the other model, only the <tt class="docutils literal"><span class="pre">required</span></tt> and
+<tt class="docutils literal"><span class="pre">default</span></tt> arguments are accepted.</p>
+<p>Used via:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="k">class</span> <span class="nc">MyModel</span><span class="p">(</span><span class="n">Model</span><span class="p">):</span>
+    <span class="n">col</span> <span class="o">=</span> <span class="n">ManyToOne</span><span class="p">(</span><span class="s">&#39;OtherModelName&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="class">
+<dt id="rom.columns.OneToMany">
+<em class="property">class </em><tt class="descclassname">rom.columns.</tt><tt class="descname">OneToMany</tt><big>(</big><em>ftable</em><big>)</big><a class="headerlink" href="#rom.columns.OneToMany" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#rom.columns.Column" title="rom.columns.Column"><tt class="xref py py-class docutils literal"><span class="pre">rom.columns.Column</span></tt></a></p>
+<p>OneToMany columns do not actually store any information. They rely on a
+properly defined reverse ManyToOne column on the referenced model in order
+to be able to fetch a list of referring entities.</p>
+<p>Only the name of the other model can be passed.</p>
+<p>Used via:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="k">class</span> <span class="nc">MyModel</span><span class="p">(</span><span class="n">Model</span><span class="p">):</span>
+    <span class="n">col</span> <span class="o">=</span> <span class="n">OneToMany</span><span class="p">(</span><span class="s">&#39;OtherModelName&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="class">
+<dt id="rom.columns.PrimaryKey">
+<em class="property">class </em><tt class="descclassname">rom.columns.</tt><tt class="descname">PrimaryKey</tt><big>(</big><em>index=False</em><big>)</big><a class="headerlink" href="#rom.columns.PrimaryKey" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#rom.columns.Column" title="rom.columns.Column"><tt class="xref py py-class docutils literal"><span class="pre">rom.columns.Column</span></tt></a></p>
+<p>This is a primary key column, used when you want the primary key to be
+named something other than &#8216;id&#8217;. If you omit a PrimaryKey column on your
+Model classes, one will be automatically cretaed for you.</p>
+<p>Only the <tt class="docutils literal"><span class="pre">index</span></tt> argument will be used. You may want to enable indexing
+on this column if you want to be able to perform queries and sort the
+results by primary key.</p>
+<p>Used via:</p>
+<blockquote>
+<div><dl class="docutils">
+<dt>class MyModel(Model):</dt>
+<dd>id = PrimaryKey()</dd>
+</dl>
+</div></blockquote>
+</dd></dl>
+
+<dl class="class">
+<dt id="rom.columns.String">
+<em class="property">class </em><tt class="descclassname">rom.columns.</tt><tt class="descname">String</tt><big>(</big><em>required=False</em>, <em>default=&lt;object object at 0x403a9988&gt;</em>, <em>unique=False</em>, <em>index=False</em>, <em>keygen=None</em><big>)</big><a class="headerlink" href="#rom.columns.String" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#rom.columns.Column" title="rom.columns.Column"><tt class="xref py py-class docutils literal"><span class="pre">rom.columns.Column</span></tt></a></p>
+<p>A plain string column. Trying to save unicode strings will probably result
+in an error, if not bad data. This is the only type of column that can
+have a unique index.</p>
+<p>All standard arguments supported.</p>
+<p>This column can be indexed, which will allow for searching for words
+contained in the column, extracted via:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="nb">filter</span><span class="p">(</span><span class="bp">None</span><span class="p">,</span> <span class="p">[</span><span class="n">s</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span><span class="o">.</span><span class="n">strip</span><span class="p">(</span><span class="n">string</span><span class="o">.</span><span class="n">punctuation</span><span class="p">)</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">val</span><span class="o">.</span><span class="n">split</span><span class="p">()])</span>
+</pre></div>
+</div>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">only one column in any given model can be unique.</p>
+</div>
+<p>Used via:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="k">class</span> <span class="nc">MyModel</span><span class="p">(</span><span class="n">Model</span><span class="p">):</span>
+    <span class="n">col</span> <span class="o">=</span> <span class="n">String</span><span class="p">()</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="class">
+<dt id="rom.columns.Text">
+<em class="property">class </em><tt class="descclassname">rom.columns.</tt><tt class="descname">Text</tt><big>(</big><em>required=False</em>, <em>default=&lt;object object at 0x403a9988&gt;</em>, <em>unique=False</em>, <em>index=False</em>, <em>keygen=None</em><big>)</big><a class="headerlink" href="#rom.columns.Text" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#rom.columns.Column" title="rom.columns.Column"><tt class="xref py py-class docutils literal"><span class="pre">rom.columns.Column</span></tt></a></p>
+<p>A unicode string column.</p>
+<p>All standard arguments supported, except for <tt class="docutils literal"><span class="pre">unique</span></tt>.</p>
+<p>Aside from not supporting <tt class="docutils literal"><span class="pre">unique</span></tt> indices, will generally have the same
+behavior as a <tt class="docutils literal"><span class="pre">String</span></tt> column, only supporting unicode strings. Data is
+encoded via utf-8 before writing to Redis. If you would like to create
+your own column to encode/decode differently, examine the source find out
+how to do it.</p>
+<p>Used via:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="k">class</span> <span class="nc">MyModel</span><span class="p">(</span><span class="n">Model</span><span class="p">):</span>
+    <span class="n">col</span> <span class="o">=</span> <span class="n">Text</span><span class="p">()</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="class">
+<dt id="rom.columns.Time">
+<em class="property">class </em><tt class="descclassname">rom.columns.</tt><tt class="descname">Time</tt><big>(</big><em>required=False</em>, <em>default=&lt;object object at 0x403a9988&gt;</em>, <em>unique=False</em>, <em>index=False</em>, <em>keygen=None</em><big>)</big><a class="headerlink" href="#rom.columns.Time" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#rom.columns.Column" title="rom.columns.Column"><tt class="xref py py-class docutils literal"><span class="pre">rom.columns.Column</span></tt></a></p>
+<p>A time column. Timezones are ignored.</p>
+<p>All standard arguments supported.</p>
+<p>Used via:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="k">class</span> <span class="nc">MyModel</span><span class="p">(</span><span class="n">Model</span><span class="p">):</span>
+    <span class="n">col</span> <span class="o">=</span> <span class="n">Time</span><span class="p">()</span>
+</pre></div>
+</div>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">tzinfo objects are not stored</p>
+</div>
+</dd></dl>
+
+</div>
 <div class="section" id="module-rom.exceptions">
 <span id="exceptions-module"></span><h2><tt class="xref py py-mod docutils literal"><span class="pre">exceptions</span></tt> Module<a class="headerlink" href="#module-rom.exceptions" title="Permalink to this headline">¶</a></h2>
 <dl class="exception">
@@ -411,6 +693,7 @@ model-specific connections.</p>
   <ul>
 <li><a class="reference internal" href="#">rom Package</a><ul>
 <li><a class="reference internal" href="#id1"><tt class="docutils literal"><span class="pre">rom</span></tt> Package</a></li>
+<li><a class="reference internal" href="#module-rom.columns"><tt class="docutils literal"><span class="pre">columns</span></tt> Module</a></li>
 <li><a class="reference internal" href="#module-rom.exceptions"><tt class="docutils literal"><span class="pre">exceptions</span></tt> Module</a></li>
 <li><a class="reference internal" href="#module-rom.index"><tt class="docutils literal"><span class="pre">index</span></tt> Module</a></li>
 <li><a class="reference internal" href="#module-rom.util"><tt class="docutils literal"><span class="pre">util</span></tt> Module</a><ul>
