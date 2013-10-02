@@ -126,7 +126,7 @@ from .exceptions import (ORMError, UniqueKeyViolation, InvalidOperation,
 from .index import GeneralIndex
 from .util import ClassProperty, _connect, session, dt2ts, t2ts, _script_load
 
-VERSION = '0.20'
+VERSION = '0.21'
 
 COLUMN_TYPES = [Column, Integer, Boolean, Float, Decimal, DateTime, Date,
 Time, String, Text, Json, PrimaryKey, ManyToOne, ForeignModel, OneToMany]
