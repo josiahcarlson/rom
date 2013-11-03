@@ -126,7 +126,7 @@ from .exceptions import (ORMError, UniqueKeyViolation, InvalidOperation,
 from .index import GeneralIndex
 from .util import ClassProperty, _connect, session, dt2ts, t2ts, _script_load
 
-VERSION = '0.21'
+VERSION = '0.22'
 
 COLUMN_TYPES = [Column, Integer, Boolean, Float, Decimal, DateTime, Date,
 Time, String, Text, Json, PrimaryKey, ManyToOne, ForeignModel, OneToMany]
@@ -496,7 +496,7 @@ class Model(object):
         if _limit and len(_limit) != 2:
             raise QueryError("Limit must include both 'offset' and 'count' parameters")
         elif _limit and not all(isinstance(x, (int, long)) for x in _limit):
-            raise QueryError("Limit arguments bust both be integers")
+            raise QueryError("Limit arguments must both be integers")
         if len(kwargs) != 1:
             raise QueryError("We can only fetch object(s) by exactly one attribute, you provided %s"%(len(kwargs),))
 
@@ -520,6 +520,22 @@ class Model(object):
 
             if plain_attr not in cls._index:
                 raise QueryError("Cannot query on a column without an index")
+
+            if isinstance(value, (int, long, float, _Decimal, datetime, date, dtime)) and not isinstance(value, bool):
+                value = (value, value)
+
+            if isinstance(value, tuple):
+                # this is a numeric range query, we'll just pull it directly
+                args = list(value)
+                for i, a in enumerate(args):
+                    if not isinstance(a, (int, long, float, str)):
+                        args[i] = cls._columns[attr]._to_redis(a)
+                if _limit:
+                    args.extend(_limit)
+                ids = conn.zrangebyscore('%s:%s:idx'%(model, attr), *args)
+                if not ids:
+                    return []
+                return cls.get(ids)
 
             # defer other index lookups to the query object
             query = cls.query.filter(**{attr: value})

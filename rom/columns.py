@@ -131,7 +131,8 @@ class Column(object):
             self._init_(obj, *value)
             return
         try:
-            value = self._from_redis(value)
+            if not isinstance(value, self._allowed):
+                value = self._from_redis(value)
         except (ValueError, TypeError):
             raise InvalidColumnValue("Cannot convert %r into type %s"%(value, self._allowed))
         self._validate(value)

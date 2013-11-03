@@ -98,11 +98,11 @@ class GeneralIndex(object):
         # reorder filters based on the size of the underlying set/zset
         for fltr in filters:
             if isinstance(fltr, (str, unicode)):
-                pipe.scard(fltr)
+                pipe.scard('%s:%s:idx'%(self.namespace, fltr))
             elif isinstance(fltr, tuple):
-                pipe.zcard(fltr[0])
+                pipe.zcard('%s:%s:idx'%(self.namespace, fltr[0]))
             elif isinstance(fltr, list):
-                pipe.zcard(fltr[0])
+                pipe.zcard('%s:%s:idx'%(self.namespace, fltr[0]))
             else:
                 raise QueryError("Don't know how to handle a filter of: %r"%(fltr,))
         sizes = list(enumerate(pipe.execute()))
@@ -187,7 +187,8 @@ class GeneralIndex(object):
         # handle ordering
         if order_by:
             reverse = order_by and order_by.startswith('-')
-            intersect(temp_id, {temp_id:0, '%s:%s:idx'%(self.namespace, order_by.lstrip('-')): -1 if reverse else 1})
+            order_clause = '%s:%s:idx'%(self.namespace, order_by.lstrip('-'))
+            intersect(temp_id, {temp_id:0, order_clause: -1 if reverse else 1})
         offset = offset if offset is not None else 0
         end = (offset + count - 1) if count > 0 else -1
         pipe.zrange(temp_id, offset, end)

@@ -205,6 +205,14 @@ class TestORM(unittest.TestCase):
         results = RomTestIndexedModel.query.filter(attr='world').order_by('attr4').execute()
         self.assertEquals([x.id for x in results], [2,1])
 
+        for i in xrange(50):
+            RomTestIndexedModel(attr3=i)
+        session.commit()
+        session.rollback()
+
+        self.assertEquals(len(RomTestIndexedModel.get_by(attr3=(10, 25))), 16)
+        self.assertEquals(len(RomTestIndexedModel.get_by(attr3=(10, 25), _limit=(0,5))), 5)
+
     def test_alternate_models(self):
         ctr = [0]
         class RomTestAlternate(object):
@@ -378,6 +386,20 @@ class TestORM(unittest.TestCase):
         session.refresh_all(force=True)
         self.assertEquals(d.col, 'hello')
         self.assertRaises(InvalidOperation, RomTestRefresh(col='boo').refresh)
+
+    def test_datetime(self):
+        class RomTestDT(Model):
+            created_at = DateTime(default=datetime.utcnow)
+            event_datetime = DateTime(index=True)
+
+        x = RomTestDT()
+        x.event_datetime = datetime.utcnow()
+        x.save()
+        RomTestDT(event_datetime=datetime.utcnow()).save()
+        session.rollback() # clearing the local cache
+
+        self.assertEquals(RomTestDT.get_by(event_datetime=(datetime(2000, 1, 1), datetime(2000, 1, 1))), [])
+        self.assertEquals(len(RomTestDT.get_by(event_datetime=(datetime(2000, 1, 1), datetime.utcnow()))), 2)
 
 if __name__ == '__main__':
     global_setup()
