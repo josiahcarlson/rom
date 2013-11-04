@@ -1,3 +1,6 @@
+#----------------------------- 0.23 (unreleased) -----------------------------
+[changed] reduced number of round trips for single-filter queries by 1, thanks
+    to https://github.com/MickeyKim for the report.
 #----------------------------------- 0.22 ------------------------------------
 [fixed] size estimation for intersection ordering when filtering has now been
     fixed, thank you to https://github.com/MickeyKim for the report and the

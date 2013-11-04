@@ -95,19 +95,19 @@ class GeneralIndex(object):
     def _prepare(self, conn, filters):
         temp_id = str(uuid.uuid4())
         pipe = conn.pipeline(True)
-        # reorder filters based on the size of the underlying set/zset
-        for fltr in filters:
-            if isinstance(fltr, (str, unicode)):
-                pipe.scard('%s:%s:idx'%(self.namespace, fltr))
-            elif isinstance(fltr, tuple):
-                pipe.zcard('%s:%s:idx'%(self.namespace, fltr[0]))
-            elif isinstance(fltr, list):
-                pipe.zcard('%s:%s:idx'%(self.namespace, fltr[0]))
-            else:
-                raise QueryError("Don't know how to handle a filter of: %r"%(fltr,))
-        sizes = list(enumerate(pipe.execute()))
-        sizes.sort(key=lambda x:x[1])
-        sfilters = [filters[x[0]] for x in sizes]
+        sfilters = filters
+        if len(filters) > 1:
+            # reorder filters based on the size of the underlying set/zset
+            for fltr in filters:
+                if isinstance(fltr, (str, unicode)):
+                    pipe.scard('%s:%s:idx'%(self.namespace, fltr))
+                elif isinstance(fltr, (tuple, list)):
+                    pipe.zcard('%s:%s:idx'%(self.namespace, fltr[0]))
+                else:
+                    raise QueryError("Don't know how to handle a filter of: %r"%(fltr,))
+            sizes = list(enumerate(pipe.execute()))
+            sizes.sort(key=lambda x:x[1])
+            sfilters = [filters[x[0]] for x in sizes]
 
         # the first "intersection" is actually a union to get us started
         intersect = pipe.zunionstore
