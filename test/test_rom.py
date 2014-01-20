@@ -1,5 +1,5 @@
 
-from datetime import datetime, date, time as dtime
+from datetime import datetime
 from decimal import Decimal as _Decimal
 import time
 import unittest
@@ -12,7 +12,7 @@ util.CONNECTION = redis.Redis(db=15)
 connect = util._connect
 
 from rom import *
-from rom import _enable_lua_writes
+from rom import _disable_lua_writes, _enable_lua_writes
 from rom.exceptions import *
 
 def global_setup():
@@ -213,6 +213,12 @@ class TestORM(unittest.TestCase):
         self.assertEquals(len(RomTestIndexedModel.get_by(attr3=(10, 25))), 16)
         self.assertEquals(len(RomTestIndexedModel.get_by(attr3=(10, 25), _limit=(0,5))), 5)
 
+        key = RomTestIndexedModel.query.filter(attr='hello').filter(attr2='how').filter(attr2='are').cached_result(30)
+        conn = connect(None)
+        self.assertTrue(conn.ttl(key) <= 30)
+        self.assertEquals(conn.zcard(key), 1)
+        conn.delete(key)
+
     def test_alternate_models(self):
         ctr = [0]
         class RomTestAlternate(object):
@@ -265,7 +271,6 @@ class TestORM(unittest.TestCase):
 
         f = RomTestGoo()
         i = f.id
-        p = id(f)
         session.commit()
 
         for j in xrange(10):
@@ -401,7 +406,28 @@ class TestORM(unittest.TestCase):
         self.assertEquals(RomTestDT.get_by(event_datetime=(datetime(2000, 1, 1), datetime(2000, 1, 1))), [])
         self.assertEquals(len(RomTestDT.get_by(event_datetime=(datetime(2000, 1, 1), datetime.utcnow()))), 2)
 
+    def test_prefix_suffix_pattern(self):
+        import rom
+        if not rom.USE_LUA:
+            return
+
+        class RomTestPSP(Model):
+            col = String(prefix=True, suffix=True)
+
+        x = RomTestPSP(col="hello world how are you doing, join us today")
+        x.save()
+
+        self.assertEquals(RomTestPSP.query.startswith(col='he').count(), 1)
+        self.assertEquals(RomTestPSP.query.startswith(col='notthere').count(), 0)
+        self.assertEquals(RomTestPSP.query.endswith(col='rld').count(), 1)
+        self.assertEquals(RomTestPSP.query.endswith(col='bad').count(), 0)
+        self.assertEquals(RomTestPSP.query.like(col='?oin?').count(), 1)
+        self.assertEquals(RomTestPSP.query.like(col='*oin+').count(), 1)
+        self.assertEquals(RomTestPSP.query.like(col='oin').count(), 0)
+        self.assertEquals(RomTestPSP.query.like(col='+oin').like(col='wor!d').count(), 1)
+
 if __name__ == '__main__':
+    _disable_lua_writes()
     global_setup()
     print "Testing standard writing"
     try:

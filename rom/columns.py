@@ -39,28 +39,58 @@ class Column(object):
         * *keygen* - pass a function that takes your column's value and
           returns the data that you want to index (see the keygen docs for
           what kinds of data to return)
+        * *prefix* - can be enabled on any column that generates a list of
+          strings as a result of the default or passed *keygen* function, and
+          will allow the searching of prefix matches (autocomplete) over your
+          data
+        * *suffix* - can be enabled in the same contexts as *prefix* and
+          enables suffix matching over your data. Any individual string in the
+          returned data will be reversed (you need to make sure this makes
+          conceptual sense with your data) before being stored or used.
+
+    .. warning: Enabling prefix or suffix matching on a column only makes
+       sense for columns defining a non-numeric *keygen* function.
 
     Notes:
 
-        * Columns with 'unique' set to True can only be string columns
-        * You can only have one unique column on any model
-        * Unique and index are not mutually exclusive
-        * The keygen argument determines how index values are generated
+        * Columns with *unique* set to True can only be string columns
+        * If you have disabled Lua support, you can only have at most one
+          unique column on each model
+        * *Unique* and *index* are not mutually exclusive
+        * The *keygen* argument determines how index values are generated
           from column data (with reasonably sensible defaults for numeric
           and string columns)
-        * If you set required to True, then you must have the column set
+        * If you set *required* to True, then you must have the column set
           during object construction: ``MyModel(col=val)``
+        * If *index* and *prefix*, or *index* and *suffix* are set, the same
+          keygen for both the regular *index* as well as the *prefix* and/or
+          *suffix* searches
+        * If *prefix* is set, you can perform pattern matches over your data.
+          See documention for ``Query.like()`` for details.
+        * Pattern matching over data is only guaranteed to be valid or correct
+          for ANSI strings that do not include nulls, though we make an effort
+          to support
+        * Prefix, suffix, and pattern matching are performed within a Lua
+          script, so may have substantial execution time if there are a large
+          number of matching prefix or suffix entries
+        * Whenever possible, pattern matching will attempt to use any
+          non-wildcard prefixes on the pattern to limit the items to be
+          scanned. A pattern starting with ``?``, ``*``, ``+``, or ``!`` will
+          not be able to use any prefix, so will scan the entire index for
+          matches (aka: expensive)
     '''
     _allowed = ()
     _default_ = None
 
-    __slots__ = '_required _default _init _unique _index _model _attr _keygen'.split()
+    __slots__ = '_required _default _init _unique _index _model _attr _keygen _prefix _suffix'.split()
 
-    def __init__(self, required=False, default=NULL, unique=False, index=False, keygen=None):
+    def __init__(self, required=False, default=NULL, unique=False, index=False, keygen=None, prefix=False, suffix=False):
         self._required = required
         self._default = default
         self._unique = unique
         self._index = index
+        self._prefix = prefix
+        self._suffix = suffix
         self._init = False
         self._model = None
         self._attr = None
@@ -82,6 +112,8 @@ class Column(object):
         if index:
             self._keygen = keygen if keygen else (
                 _numeric_keygen if numeric else _string_keygen)
+        elif prefix or suffix:
+            self._keygen = keygen if keygen else _string_keygen
 
     def _from_redis(self, value):
         convert = self._allowed[0] if isinstance(self._allowed, (tuple, list)) else self._allowed
@@ -505,11 +537,11 @@ class OneToMany(Column):
         class MyModel(Model):
             col = OneToMany('OtherModelName')
     '''
-    __slots__ = '_model _attr _ftable _required _unique _index'.split()
+    __slots__ = '_model _attr _ftable _required _unique _index _prefix _suffix _keygen'.split()
     def __init__(self, ftable):
         self._ftable = ftable
-        self._required = self._unique = self._index = False
-        self._model = self._attr = None
+        self._required = self._unique = self._index = self._prefix = self._suffix = False
+        self._model = self._attr = self._keygen = None
 
     def _to_redis(self, value):
         return ''

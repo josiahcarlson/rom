@@ -145,8 +145,12 @@ def _boolean_keygen(val):
     return [str(bool(val))]
 
 def _string_keygen(val):
-    if val in (None, ''):
+    if isinstance(val, float):
+        val = repr(val)
+    elif val in (None, ''):
         return None
+    elif not isinstance(val, basestring):
+        val = str(val)
     r = sorted(set(filter(None, [s.lower().strip(string.punctuation) for s in val.split()])))
     if isinstance(val, unicode):
         return [s.encode('utf-8') for s in r]
@@ -165,6 +169,29 @@ def _to_score(v, s=False):
         if v[:1] != '(':
             return '(' + v
     return v.lstrip('(')
+
+# borrowed and modified from:
+# https://gist.github.com/josiahcarlson/8459874
+def _bigint_to_float(v):
+    assert isinstance(v, (int, long))
+    sign = -1 if v < 0 else 1
+    v *= sign
+    assert v < 0x7fe0000000000000
+    exponent, mantissa = divmod(v, 2**52)
+    return sign * (2**52 + mantissa) * 2.0**(exponent-52-1022)
+
+def _prefix_score(v, next=False):
+    if isinstance(v, unicode):
+        v = v.encode('utf-8')
+    # We only get 7 characters of score-based prefix.
+    score = 0
+    for ch in map(ord, v[:7]):
+        score *= 258
+        score += ch + 1
+    if next:
+        score += 1
+    score *= 258 ** max(0, 7-len(v))
+    return repr(_bigint_to_float(score))
 
 _epoch = datetime(1970, 1, 1)
 _epochd = _epoch.date()

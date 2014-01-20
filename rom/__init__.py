@@ -1,7 +1,7 @@
 '''
 Rom - the Redis object mapper for Python
 
-Copyright 2013 Josiah Carlson
+Copyright 2013-2014 Josiah Carlson
 
 Released under the LGPL license version 2.1 and version 3 (you can choose
 which you'd like to be bound under).
@@ -37,11 +37,16 @@ Indexes:
 
 * Numeric range fetches, searches, and ordering
 * Full-word text search (find me entries with col X having words A and B)
+* Prefix matching (can be used for prefix-based autocomplete)
+* Suffix matching (can be used for suffix-based autocomplete)
+* Pattern matching on string-based columns
 
 Other features:
 
 * Per-thread entity cache (to minimize round-trips, easy saving of all
   entities)
+* The ability to cache query results and get the key for any other use (see:
+  ``Query.cached_result()``)
 
 Getting started
 ===============
@@ -68,7 +73,7 @@ Getting started
 6. Create a model::
 
     class User(Model):
-        email_address = String(required=True, unique=True)
+        email = String(required=True, unique=True, suffix=True)
         salt = String()
         hash = String()
         created_at = Float(default=time.time)
@@ -84,32 +89,29 @@ Getting started
             out = sha256(out + comp).digest()
         return salt, out
 
-    user = User(email_address='user@host.com')
+    user = User(email='user@host.com')
     user.salt, user.hash = gen_hash(password)
     user.save()
     # session.commit() or session.flush() works too
 
 8. Load and use the object later::
 
-    user = User.get_by(email_address='user@host.com')
+    user = User.get_by(email='user@host.com')
+    at_gmail = User.query.endswith(email='@gmail.com').all()
 
-Enabling Lua writing to support multiple unique columns
-=======================================================
+Lua support
+===========
 
-If you are interested in having multiple unique columns, you can enable a beta
-feature that uses Lua to update all data written by rom. This eliminates any
-race conditions that could lead to unique index retries, allowing writes to
-succeed or fail much faster.
+From version 0.25.0 and on, rom assumes that you are using Redis version 2.6
+or later, which supports server-side Lua scripting. This allows for the
+support of multiple unique columns without potentially nasty race conditions
+and retries. This also allows for the support of prefix, suffix, and pattern
+matching on certain column types.
 
-To enable this beta support, you only need to do::
-
-    import rom
-    rom._enable_lua_writes()
-
-.. note:: You must be using Redis version 2.6 or later to be able to use this
- feature. If you are using a previous version without Lua support on the
- server side, this will not work.
-
+If you are using a version of Redis prior to 2.6, you should upgrade Redis. If
+you are unable or unwilling to upgrade Redis, but you still wish to use rom,
+you should call ``rom._disable_lua_writes()``, which will prevent you from
+using features that require Lua scripting support.
 '''
 
 from datetime import datetime, date, time as dtime
@@ -123,20 +125,25 @@ from .columns import (Column, Integer, Boolean, Float, Decimal, DateTime,
     OneToMany, MODELS)
 from .exceptions import (ORMError, UniqueKeyViolation, InvalidOperation,
     QueryError, ColumnError, MissingColumn, InvalidColumnValue)
-from .index import GeneralIndex
-from .util import ClassProperty, _connect, session, dt2ts, t2ts, _script_load
+from .index import GeneralIndex, Pattern, Prefix, Suffix
+from .util import (ClassProperty, _connect, session, dt2ts, t2ts,
+    _prefix_score, _script_load)
 
-VERSION = '0.22'
+VERSION = '0.25.0'
 
 COLUMN_TYPES = [Column, Integer, Boolean, Float, Decimal, DateTime, Date,
 Time, String, Text, Json, PrimaryKey, ManyToOne, ForeignModel, OneToMany]
 
 MissingColumn, InvalidOperation # silence pyflakes
 
-USE_LUA = False
+USE_LUA = True
 def _enable_lua_writes():
     global USE_LUA
     USE_LUA = True
+
+def _disable_lua_writes():
+    global USE_LUA
+    USE_LUA = False
 
 __all__ = '''
     Model Column Integer Float Decimal String Text Json PrimaryKey ManyToOne
@@ -149,6 +156,9 @@ class _ModelMetaclass(type):
         dict['_required'] = required = set()
         dict['_index'] = index = set()
         dict['_unique'] = unique = set()
+        dict['_prefix'] = prefix = set()
+        dict['_suffix'] = suffix = set()
+
         dict['_columns'] = columns = {}
         pkey = None
 
@@ -174,6 +184,14 @@ class _ModelMetaclass(type):
                     required.add(attr)
                 if col._index:
                     index.add(attr)
+                if col._prefix:
+                    if not USE_LUA:
+                        raise ColumnError("Lua scripting must be enabled to support prefix indexes (%s.%s)"%(name, attr))
+                    prefix.add(attr)
+                if col._suffix:
+                    if not USE_LUA:
+                        raise ColumnError("Lua scripting must be enabled to support suffix indexes (%s.%s)"%(name, attr))
+                    suffix.add(attr)
                 if col._unique:
                     # We only allow one for performance when USE_LUA is False
                     if unique and not USE_LUA:
@@ -183,6 +201,10 @@ class _ModelMetaclass(type):
                         )
                     unique.add(attr)
             if isinstance(col, PrimaryKey):
+                if pkey:
+                    raise ColumnError("Only one primary key column allowed, you have: %s %s"%(
+                        pkey, attr)
+                    )
                 pkey = attr
 
         dict['_pkey'] = pkey
@@ -281,6 +303,8 @@ class Model(object):
             unique = {}
             deleted = []
             udeleted = {}
+            prefix = []
+            suffix = []
 
             # check for unique keys
             if len(cls._unique) > 1 and not use_lua:
@@ -320,11 +344,18 @@ class Model(object):
                 rnval = ca._to_redis(nval) if nval is not None else None
 
                 # Add/update standard index
-                if hasattr(ca, '_keygen') and ca._keygen and not delete and nval is not None:
+                if ca._keygen and not delete and nval is not None and (ca._index or ca._prefix or ca._suffix):
                     generated = ca._keygen(nval)
                     if isinstance(generated, (list, tuple, set)):
-                        for k in generated:
-                            keys.add('%s:%s'%(attr, k))
+                        if ca._index:
+                            for k in generated:
+                                keys.add('%s:%s'%(attr, k))
+                        if ca._prefix:
+                            for k in generated:
+                                prefix.append([attr, k])
+                        if ca._suffix:
+                            for k in generated:
+                                suffix.append([attr, k[::-1]])
                     elif isinstance(generated, dict):
                         for k, v in generated.iteritems():
                             if not k:
@@ -376,12 +407,13 @@ class Model(object):
                 cls._gindex._unindex(conn, pipe, id_only)
                 pipe.delete(key)
             elif use_lua:
-                redis_writer_lua(conn, model, id_only, unique, udeleted, deleted, data, list(keys), scores)
+                redis_writer_lua(conn, model, id_only, unique, udeleted,
+                    deleted, data, list(keys), scores, prefix, suffix)
                 return changes
             else:
                 if data:
                     pipe.hmset(key, data)
-                cls._gindex.index(conn, id_only, keys, scores, pipe=pipe)
+                cls._gindex.index(conn, id_only, keys, scores, prefix, suffix, pipe=pipe)
 
             try:
                 pipe.execute()
@@ -595,11 +627,25 @@ end
 local idata = redis.call('HGET', namespace .. '::', id)
 if idata then
     idata = cjson.decode(idata)
+    if #idata == 2 then
+        idata[3] = {}
+        idata[4] = {}
+    end
     for i, key in ipairs(idata[1]) do
         redis.call('SREM', string.format('%s:%s:idx', namespace, key), id)
     end
     for i, key in ipairs(idata[2]) do
         redis.call('ZREM', string.format('%s:%s:idx', namespace, key), id)
+    end
+    for i, data in ipairs(idata[3]) do
+        local key = string.format('%s:%s:pre', namespace, data[1])
+        local mem = string.format('%s\0%s', data[2], id)
+        redis.call('ZREM', key, mem)
+    end
+    for i, data in ipairs(idata[4]) do
+        local key = string.format('%s:%s:suf', namespace, data[1])
+        local mem = string.format('%s\0%s', data[2], id)
+        redis.call('ZREM', key, mem)
     end
 end
 
@@ -616,27 +662,44 @@ for key, score in pairs(cjson.decode(ARGV[8])) do
     nscored[#nscored + 1] = key
 end
 
+-- add new prefix data
+local nprefix = {}
+for i, data in ipairs(cjson.decode(ARGV[9])) do
+    local key = string.format('%s:%s:pre', namespace, data[1])
+    local mem = string.format("%s\0%s", data[2], id)
+    redis.call('ZADD', key, data[3], mem)
+    nprefix[#nprefix + 1] = {data[1], data[2]}
+end
+
+-- add new suffix data
+local nsuffix = {}
+for i, data in ipairs(cjson.decode(ARGV[10])) do
+    local key = string.format('%s:%s:suf', namespace, data[1])
+    local mem = string.format("%s\0%s", data[2], id)
+    redis.call('ZADD', key, data[3], mem)
+    nsuffix[#nsuffix + 1] = {data[1], data[2]}
+end
+
 -- update known index data
-redis.call('HSET', namespace .. '::', id, cjson.encode({nkeys, nscored}))
-return #nkeys + #nscored
+local encoded = cjson.encode({nkeys, nscored, nprefix, nsuffix})
+redis.call('HSET', namespace .. '::', id, encoded)
+return #nkeys + #nscored + #nprefix + #nsuffix
 ''')
 
-def redis_writer_lua(conn, namespace, id, unique, udelete, delete, data, keys, scored):
+def redis_writer_lua(conn, namespace, id, unique, udelete, delete, data, keys, scored, prefix, suffix):
     ldata = []
     for pair in data.iteritems():
         ldata.extend(pair)
 
+    for item in prefix:
+        item.append(_prefix_score(item[-1]))
+    for item in suffix:
+        item.append(_prefix_score(item[-1]))
+
     result = _redis_writer_lua(conn, [], [namespace, id] + map(json.dumps, [
-        unique, udelete, delete, ldata, keys, scored]))
+        unique, udelete, delete, ldata, keys, scored, prefix, suffix]))
     if isinstance(result, str):
         raise UniqueKeyViolation("Value %r for %s:%s:uidx not distinct"%(unique[result], namespace, result))
-
-def is_numeric(value):
-    try:
-        value + 0
-        return True
-    except Exception:
-        return False
 
 class Query(object):
     '''
@@ -650,6 +713,20 @@ class Query(object):
         self._filters = filters
         self._order_by = order_by
         self._limit = limit
+
+    def replace(self, **kwargs):
+        '''
+        Copy the Query object, optionally replacing the filters, order_by, or
+        limit information on the copy.
+        '''
+        data = {
+            'model': self._model,
+            'filters': self._filters,
+            'order_by': self._order_by,
+            'limit': self._limit,
+        }
+        data.update(**kwargs)
+        return Query(**data)
 
     def filter(self, **kwargs):
         '''
@@ -678,7 +755,7 @@ class Query(object):
                 .filter(scol='hello') \\
                 .filter(scol='world') \\
                 .filter(ncol=(2, 10)) \\
-                .execute()
+                .all()
 
         If you only want to match a single value as part of your range query,
         you can pass an integer, float, or Decimal object by itself, similar
@@ -723,7 +800,71 @@ class Query(object):
 
             else:
                 raise QueryError("Sorry, we don't know how to filter %r by %r"%(attr, value))
-        return Query(self._model, tuple(cur_filters), self._order_by, self._limit)
+        return self.replace(filters=tuple(cur_filters))
+
+    def startswith(self, **kwargs):
+        '''
+        When provided with keyword arguments of the form ``col=prefix``, this
+        will limit the entities returned to those that have a word with the
+        provided prefix in the specified column(s). This requires that the
+        ``prefix=True`` option was provided during column definition.::
+
+            User.query.startswith(email='user@').execute()
+
+        '''
+        new = []
+        for k, v in kwargs.iteritems():
+            new.append(Prefix(k, v))
+        return self.replace(filters=self._filters+tuple(new))
+
+    def endswith(self, **kwargs):
+        '''
+        When provided with keyword arguments of the form ``col=suffix``, this
+        will limit the entities returned to those that have a word with the
+        provided suffix in the specified column(s). This requires that the
+        ``suffix=True`` option was provided during column definition.::
+
+            User.query.endswith(email='@gmail.com').execute()
+
+        '''
+        new = []
+        for k, v in kwargs.iteritems():
+            new.append(Suffix(k, v[::-1]))
+        return self.replace(filters=self._filters+tuple(new))
+
+    def like(self, **kwargs):
+        '''
+        When provided with keyword arguments of the form ``col=pattern``, this
+        will limit the entities returned to those that include the provided
+        pattern. Note that 'like' queries require that the ``prefix=True``
+        option must have been provided as part of the column definition.
+
+        Patterns allow for 4 wildcard characters, whose semantics are as
+        follows:
+
+            * *?* - will match 0 or 1 of any character
+            * *\** - will match 0 or more of any character
+            * *+* - will match 1 or more of any character
+            * *!* - will match exactly 1 of any character
+
+        As an example, imagine that you have enabled the required prefix
+        matching on your ``User.email`` column. And lets say that you want to
+        find everyone with an email address that contains the name 'frank'
+        before the ``@`` sign. You can use either of the following patterns
+        to discover those users.
+
+            * *\*frank\*@*
+            * *\*frank\*@
+
+        .. note: Like queries implicitly start at the beginning of strings
+          checked, so if you want to match a pattern that doesn't start at
+          the beginning of a string, you should prefix it with one of the
+          wildcard characters (like ``*`` as we did with the 'frank' pattern).
+        '''
+        new = []
+        for k, v in kwargs.iteritems():
+            new.append(Pattern(k, v))
+        return self.replace(filters=self._filters+tuple(new))
 
     def order_by(self, column):
         '''
@@ -733,7 +874,7 @@ class Query(object):
             # descending order
             User.query.order_by('-created_at').execute()
         '''
-        return Query(self._model, self._filters, column, self._limit)
+        return self.replace(order_by=column)
 
     def limit(self, offset, count):
         '''
@@ -742,7 +883,7 @@ class Query(object):
             # returns the most recent 25 users
             User.query.order_by('-created_at').limit(0, 25).execute()
         '''
-        return Query(self._model, self._filters, self._order_by, (offset, count))
+        return self.replace(limit=(offset, count))
 
     def count(self):
         '''
@@ -760,9 +901,40 @@ class Query(object):
         return self._model._gindex.count(_connect(self._model), filters)
 
     def _search(self):
+        if not (self._filters or self._order_by):
+            raise QueryError("You are missing filter or order criteria")
         limit = () if not self._limit else self._limit
         return self._model._gindex.search(
             _connect(self._model), self._filters, self._order_by, *limit)
+
+    def cached_result(self, timeout):
+        '''
+        This will execute the query, returning the key where a ZSET of your
+        results will be stored for pagination, further operations, etc.
+
+        The timeout must be a positive integer number of seconds for which to
+        set the expiration time on the key (this is to ensure that any cached
+        query results are eventually deleted, unless you make the explicit
+        step to use the PERSIST command).
+
+        .. note: Limit clauses are ignored and not passed.
+
+        Usage::
+
+            ukey = User.query.endswith(email='@gmail.com').cached_result(30)
+            for i in xrange(0, conn.zcard(ukey), 100):
+                # refresh the expiration
+                conn.expire(ukey, 30)
+                users = User.get(conn.zrange(ukey, i, i+99))
+                ...
+        '''
+        if not (self._filters or self._order_by):
+            raise QueryError("You are missing filter or order criteria")
+        timeout = int(timeout)
+        if timeout < 1:
+            raise QueryError("You must specify a timeout >= 1, you gave %r"%timeout)
+        return self._model._gindex.search(
+            _connect(self._model), self._filters, self._order_by, timeout=timeout)
 
     def execute(self):
         '''
@@ -776,8 +948,6 @@ class Query(object):
         '''
         Alias for ``execute()``.
         '''
-        if not (self._filters or self._order_by):
-            raise QueryError("You are missing filter or order criteria")
         return self.execute()
 
     def first(self):

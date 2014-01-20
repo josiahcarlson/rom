@@ -1,3 +1,24 @@
+#---------------------------------- 0.25.0 -----------------------------------
+[changed] version numbers to account for bugfixes vs. feature updates.
+[added] columns can now be defined to allow for prefix and/or suffix queries.
+    Enabling prefix queries also enables arbitrary pattern matching over your
+    data.
+[fixed] in some cases, rom would allow the definition of multiple primary
+    keys, of which only one would ever be used (inconsistently). This will now
+    result in an error.
+[changed] defaulted to assume Lua is available on Redis, which has been
+    released for over 15 months at this point. You can disable support via
+    a call to rom._disable_lua_writes().
+[added] the ability to cache and get the key that holds the result of a query,
+    which can be used for pagination, etc. See: Query.cached_result()
+[warning] using rom versions of 0.23 with 0.25.0 when prefix and suffix
+    indexes are enabled can result in improper results from prefix, suffix,
+    and/or pattern queries, and can result in orphan data living in prefix or
+    suffix indexes. Upgrade all of your clients!
+[changed] temporary keys for queries are now prefixed with the name of the
+    model over which queries are being executed on. This should effect
+    basically zero people, but can allow for query cleanup in the off chance
+    of a failure during execution.
 #----------------------------- 0.23 (unreleased) -----------------------------
 [changed] reduced number of round trips for single-filter queries by 1, thanks
     to https://github.com/MickeyKim for the report.

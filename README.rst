@@ -1,7 +1,7 @@
 
 Rom - the Redis object mapper for Python
 
-Copyright 2013 Josiah Carlson
+Copyright 2013-2014 Josiah Carlson
 
 Released under the LGPL license version 2.1 and version 3 (you can choose
 which you'd like to be bound under).
@@ -37,11 +37,16 @@ Indexes:
 
 * Numeric range fetches, searches, and ordering
 * Full-word text search (find me entries with col X having words A and B)
+* Prefix matching (can be used for prefix-based autocomplete)
+* Suffix matching (can be used for suffix-based autocomplete)
+* Pattern matching on string-based columns
 
 Other features:
 
 * Per-thread entity cache (to minimize round-trips, easy saving of all
   entities)
+* The ability to cache query results and get the key for any other use (see:
+  ``Query.cached_result()``)
 
 Getting started
 ===============
@@ -68,7 +73,7 @@ Getting started
 6. Create a model::
 
     class User(Model):
-        email_address = String(required=True, unique=True)
+        email = String(required=True, unique=True, suffix=True)
         salt = String()
         hash = String()
         created_at = Float(default=time.time)
@@ -84,29 +89,26 @@ Getting started
             out = sha256(out + comp).digest()
         return salt, out
 
-    user = User(email_address='user@host.com')
+    user = User(email='user@host.com')
     user.salt, user.hash = gen_hash(password)
     user.save()
     # session.commit() or session.flush() works too
 
 8. Load and use the object later::
 
-    user = User.get_by(email_address='user@host.com')
+    user = User.get_by(email='user@host.com')
+    at_gmail = User.query.endswith(email='@gmail.com').all()
 
-Enabling Lua writing to support multiple unique columns
-=======================================================
+Lua support
+===========
 
-If you are interested in having multiple unique columns, you can enable a beta
-feature that uses Lua to update all data written by rom. This eliminates any
-race conditions that could lead to unique index retries, allowing writes to
-succeed or fail much faster.
+From version 0.25.0 and on, rom assumes that you are using Redis version 2.6
+or later, which supports server-side Lua scripting. This allows for the
+support of multiple unique columns without potentially nasty race conditions
+and retries. This also allows for the support of prefix, suffix, and pattern
+matching on certain column types.
 
-To enable this beta support, you only need to do::
-
-    import rom
-    rom._enable_lua_writes()
-
-.. note:: You must be using Redis version 2.6 or later to be able to use this
- feature. If you are using a previous version without Lua support on the
- server side, this will not work.
-
+If you are using a version of Redis prior to 2.6, you should upgrade Redis. If
+you are unable or unwilling to upgrade Redis, but you still wish to use rom,
+you should call ``rom._disable_lua_writes()``, which will prevent you from
+using features that require Lua scripting support.
