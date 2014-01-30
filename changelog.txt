@@ -1,4 +1,9 @@
 #---------------------------------- 0.25.0 -----------------------------------
+[fixed] an issue where Lua writing wouldn't properly update unique indexes on
+    deletion was fixed. Thank you to https://github.com/thedrow for the
+    report.
+[changed] added a link to the full Python docs to the Readme.
+#---------------------------------- 0.25.0 -----------------------------------
 [changed] version numbers to account for bugfixes vs. feature updates.
 [added] columns can now be defined to allow for prefix and/or suffix queries.
     Enabling prefix queries also enables arbitrary pattern matching over your

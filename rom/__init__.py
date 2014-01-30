@@ -6,6 +6,10 @@ Copyright 2013-2014 Josiah Carlson
 Released under the LGPL license version 2.1 and version 3 (you can choose
 which you'd like to be bound under).
 
+Documentation
+=============
+
+Updated documentation can be found: http://pythonhosted.org/rom/
 
 What
 ====
@@ -129,7 +133,7 @@ from .index import GeneralIndex, Pattern, Prefix, Suffix
 from .util import (ClassProperty, _connect, session, dt2ts, t2ts,
     _prefix_score, _script_load)
 
-VERSION = '0.25.0'
+VERSION = '0.25.1'
 
 COLUMN_TYPES = [Column, Integer, Boolean, Float, Decimal, DateTime, Date,
 Time, String, Text, Json, PrimaryKey, ManyToOne, ForeignModel, OneToMany]
@@ -402,14 +406,14 @@ class Model(object):
                         pipe.hset(ikey, rnval, pk)
 
             id_only = str(pk)
-            if delete:
-                changes += 1
-                cls._gindex._unindex(conn, pipe, id_only)
-                pipe.delete(key)
-            elif use_lua:
+            if use_lua:
                 redis_writer_lua(conn, model, id_only, unique, udeleted,
                     deleted, data, list(keys), scores, prefix, suffix)
                 return changes
+            elif delete:
+                changes += 1
+                cls._gindex._unindex(conn, pipe, id_only)
+                pipe.delete(key)
             else:
                 if data:
                     pipe.hmset(key, data)

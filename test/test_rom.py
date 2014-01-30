@@ -150,6 +150,9 @@ class TestORM(unittest.TestCase):
         c = RomTestUnique(attr='hello')
         self.assertRaises(UniqueKeyViolation, c.save)
 
+        a.delete()
+        b.save()
+
     def test_saving(self):
         class RomTestNormal(Model):
             attr = String()
