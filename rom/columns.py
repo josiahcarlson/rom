@@ -2,6 +2,7 @@
 from datetime import datetime, date, time as dtime
 from decimal import Decimal as _Decimal
 import json
+import six
 
 from .exceptions import (ORMError, InvalidOperation, ColumnError,
     MissingColumn, InvalidColumnValue)
@@ -96,17 +97,19 @@ class Column(object):
         self._attr = None
         self._keygen = None
 
+        allowed = (self._allowed,) if isinstance(self._allowed, type) else self._allowed
+        is_string = lambda: all(issubclass(x, six.string_types) for x in allowed)
         if unique:
-            if self._allowed != str and self._allowed != unicode:
+            if not is_string():
                 raise ColumnError("Unique columns can only be strings")
 
         numeric = True
         if index and not isinstance(self, ManyToOne):
-            if not any(isinstance(i, self._allowed) for i in _NUMERIC):
+            if not any(isinstance(i, allowed) for i in _NUMERIC):
                 numeric = False
-                if isinstance(True, self._allowed):
+                if issubclass(bool, allowed):
                     keygen = keygen or _boolean_keygen
-                if self._allowed not in (str, unicode) and not keygen:
+                if not is_string() and not keygen:
                     raise ColumnError("Non-numeric/string indexed columns must provide keygen argument on creation")
 
         if index:
@@ -120,7 +123,7 @@ class Column(object):
         return convert(value)
 
     def _to_redis(self, value):
-        if isinstance(value, long):
+        if value >= (1<<63):
             return str(value)
         return repr(value)
 
@@ -199,7 +202,7 @@ class Integer(Column):
         class MyModel(Model):
             col = Integer()
     '''
-    _allowed = (int, long)
+    _allowed = six.integer_types
 
 class Boolean(Column):
     '''
@@ -239,7 +242,7 @@ class Float(Column):
         class MyModel(Model):
             col = Float()
     '''
-    _allowed = (float, int, long)
+    _allowed = (float,) + six.integer_types
 
 class Decimal(Column):
     '''
@@ -355,12 +358,13 @@ class Text(Column):
         class MyModel(Model):
             col = Text()
     '''
-    _allowed = unicode
+    _allowed = six.text_type
     def _to_redis(self, value):
         return value.encode('utf-8')
     def _from_redis(self, value):
         if isinstance(value, str):
             return value.decode('utf-8')
+        assert not isinstance(value, six.string_types), "JMXXX"
         return value
 
 class Json(Column):
@@ -398,7 +402,7 @@ class PrimaryKey(Column):
         class MyModel(Model):
             id = PrimaryKey()
     '''
-    _allowed = (int, long)
+    _allowed = six.integer_types
 
     def __init__(self, index=False):
         Column.__init__(self, required=False, default=None, unique=False, index=index)
@@ -469,7 +473,7 @@ class ManyToOne(Column):
     def _to_redis(self, value):
         if not value:
             return None
-        if isinstance(value, (int, long)):
+        if isinstance(value, six.integer_types):
             return str(value)
         if value._new:
             # should spew a warning here
@@ -506,7 +510,7 @@ class ForeignModel(Column):
     def _from_redis(self, value):
         if isinstance(value, self._fmodel):
             return value
-        if isinstance(value, str) and value.isdigit():
+        if isinstance(value, six.string_types) and value.isdigit():
             value = int(value, 10)
         return self._fmodel.get(value)
 
@@ -520,8 +524,10 @@ class ForeignModel(Column):
     def _to_redis(self, value):
         if not value:
             return None
-        if isinstance(value, (int, long, str)):
+        if isinstance(value, (str,) + six.integer_types):
             return str(value)
+        else:
+            assert not isinstance(value, six.string_types), "JMXXX"
         return str(value.id)
 
 class OneToMany(Column):
@@ -562,7 +568,7 @@ class OneToMany(Column):
         except KeyError:
             raise ORMError("Missing foreign table %r referenced by %s.%s"%(self._ftable, self._model, self._attr))
 
-        for attr, col in model._columns.iteritems():
+        for attr, col in model._columns.items():
             if isinstance(col, ManyToOne) and col._ftable == self._model:
                 return model.get_by(**{attr: getattr(obj, obj._pkey)})
 

@@ -123,6 +123,7 @@ from decimal import Decimal as _Decimal
 import json
 
 import redis
+import six
 
 from .columns import (Column, Integer, Boolean, Float, Decimal, DateTime,
     Date, Time, String, Text, Json, PrimaryKey, ManyToOne, ForeignModel,
@@ -137,6 +138,8 @@ VERSION = '0.25.1'
 
 COLUMN_TYPES = [Column, Integer, Boolean, Float, Decimal, DateTime, Date,
 Time, String, Text, Json, PrimaryKey, ManyToOne, ForeignModel, OneToMany]
+
+NUMERIC_TYPES = six.integer_types + (float, _Decimal, datetime, date, dtime)
 
 MissingColumn, InvalidOperation # silence pyflakes
 
@@ -174,14 +177,14 @@ class _ModelMetaclass(type):
         odict.update(dict)
         dict = odict
 
-        if not any(isinstance(col, PrimaryKey) for col in dict.itervalues()):
+        if not any(isinstance(col, PrimaryKey) for col in dict.values()):
             if 'id' in dict:
                 raise ColumnError("Cannot have non-primary key named 'id'")
             dict['id'] = PrimaryKey()
 
         # validate all of our columns to ensure that they fulfill our
         # expectations
-        for attr, col in dict.iteritems():
+        for attr, col in dict.items():
             if isinstance(col, Column):
                 columns[attr] = col
                 if col._required:
@@ -217,7 +220,7 @@ class _ModelMetaclass(type):
         MODELS[name] = model = type.__new__(cls, name, bases, dict)
         return model
 
-class Model(object):
+class Model(six.with_metaclass(_ModelMetaclass, object)):
     '''
     This is the base class for all models. You subclass from this base Model
     in order to create a model with columns. As an example::
@@ -248,7 +251,6 @@ class Model(object):
       that were defined with ``index=True``.
 
     '''
-    __metaclass__ = _ModelMetaclass
     def __init__(self, **kwargs):
         self._new = not kwargs.pop('_loading', False)
         model = self.__class__.__name__
@@ -264,7 +266,7 @@ class Model(object):
                 raise InvalidColumnValue("Cannot pass primary key on object creation")
             setattr(self, attr, data)
             if cval != None:
-                if not isinstance(cval, str):
+                if not isinstance(cval, six.string_types):
                     cval = self._columns[attr]._to_redis(cval)
                 self._last[attr] = cval
         self._init = True
@@ -279,7 +281,7 @@ class Model(object):
             raise InvalidOperation("Cannot refresh a new entity")
 
         conn = _connect(self)
-        data = conn.hgetall(self._pk)
+        data = dict((k.decode(), v.decode()) for k, v in conn.hgetall(self._pk).items())
         self.__init__(_loading=True, **data)
 
     @property
@@ -361,7 +363,7 @@ class Model(object):
                             for k in generated:
                                 suffix.append([attr, k[::-1]])
                     elif isinstance(generated, dict):
-                        for k, v in generated.iteritems():
+                        for k, v in generated.items():
                             if not k:
                                 scores[attr] = v
                             else:
@@ -485,9 +487,9 @@ class Model(object):
         single = not isinstance(ids, (list, tuple))
         if single:
             ids = [ids]
-        pks = ['%s:%s'%(cls.__name__, id) for id in ids]
+        pks = ['%s:%s'%(cls.__name__, id) for id in map(int, ids)]
         # get from the session, if possible
-        out = map(session.get, pks)
+        out = list(map(session.get, pks))
         # if we couldn't get an instance from the session, load from Redis
         if None in out:
             pipe = conn.pipeline(True)
@@ -500,9 +502,10 @@ class Model(object):
             # Update output list
             for i, data in zip(idxs, pipe.execute()):
                 if data:
-                    out[i] = cls(_loading=True, **data)
+                    kwargs = dict((k.decode(), v.decode()) for k, v in data.items())
+                    out[i] = cls(_loading=True, **kwargs)
             # Get rid of missing models
-            out = filter(None, out)
+            out = [x for x in out if x]
         if single:
             return out[0] if out else None
         return out
@@ -531,12 +534,12 @@ class Model(object):
         _limit = kwargs.pop('_limit', ())
         if _limit and len(_limit) != 2:
             raise QueryError("Limit must include both 'offset' and 'count' parameters")
-        elif _limit and not all(isinstance(x, (int, long)) for x in _limit):
+        elif _limit and not all(isinstance(x, six.integer_types) for x in _limit):
             raise QueryError("Limit arguments must both be integers")
         if len(kwargs) != 1:
             raise QueryError("We can only fetch object(s) by exactly one attribute, you provided %s"%(len(kwargs),))
 
-        for attr, value in kwargs.iteritems():
+        for attr, value in kwargs.items():
             plain_attr = attr.partition(':')[0]
             if isinstance(value, tuple) and len(value) != 2:
                 raise QueryError("Range queries must include exactly two endpoints")
@@ -548,8 +551,8 @@ class Model(object):
                 single = not isinstance(value, list)
                 if single:
                     value = [value]
-                qvalues = map(cls._columns[attr]._to_redis, value)
-                ids = filter(None, conn.hmget('%s:%s:uidx'%(model, attr), qvalues))
+                qvalues = list(map(cls._columns[attr]._to_redis, value))
+                ids = [x for x in conn.hmget('%s:%s:uidx'%(model, attr), qvalues) if x]
                 if not ids:
                     return None if single else []
                 return cls.get(ids[0] if single else ids)
@@ -557,15 +560,16 @@ class Model(object):
             if plain_attr not in cls._index:
                 raise QueryError("Cannot query on a column without an index")
 
-            if isinstance(value, (int, long, float, _Decimal, datetime, date, dtime)) and not isinstance(value, bool):
+            if isinstance(value, NUMERIC_TYPES) and not isinstance(value, bool):
                 value = (value, value)
 
             if isinstance(value, tuple):
                 # this is a numeric range query, we'll just pull it directly
                 args = list(value)
                 for i, a in enumerate(args):
-                    if not isinstance(a, (int, long, float, str)):
-                        args[i] = cls._columns[attr]._to_redis(a)
+                    # Handle the ranges where None is -inf on the left and inf
+                    # on the right when used in the context of a range tuple.
+                    args[i] = ('-inf', 'inf')[i] if a is None else cls._columns[attr]._to_redis(a)
                 if _limit:
                     args.extend(_limit)
                 ids = conn.zrangebyscore('%s:%s:idx'%(model, attr), *args)
@@ -692,7 +696,7 @@ return #nkeys + #nscored + #nprefix + #nsuffix
 
 def redis_writer_lua(conn, namespace, id, unique, udelete, delete, data, keys, scored, prefix, suffix):
     ldata = []
-    for pair in data.iteritems():
+    for pair in data.items():
         ldata.extend(pair)
 
     for item in prefix:
@@ -700,9 +704,10 @@ def redis_writer_lua(conn, namespace, id, unique, udelete, delete, data, keys, s
     for item in suffix:
         item.append(_prefix_score(item[-1]))
 
-    result = _redis_writer_lua(conn, [], [namespace, id] + map(json.dumps, [
-        unique, udelete, delete, ldata, keys, scored, prefix, suffix]))
-    if isinstance(result, str):
+    result = _redis_writer_lua(conn, [], [namespace, id] + list(map(json.dumps, [
+        unique, udelete, delete, ldata, keys, scored, prefix, suffix])))
+    if isinstance(result, six.binary_type):
+        result = result.decode()
         raise UniqueKeyViolation("Value %r for %s:%s:uidx not distinct"%(unique[result], namespace, result))
 
 class Query(object):
@@ -771,15 +776,15 @@ class Query(object):
 
         '''
         cur_filters = list(self._filters)
-        for attr, value in kwargs.iteritems():
+        for attr, value in kwargs.items():
             if isinstance(value, bool):
                 value = str(bool(value))
 
-            if isinstance(value, (int, long, float, _Decimal, datetime, date, dtime)):
+            if isinstance(value, NUMERIC_TYPES):
                 # for simple numeric equiality filters
                 value = (value, value)
 
-            if isinstance(value, (str, unicode)):
+            if isinstance(value, six.string_types):
                 cur_filters.append('%s:%s'%(attr, value))
 
             elif isinstance(value, tuple):
@@ -817,7 +822,7 @@ class Query(object):
 
         '''
         new = []
-        for k, v in kwargs.iteritems():
+        for k, v in kwargs.items():
             new.append(Prefix(k, v))
         return self.replace(filters=self._filters+tuple(new))
 
@@ -832,7 +837,7 @@ class Query(object):
 
         '''
         new = []
-        for k, v in kwargs.iteritems():
+        for k, v in kwargs.items():
             new.append(Suffix(k, v[::-1]))
         return self.replace(filters=self._filters+tuple(new))
 
@@ -866,7 +871,7 @@ class Query(object):
           wildcard characters (like ``*`` as we did with the 'frank' pattern).
         '''
         new = []
-        for k, v in kwargs.iteritems():
+        for k, v in kwargs.items():
             new.append(Pattern(k, v))
         return self.replace(filters=self._filters+tuple(new))
 

@@ -51,6 +51,7 @@ import threading
 import weakref
 
 import redis
+import six
 
 from .exceptions import ORMError
 
@@ -149,10 +150,10 @@ def _string_keygen(val):
         val = repr(val)
     elif val in (None, ''):
         return None
-    elif not isinstance(val, basestring):
+    elif not isinstance(val, six.string_types):
         val = str(val)
-    r = sorted(set(filter(None, [s.lower().strip(string.punctuation) for s in val.split()])))
-    if isinstance(val, unicode):
+    r = sorted(set([x for x in [s.lower().strip(string.punctuation) for s in val.split()] if x]))
+    if isinstance(val, six.string_types) and not isinstance(val, str):  # unicode on py2k
         return [s.encode('utf-8') for s in r]
     return r
 
@@ -173,7 +174,7 @@ def _to_score(v, s=False):
 # borrowed and modified from:
 # https://gist.github.com/josiahcarlson/8459874
 def _bigint_to_float(v):
-    assert isinstance(v, (int, long))
+    assert isinstance(v, six.integer_types)
     sign = -1 if v < 0 else 1
     v *= sign
     assert v < 0x7fe0000000000000
@@ -181,11 +182,11 @@ def _bigint_to_float(v):
     return sign * (2**52 + mantissa) * 2.0**(exponent-52-1022)
 
 def _prefix_score(v, next=False):
-    if isinstance(v, unicode):
+    if isinstance(v, six.text_type):
         v = v.encode('utf-8')
     # We only get 7 characters of score-based prefix.
     score = 0
-    for ch in map(ord, v[:7]):
+    for ch in six.iterbytes(v[:7]):
         score *= 258
         score += ch + 1
     if next:
@@ -403,9 +404,9 @@ def refresh_indices(model, block_size=100):
     conn = _connect(model)
     max_id = int(conn.get('%s:%s:'%(model.__name__, model._pkey)) or '0')
     block_size = max(block_size, 10)
-    for i in xrange(1, max_id+1, block_size):
+    for i in range(1, max_id+1, block_size):
         # fetches entities, keeping a record in the session
-        models = model.get(range(i, i+block_size))
+        models = model.get(list(range(i, i+block_size)))
         models # for pyflakes
         # re-save un-modified data, resulting in index-only updates
         session.commit(all=True)
