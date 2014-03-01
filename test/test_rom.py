@@ -1,5 +1,5 @@
-
-from datetime import datetime
+from __future__ import print_function
+from datetime import datetime, timedelta
 from decimal import Decimal as _Decimal
 import time
 import unittest
@@ -22,7 +22,7 @@ def global_setup():
         c.delete(*keys)
     from rom.columns import MODELS
     Model = MODELS['Model']
-    for k,v in MODELS.items():
+    for k, v in MODELS.copy().items():
         if v is not Model:
             del MODELS[k]
 
@@ -30,7 +30,8 @@ def get_state():
     c = connect(None)
     data = []
     for k in c.keys('*'):
-        t = c.type(k)
+        k = k.decode()
+        t = c.type(k).decode()
         if t == 'string':
             data.append((k, c.get(k)))
         elif t == 'list':
@@ -62,7 +63,7 @@ class TestORM(unittest.TestCase):
             req = String(required=True)
 
         self.assertRaises(ColumnError, RomTestBasicModel)
-        self.assertRaises(InvalidColumnValue, lambda: RomTestBasicModel(oval='t'))
+        self.assertRaises(InvalidColumnValue, lambda: RomTestBasicModel(oval='t', req='X'))
         self.assertRaises(MissingColumn, lambda: RomTestBasicModel(created_at=7))
 
         # try object saving/loading
@@ -101,7 +102,7 @@ class TestORM(unittest.TestCase):
 
         m = RomTestIndexModel.get_by(key="hello")
         self.assertTrue(m)
-        self.assertEquals(m.id, item.id)
+        self.assertEqual(m.id, item.id)
         self.assertTrue(m is item)
 
     def test_foreign_key(self):
@@ -130,11 +131,11 @@ class TestORM(unittest.TestCase):
         yid = y.id
         x = y = None
         y = RomTestFkey1.get(yid)
-        self.assertEquals(y.fkey2.id, xid)
+        self.assertEqual(y.fkey2.id, xid)
         fk1 = y.fkey2.fkey1
 
-        self.assertEquals(len(fk1), 1)
-        self.assertEquals(fk1[0].id, y.id)
+        self.assertEqual(len(fk1), 1)
+        self.assertEqual(fk1[0].id, y.id)
 
     def test_unique(self):
         class RomTestUnique(Model):
@@ -189,37 +190,37 @@ class TestORM(unittest.TestCase):
             attr5=_Decimal('2.643'),
         ).save()
 
-        self.assertEquals(RomTestIndexedModel.query.filter(attr='hello').count(), 1)
-        self.assertEquals(RomTestIndexedModel.query.filter(attr2='how').filter(attr2='are').count(), 1)
-        self.assertEquals(RomTestIndexedModel.query.filter(attr='hello').filter(attr2='how').filter(attr2='are').count(), 1)
-        self.assertEquals(RomTestIndexedModel.query.filter(attr='hello', noattr='bad').filter(attr2='how').filter(attr2='are').count(), 0)
-        self.assertEquals(RomTestIndexedModel.query.filter(attr='hello', attr3=(None, None)).count(), 1)
-        self.assertEquals(RomTestIndexedModel.query.filter(attr='hello', attr3=(None, 10)).count(), 1)
-        self.assertEquals(RomTestIndexedModel.query.filter(attr='hello', attr3=(None, 10)).execute()[0].id, 1)
-        self.assertEquals(RomTestIndexedModel.query.filter(attr='hello', attr3=(5, None)).count(), 1)
-        self.assertEquals(RomTestIndexedModel.query.filter(attr='hello', attr3=(5, 10), attr4=(4,5), attr5=(2.5, 2.7)).count(), 1)
+        self.assertEqual(RomTestIndexedModel.query.filter(attr='hello').count(), 1)
+        self.assertEqual(RomTestIndexedModel.query.filter(attr2='how').filter(attr2='are').count(), 1)
+        self.assertEqual(RomTestIndexedModel.query.filter(attr='hello').filter(attr2='how').filter(attr2='are').count(), 1)
+        self.assertEqual(RomTestIndexedModel.query.filter(attr='hello', noattr='bad').filter(attr2='how').filter(attr2='are').count(), 0)
+        self.assertEqual(RomTestIndexedModel.query.filter(attr='hello', attr3=(None, None)).count(), 1)
+        self.assertEqual(RomTestIndexedModel.query.filter(attr='hello', attr3=(None, 10)).count(), 1)
+        self.assertEqual(RomTestIndexedModel.query.filter(attr='hello', attr3=(None, 10)).execute()[0].id, 1)
+        self.assertEqual(RomTestIndexedModel.query.filter(attr='hello', attr3=(5, None)).count(), 1)
+        self.assertEqual(RomTestIndexedModel.query.filter(attr='hello', attr3=(5, 10), attr4=(4,5), attr5=(2.5, 2.7)).count(), 1)
         first = RomTestIndexedModel.query.filter(attr='hello', attr3=(5, 10), attr4=(4,5), attr5=(2.5, 2.7)).first()
         self.assertTrue(first)
         self.assertTrue(first is x)
-        self.assertEquals(RomTestIndexedModel.query.filter(attr='hello', attr3=(10, 20), attr4=(4,5), attr5=(2.5, 2.7)).count(), 0)
-        self.assertEquals(RomTestIndexedModel.query.filter(attr3=100).count(), 1)
-        self.assertEquals(RomTestIndexedModel.query.filter(attr='world', attr5=_Decimal('2.643')).count(), 2)
+        self.assertEqual(RomTestIndexedModel.query.filter(attr='hello', attr3=(10, 20), attr4=(4,5), attr5=(2.5, 2.7)).count(), 0)
+        self.assertEqual(RomTestIndexedModel.query.filter(attr3=100).count(), 1)
+        self.assertEqual(RomTestIndexedModel.query.filter(attr='world', attr5=_Decimal('2.643')).count(), 2)
 
         results = RomTestIndexedModel.query.filter(attr='world').order_by('attr4').execute()
-        self.assertEquals([x.id for x in results], [2,1])
+        self.assertEqual([x.id for x in results], [2,1])
 
-        for i in xrange(50):
+        for i in range(50):
             RomTestIndexedModel(attr3=i)
         session.commit()
         session.rollback()
 
-        self.assertEquals(len(RomTestIndexedModel.get_by(attr3=(10, 25))), 16)
-        self.assertEquals(len(RomTestIndexedModel.get_by(attr3=(10, 25), _limit=(0,5))), 5)
+        self.assertEqual(len(RomTestIndexedModel.get_by(attr3=(10, 25))), 16)
+        self.assertEqual(len(RomTestIndexedModel.get_by(attr3=(10, 25), _limit=(0,5))), 5)
 
         key = RomTestIndexedModel.query.filter(attr='hello').filter(attr2='how').filter(attr2='are').cached_result(30)
         conn = connect(None)
         self.assertTrue(conn.ttl(key) <= 30)
-        self.assertEquals(conn.zcard(key), 1)
+        self.assertEqual(conn.zcard(key), 1)
         conn.delete(key)
 
     def test_alternate_models(self):
@@ -246,7 +247,7 @@ class TestORM(unittest.TestCase):
         del a
 
         f = RomTestFModel.get(i)
-        self.assertEquals(f.attr.id, ai)
+        self.assertEqual(f.attr.id, ai)
 
     def test_model_connection(self):
         class RomTestFoo(Model):
@@ -260,8 +261,8 @@ class TestORM(unittest.TestCase):
         RomTestFoo().save()
         RomTestBar().save()
 
-        self.assertEquals(RomTestBar._conn.get('RomTestBar:id:'), '1')
-        self.assertEquals(util.CONNECTION.get('RomTestBar:id:'), None)
+        self.assertEqual(RomTestBar._conn.get('RomTestBar:id:').decode(), '1')
+        self.assertEqual(util.CONNECTION.get('RomTestBar:id:'), None)
         RomTestBar.get(1).delete()
         RomTestBar._conn.delete('RomTestBar:id:')
         k = RomTestBar._conn.keys('RomTest*')
@@ -276,7 +277,7 @@ class TestORM(unittest.TestCase):
         i = f.id
         session.commit()
 
-        for j in xrange(10):
+        for j in range(10):
             RomTestGoo()
 
         g = RomTestGoo.get(i)
@@ -308,9 +309,9 @@ class TestORM(unittest.TestCase):
         x = RomTestJsonTest(col=d)
         x.save()
         del x
-        for i in xrange(5):
+        for i in range(5):
             x = RomTestJsonTest.get(1)
-            self.assertEquals(x.col, d)
+            self.assertEqual(x.col, d)
             x.save(full=True)
             session.rollback()
 
@@ -327,18 +328,18 @@ class TestORM(unittest.TestCase):
         yid = y.id
         y.save()
         del y
-        self.assertEquals(len(RomTestBooleanTest.get_by(col=True)), 2)
-        self.assertEquals(len(RomTestBooleanTest.get_by(col=False)), 2)
+        self.assertEqual(len(RomTestBooleanTest.get_by(col=True)), 2)
+        self.assertEqual(len(RomTestBooleanTest.get_by(col=False)), 2)
         session.rollback()
         x = RomTestBooleanTest.get(1)
         x.col = False
         x.save()
-        self.assertEquals(len(RomTestBooleanTest.get_by(col=True)), 1)
-        self.assertEquals(len(RomTestBooleanTest.get_by(col=False)), 3)
-        self.assertEquals(len(RomTestBooleanTest.get_by(col=True)), 1)
-        self.assertEquals(len(RomTestBooleanTest.get_by(col=False)), 3)
+        self.assertEqual(len(RomTestBooleanTest.get_by(col=True)), 1)
+        self.assertEqual(len(RomTestBooleanTest.get_by(col=False)), 3)
+        self.assertEqual(len(RomTestBooleanTest.get_by(col=True)), 1)
+        self.assertEqual(len(RomTestBooleanTest.get_by(col=False)), 3)
         y = RomTestBooleanTest.get(yid)
-        self.assertEquals(y.col, None)
+        self.assertEqual(y.col, None)
 
     def test_datetimes(self):
         class RomTestDateTimesTest(Model):
@@ -350,9 +351,9 @@ class TestORM(unittest.TestCase):
         dtt.save()
         session.commit()
         del dtt
-        self.assertEquals(len(RomTestDateTimesTest.get_by(col1=_now)), 1)
-        self.assertEquals(len(RomTestDateTimesTest.get_by(col2=_now.date())), 1)
-        self.assertEquals(len(RomTestDateTimesTest.get_by(col3=_now.time())), 1)
+        self.assertEqual(len(RomTestDateTimesTest.get_by(col1=_now)), 1)
+        self.assertEqual(len(RomTestDateTimesTest.get_by(col2=_now.date())), 1)
+        self.assertEqual(len(RomTestDateTimesTest.get_by(col3=_now.time())), 1)
 
     def test_deletion(self):
         class RomTestDeletionTest(Model):
@@ -360,13 +361,13 @@ class TestORM(unittest.TestCase):
 
         x = RomTestDeletionTest(col1="this is a test string that should be indexed")
         session.commit()
-        self.assertEquals(len(RomTestDeletionTest.get_by(col1='this')), 1)
+        self.assertEqual(len(RomTestDeletionTest.get_by(col1='this')), 1)
 
         x.delete()
-        self.assertEquals(len(RomTestDeletionTest.get_by(col1='this')), 0)
+        self.assertEqual(len(RomTestDeletionTest.get_by(col1='this')), 0)
 
         session.commit()
-        self.assertEquals(len(RomTestDeletionTest.get_by(col1='this')), 0)
+        self.assertEqual(len(RomTestDeletionTest.get_by(col1='this')), 0)
 
     def test_empty_query(self):
         class RomTestEmptyQueryTest(Model):
@@ -386,13 +387,13 @@ class TestORM(unittest.TestCase):
         d.col = 'world'
         self.assertRaises(InvalidOperation, d.refresh)
         d.refresh(True)
-        self.assertEquals(d.col, 'hello')
+        self.assertEqual(d.col, 'hello')
         d.col = 'world'
         session.refresh(d, force=True)
-        self.assertEquals(d.col, 'hello')
+        self.assertEqual(d.col, 'hello')
         d.col = 'world'
         session.refresh_all(force=True)
-        self.assertEquals(d.col, 'hello')
+        self.assertEqual(d.col, 'hello')
         self.assertRaises(InvalidOperation, RomTestRefresh(col='boo').refresh)
 
     def test_datetime(self):
@@ -406,8 +407,8 @@ class TestORM(unittest.TestCase):
         RomTestDT(event_datetime=datetime.utcnow()).save()
         session.rollback() # clearing the local cache
 
-        self.assertEquals(RomTestDT.get_by(event_datetime=(datetime(2000, 1, 1), datetime(2000, 1, 1))), [])
-        self.assertEquals(len(RomTestDT.get_by(event_datetime=(datetime(2000, 1, 1), datetime.utcnow()))), 2)
+        self.assertEqual(RomTestDT.get_by(event_datetime=(datetime(2000, 1, 1), datetime(2000, 1, 1))), [])
+        self.assertEqual(len(RomTestDT.get_by(event_datetime=(datetime(2000, 1, 1), datetime.utcnow()))), 2)
 
     def test_prefix_suffix_pattern(self):
         import rom
@@ -420,34 +421,109 @@ class TestORM(unittest.TestCase):
         x = RomTestPSP(col="hello world how are you doing, join us today")
         x.save()
 
-        self.assertEquals(RomTestPSP.query.startswith(col='he').count(), 1)
-        self.assertEquals(RomTestPSP.query.startswith(col='notthere').count(), 0)
-        self.assertEquals(RomTestPSP.query.endswith(col='rld').count(), 1)
-        self.assertEquals(RomTestPSP.query.endswith(col='bad').count(), 0)
-        self.assertEquals(RomTestPSP.query.like(col='?oin?').count(), 1)
-        self.assertEquals(RomTestPSP.query.like(col='*oin+').count(), 1)
-        self.assertEquals(RomTestPSP.query.like(col='oin').count(), 0)
-        self.assertEquals(RomTestPSP.query.like(col='+oin').like(col='wor!d').count(), 1)
+        self.assertEqual(RomTestPSP.query.startswith(col='he').count(), 1)
+        self.assertEqual(RomTestPSP.query.startswith(col='notthere').count(), 0)
+        self.assertEqual(RomTestPSP.query.endswith(col='rld').count(), 1)
+        self.assertEqual(RomTestPSP.query.endswith(col='bad').count(), 0)
+        self.assertEqual(RomTestPSP.query.like(col='?oin?').count(), 1)
+        self.assertEqual(RomTestPSP.query.like(col='*oin+').count(), 1)
+        self.assertEqual(RomTestPSP.query.like(col='oin').count(), 0)
+        self.assertEqual(RomTestPSP.query.like(col='+oin').like(col='wor!d').count(), 1)
+
+    def test_infinite_ranges(self):
+        """ Infinite range lookups via None in tuple.
+        The get_by method accepts None as an argument to range based
+        lookups.  A range lookup is done by passing a tuple as the value
+        to the kwarg representing the column in question such as,
+        Model.get_by(some_column=(small, large)).  The left and right side
+        are inclusive. """
+
+        class RomTestInfRange(Model):
+            dt = DateTime(index=True)
+            num = Integer(index=True)
+
+        start_dt = datetime(2000, 1, 1)
+        for x in range(3):
+            RomTestInfRange(dt=start_dt+timedelta(days=x), num=x)
+        session.commit()
+        ranges = (
+            (dict(dt=(start_dt-timedelta(days=1), None)), 3),
+            (dict(dt=(start_dt, None)), 3),
+            (dict(dt=(start_dt+timedelta(days=0.5), None)), 2),
+            (dict(dt=(start_dt+timedelta(days=1), None)), 2),
+            (dict(dt=(start_dt+timedelta(days=1.5), None)), 1),
+            (dict(dt=(start_dt+timedelta(days=2), None)), 1),
+            (dict(dt=(start_dt+timedelta(days=2.5), None)), 0),
+
+            (dict(dt=(None, start_dt+timedelta(days=2.5))), 3),
+            (dict(dt=(None, start_dt+timedelta(days=2))), 3),
+            (dict(dt=(None, start_dt+timedelta(days=1.5))), 2),
+            (dict(dt=(None, start_dt+timedelta(days=1))), 2),
+            (dict(dt=(None, start_dt+timedelta(days=0.5))), 1),
+            (dict(dt=(None, start_dt)), 1),
+            (dict(dt=(None, start_dt-timedelta(days=1))), 0),
+
+            (dict(num=(-1, None)), 3),
+            (dict(num=(0, None)), 3),
+            (dict(num=(0.5, None)), 2),
+            (dict(num=(1, None)), 2),
+            (dict(num=(1.5, None)), 1),
+            (dict(num=(2, None)), 1),
+            (dict(num=(2.5, None)), 0),
+
+            (dict(num=(None, 2.5)), 3),
+            (dict(num=(None, 2)), 3),
+            (dict(num=(None, 1.5)), 2),
+            (dict(num=(None, 1)), 2),
+            (dict(num=(None, 0.5)), 1),
+            (dict(num=(None, 0)), 1),
+            (dict(num=(None, -1)), 0),
+        )
+        for i, (kwargs, count) in enumerate(ranges):
+            msg = 'test %d: range %s, expect: %d' % (i, kwargs, count)
+            try:
+                self.assertEqual(len(RomTestInfRange.get_by(**kwargs)), count)
+            except Exception:
+                print(msg)
+                raise
+
+    def test_big_int(self):
+        """ Ensure integers that overflow py2k int work. """
+
+        class RomTestBigInt(Model):
+            num = Integer()
+
+        numbers = [
+            1,
+            200,
+            1<<15,
+            #1<<63,
+            #1<<128,
+            #1<<256,
+        ]
+
+        for i, num in enumerate(numbers):
+            RomTestBigInt(num=num).save()
+            session.commit()
+            session.rollback()
+            echo = RomTestBigInt.get(i+1).num
+            self.assertEqual(num, echo)
 
 if __name__ == '__main__':
     _disable_lua_writes()
     global_setup()
-    print "Testing standard writing"
-    try:
-        unittest.main()
-    except:
-        data = get_state()
+    print("Testing standard writing")
+    unittest.main(exit=False)
+    data = get_state()
     global_setup()
     _enable_lua_writes()
-    print "Testing Lua writing"
-    try:
-        unittest.main()
-    except:
-        lua_data = get_state()
+    print("Testing Lua writing")
+    unittest.main(exit=False)
+    lua_data = get_state()
     global_setup()
 
     ## if data != lua_data:
-        ## print "WARNING: Regular/Lua data writing does not match!"
+        ## print("WARNING: Regular/Lua data writing does not match!")
         ## import pprint
         ## pprint.pprint(data)
         ## pprint.pprint(lua_data)

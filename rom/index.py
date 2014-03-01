@@ -4,6 +4,8 @@ import json
 import re
 import uuid
 
+import six
+
 from .exceptions import QueryError
 from .util import _prefix_score, _script_load, _to_score
 
@@ -13,7 +15,9 @@ Pattern = namedtuple('Pattern', 'attr pattern')
 
 SPECIAL = re.compile('([-().%[^$])')
 def _pattern_to_lua_pattern(pat):
-    if isinstance(pat, unicode):
+    if isinstance(pat, six.string_types) and not isinstance(pat, str):
+        # XXX: Decode only py2k unicode. Why can't we run the unicode
+        # pattern through the re? -JM
         pat = pat.encode('utf-8')
     # We use '-' instead of '*' to get the shortest matches possible, which is
     # usually the desired case for pattern matching.
@@ -25,7 +29,9 @@ def _pattern_to_lua_pattern(pat):
 
 def _find_prefix(pat):
     pat = SPECIAL.sub('%\1', pat)
-    if isinstance(pat, unicode):
+    if isinstance(pat, six.string_types) and not isinstance(pat, str):
+        # XXX: Decode only py2k unicode. Why can't we run the unicode
+        # pattern through the re? -JM
         pat = pat.encode('utf-8')
     x = []
     for i in pat:
@@ -87,7 +93,7 @@ class GeneralIndex(object):
         known = conn.hget(self.namespace + '::', id)
         if not known:
             return 0
-        old = json.loads(known)
+        old = json.loads(known.decode())
         keys, scored = old[:2]
         pre, suf = ([],[]) if len(old) == 2 else old[2:]
 
@@ -145,7 +151,7 @@ class GeneralIndex(object):
 
         for key in keys:
             pipe.sadd('%s:%s:idx'%(self.namespace, key), id)
-        for key, score in scores.iteritems():
+        for key, score in scores.items():
             pipe.zadd('%s:%s:idx'%(self.namespace, key), id, _to_score(score))
         for attr, key in prefix:
             pipe.zadd('%s:%s:pre'%(self.namespace, attr), '%s\0%s'%(key, id), _prefix_score(key))
@@ -163,7 +169,7 @@ class GeneralIndex(object):
         if len(filters) > 1:
             # reorder filters based on the size of the underlying set/zset
             for fltr in filters:
-                if isinstance(fltr, (str, unicode)):
+                if isinstance(fltr, six.string_types):
                     pipe.scard('%s:%s:idx'%(self.namespace, fltr))
                 elif isinstance(fltr, Prefix):
                     estimate_work_lua(pipe, '%s:%s:pre'%(self.namespace, fltr.attr), fltr.prefix)
@@ -196,7 +202,7 @@ class GeneralIndex(object):
                         ('%s:%s:idx'%(self.namespace, fi), 0) for fi in fltr))
                     intersect(temp_id, {temp_id:0, temp_id2:0})
                     pipe.delete(temp_id2)
-            if isinstance(fltr, (str, unicode)):
+            if isinstance(fltr, six.string_types):
                 # simple string/tag search
                 intersect(temp_id, {temp_id:0, '%s:%s:idx'%(self.namespace, fltr):0})
             elif isinstance(fltr, Prefix):
@@ -288,7 +294,7 @@ class GeneralIndex(object):
             return temp_id
 
         offset = offset if offset is not None else 0
-        end = (offset + count - 1) if count > 0 else -1
+        end = (offset + count - 1) if count and count > 0 else -1
         pipe.zrange(temp_id, offset, end)
         pipe.delete(temp_id)
         return pipe.execute()[-2]
