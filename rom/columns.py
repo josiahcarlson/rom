@@ -98,9 +98,9 @@ class Column(object):
         self._keygen = None
 
         allowed = (self._allowed,) if isinstance(self._allowed, type) else self._allowed
-        is_string = lambda: all(issubclass(x, six.string_types) for x in allowed)
+        is_string = all(issubclass(x, six.string_types) for x in allowed)
         if unique:
-            if not is_string():
+            if not is_string:
                 raise ColumnError("Unique columns can only be strings")
 
         numeric = True
@@ -109,7 +109,7 @@ class Column(object):
                 numeric = False
                 if issubclass(bool, allowed):
                     keygen = keygen or _boolean_keygen
-                if not is_string() and not keygen:
+                if not is_string and not keygen:
                     raise ColumnError("Non-numeric/string indexed columns must provide keygen argument on creation")
 
         if index:

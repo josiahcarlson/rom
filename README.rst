@@ -55,13 +55,15 @@ Other features:
 Getting started
 ===============
 
-1. Make sure you have Python 2.6 or 2.7 installed
+1. Make sure you have Python 2.6, 2.7 or 3.3+ installed
 2. Make sure that you have Andy McCurdy's Redis library installed:
    https://github.com/andymccurdy/redis-py/ or
    https://pypi.python.org/pypi/redis
-3. (optional) Make sure that you have the hiredis library installed for Python
-4. Make sure that you have a Redis server installed and available remotely
-5. Update the Redis connection settings for ``rom`` via
+3. Make sure that you have the Python 2 and 3 compatibility library, 'six'
+   installed: https://pypi.python.org/pypi/six
+4. (optional) Make sure that you have the hiredis library installed for Python
+5. Make sure that you have a Redis server installed and available remotely
+6. Update the Redis connection settings for ``rom`` via
    ``rom.util.set_connection_settings()`` (other connection update options,
    including per-model connections, can be read about in the ``rom.util``
    documentation)::
@@ -74,7 +76,7 @@ Getting started
 .. warning:: If you forget to update the connection function, rom will attempt
  to connect to localhost:6379 .
 
-6. Create a model::
+7. Create a model::
 
     class User(Model):
         email = String(required=True, unique=True, suffix=True)
@@ -82,7 +84,7 @@ Getting started
         hash = String()
         created_at = Float(default=time.time)
 
-7. Create an instance of the model and save it::
+8. Create an instance of the model and save it::
 
     PASSES = 32768
     def gen_hash(password, salt=None):
@@ -98,7 +100,7 @@ Getting started
     user.save()
     # session.commit() or session.flush() works too
 
-8. Load and use the object later::
+9. Load and use the object later::
 
     user = User.get_by(email='user@host.com')
     at_gmail = User.query.endswith(email='@gmail.com').all()
