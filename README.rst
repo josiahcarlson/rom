@@ -31,7 +31,7 @@ What is available
 
 Data types:
 
-* Strings, ints, floats, decimals, booleans
+* Strings (2.x: str/unicode, 3.3+: str), ints, floats, decimals, booleans
 * datetime.datetime, datetime.date, datetime.time
 * Json columns (for nested structures)
 * OneToMany and ManyToOne columns (for model references)
@@ -55,7 +55,7 @@ Other features:
 Getting started
 ===============
 
-1. Make sure you have Python 2.6, 2.7 or 3.3+ installed
+1. Make sure you have Python 2.6, 2.7, or 3.3+ installed
 2. Make sure that you have Andy McCurdy's Redis library installed:
    https://github.com/andymccurdy/redis-py/ or
    https://pypi.python.org/pypi/redis

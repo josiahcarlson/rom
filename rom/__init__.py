@@ -31,7 +31,7 @@ What is available
 
 Data types:
 
-* Strings, ints, floats, decimals, booleans
+* Strings (2.x: str/unicode, 3.3+: str), ints, floats, decimals, booleans
 * datetime.datetime, datetime.date, datetime.time
 * Json columns (for nested structures)
 * OneToMany and ManyToOne columns (for model references)
@@ -55,13 +55,15 @@ Other features:
 Getting started
 ===============
 
-1. Make sure you have Python 2.6 or 2.7 installed
+1. Make sure you have Python 2.6, 2.7, or 3.3+ installed
 2. Make sure that you have Andy McCurdy's Redis library installed:
    https://github.com/andymccurdy/redis-py/ or
    https://pypi.python.org/pypi/redis
-3. (optional) Make sure that you have the hiredis library installed for Python
-4. Make sure that you have a Redis server installed and available remotely
-5. Update the Redis connection settings for ``rom`` via
+3. Make sure that you have the Python 2 and 3 compatibility library, 'six'
+   installed: https://pypi.python.org/pypi/six
+4. (optional) Make sure that you have the hiredis library installed for Python
+5. Make sure that you have a Redis server installed and available remotely
+6. Update the Redis connection settings for ``rom`` via
    ``rom.util.set_connection_settings()`` (other connection update options,
    including per-model connections, can be read about in the ``rom.util``
    documentation)::
@@ -74,7 +76,7 @@ Getting started
 .. warning:: If you forget to update the connection function, rom will attempt
  to connect to localhost:6379 .
 
-6. Create a model::
+7. Create a model::
 
     class User(Model):
         email = String(required=True, unique=True, suffix=True)
@@ -82,7 +84,7 @@ Getting started
         hash = String()
         created_at = Float(default=time.time)
 
-7. Create an instance of the model and save it::
+8. Create an instance of the model and save it::
 
     PASSES = 32768
     def gen_hash(password, salt=None):
@@ -98,7 +100,7 @@ Getting started
     user.save()
     # session.commit() or session.flush() works too
 
-8. Load and use the object later::
+9. Load and use the object later::
 
     user = User.get_by(email='user@host.com')
     at_gmail = User.query.endswith(email='@gmail.com').all()
@@ -126,18 +128,18 @@ import redis
 import six
 
 from .columns import (Column, Integer, Boolean, Float, Decimal, DateTime,
-    Date, Time, String, Text, Json, PrimaryKey, ManyToOne, ForeignModel,
-    OneToMany, MODELS)
+    Date, Time, Text, Json, PrimaryKey, ManyToOne, ForeignModel, OneToMany,
+    MODELS)
 from .exceptions import (ORMError, UniqueKeyViolation, InvalidOperation,
     QueryError, ColumnError, MissingColumn, InvalidColumnValue)
 from .index import GeneralIndex, Pattern, Prefix, Suffix
 from .util import (ClassProperty, _connect, session, dt2ts, t2ts,
     _prefix_score, _script_load)
 
-VERSION = '0.25.1'
+VERSION = '0.26.0'
 
 COLUMN_TYPES = [Column, Integer, Boolean, Float, Decimal, DateTime, Date,
-Time, String, Text, Json, PrimaryKey, ManyToOne, ForeignModel, OneToMany]
+Time, Text, Json, PrimaryKey, ManyToOne, ForeignModel, OneToMany]
 
 NUMERIC_TYPES = six.integer_types + (float, _Decimal, datetime, date, dtime)
 
@@ -145,16 +147,23 @@ MissingColumn, InvalidOperation # silence pyflakes
 
 USE_LUA = True
 def _enable_lua_writes():
+    from . import columns
     global USE_LUA
-    USE_LUA = True
+    columns.USE_LUA = USE_LUA = True
 
 def _disable_lua_writes():
+    from . import columns
     global USE_LUA
-    USE_LUA = False
+    columns.USE_LUA = USE_LUA = False
 
 __all__ = '''
-    Model Column Integer Float Decimal String Text Json PrimaryKey ManyToOne
+    Model Column Integer Float Decimal Text Json PrimaryKey ManyToOne
     ForeignModel OneToMany Query session Boolean DateTime Date Time'''.split()
+
+if six.PY2:
+    from .columns import String
+    COLUMN_TYPES.append(String)
+    __all__.append('String')
 
 class _ModelMetaclass(type):
     def __new__(cls, name, bases, dict):
@@ -281,7 +290,9 @@ class Model(six.with_metaclass(_ModelMetaclass, object)):
             raise InvalidOperation("Cannot refresh a new entity")
 
         conn = _connect(self)
-        data = dict((k.decode(), v.decode()) for k, v in conn.hgetall(self._pk).items())
+        data = conn.hgetall(self._pk)
+        if six.PY3:
+            data = dict((k.decode(), v.decode()) for k, v in data.items())
         self.__init__(_loading=True, **data)
 
     @property
@@ -321,8 +332,10 @@ class Model(six.with_metaclass(_ModelMetaclass, object)):
                 for col in cls._unique:
                     ouval = old.get(col)
                     nuval = new.get(col)
-                    nuvale = columns[col]._to_redis(nuval)
+                    nuvale = columns[col]._to_redis(nuval) if nuval is not None else None
 
+                    if six.PY2 and not isinstance(ouval, str):
+                        ouval = columns[col]._to_redis(ouval)
                     if not (nuval and (ouval != nuvale or full)):
                         # no changes to unique columns
                         continue
@@ -330,11 +343,12 @@ class Model(six.with_metaclass(_ModelMetaclass, object)):
                     ikey = "%s:%s:uidx"%(model, col)
                     pipe.watch(ikey)
                     ival = pipe.hget(ikey, nuvale)
+                    ival = ival if isinstance(ival, str) or ival is None else ival.decode()
                     if not ival or ival == str(pk):
                         pipe.multi()
                     else:
                         pipe.unwatch()
-                        raise UniqueKeyViolation("Value %r for %s not distinct"%(nuval, ikey))
+                        raise UniqueKeyViolation("Value %r for %s is not distinct"%(nuval, ikey))
 
             # update individual columns
             for attr in cls._columns:
@@ -361,7 +375,13 @@ class Model(six.with_metaclass(_ModelMetaclass, object)):
                                 prefix.append([attr, k])
                         if ca._suffix:
                             for k in generated:
-                                suffix.append([attr, k[::-1]])
+                                if six.PY2 and isinstance(k, str) and isinstance(cls._columns[attr], Text):
+                                    try:
+                                        suffix.append([attr, k.decode('utf-8')[::-1].encode('utf-8')])
+                                    except UnicodeDecodeError:
+                                        suffix.append([attr, k[::-1]])
+                                else:
+                                    suffix.append([attr, k[::-1]])
                     elif isinstance(generated, dict):
                         for k, v in generated.items():
                             if not k:
@@ -398,8 +418,10 @@ class Model(six.with_metaclass(_ModelMetaclass, object)):
 
                 # Add/update unique index
                 if ikey:
+                    if six.PY2 and not isinstance(roval, str):
+                        roval = columns[attr]._to_redis(roval)
                     if use_lua:
-                        if oval is not None and oval != rnval:
+                        if oval is not None and roval != rnval:
                             udeleted[attr] = oval
                         unique[attr] = rnval
                     else:
@@ -502,8 +524,9 @@ class Model(six.with_metaclass(_ModelMetaclass, object)):
             # Update output list
             for i, data in zip(idxs, pipe.execute()):
                 if data:
-                    kwargs = dict((k.decode(), v.decode()) for k, v in data.items())
-                    out[i] = cls(_loading=True, **kwargs)
+                    if six.PY3:
+                        data = dict((k.decode(), v.decode()) for k, v in data.items())
+                    out[i] = cls(_loading=True, **data)
             # Get rid of missing models
             out = [x for x in out if x]
         if single:

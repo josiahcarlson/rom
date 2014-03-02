@@ -1,4 +1,16 @@
-#---------------------------------- 0.25.0 -----------------------------------
+#---------------------------------- 0.26.0 -----------------------------------
+[added] support for Python 3.3 thanks to the six library and porting effort
+    from Justin Mayfield https://github.com/mayfield, which also includes some
+    additional tests.
+[remove] String column from Python 3.3, use the Text column instead.
+[changed] Both String and Text columns can use unique columns.
+[fixed] rom's behavior with long ints in some situations.
+[fixed] rom's behavior with unicode suffixes in Python 2.x.
+[added] tests for unicode text indexes, unique indexes, prefix indexes, and
+    suffix indexes.
+[updated] relevant docs regarding the Text column and unique indexes.
+[fixed] improperly labeled 0.25.1 release in this changelog.
+#---------------------------------- 0.25.1 -----------------------------------
 [fixed] an issue where Lua writing wouldn't properly update unique indexes on
     deletion was fixed. Thank you to https://github.com/thedrow for the
     report.

@@ -2,6 +2,7 @@
 from datetime import datetime, date, time as dtime
 from decimal import Decimal as _Decimal
 import json
+
 import six
 
 from .exceptions import (ORMError, InvalidOperation, ColumnError,
@@ -12,6 +13,7 @@ from .util import (_numeric_keygen, _string_keygen, _many_to_one_keygen,
 NULL = object()
 MODELS = {}
 _NUMERIC = (0, 0.0, _Decimal('0'), datetime(1970, 1, 1), date(1970, 1, 1), dtime(0, 0, 0))
+USE_LUA = True
 
 class Column(object):
     '''
@@ -97,6 +99,9 @@ class Column(object):
         self._attr = None
         self._keygen = None
 
+        if not self._allowed and not hasattr(self, '_fmodel') and not hasattr(self, '_ftable'):
+            raise ColumnError("Missing valid _allowed attribute")
+
         allowed = (self._allowed,) if isinstance(self._allowed, type) else self._allowed
         is_string = all(issubclass(x, six.string_types) for x in allowed)
         if unique:
@@ -123,8 +128,6 @@ class Column(object):
         return convert(value)
 
     def _to_redis(self, value):
-        if value >= (1<<63):
-            return str(value)
         return repr(value)
 
     def _validate(self, value):
@@ -203,6 +206,8 @@ class Integer(Column):
             col = Integer()
     '''
     _allowed = six.integer_types
+    def _to_redis(self, value):
+        return str(value)
 
 class Boolean(Column):
     '''
@@ -317,41 +322,39 @@ class Time(Column):
     def _to_redis(self, value):
         return repr(t2ts(value))
 
-class String(Column):
-    '''
-    A plain string column. Trying to save unicode strings will probably result
-    in an error, if not bad data. This is the only type of column that can
-    have a unique index.
+if six.PY2:
+    class String(Column):
+        '''
+        .. note:: this column type is only available in Python 2.x
 
-    All standard arguments supported.
+        A plain string column. Trying to save unicode strings will probably result
+        in an error, if not bad data.
 
-    This column can be indexed, which will allow for searching for words
-    contained in the column, extracted via::
+        All standard arguments supported.
 
-        filter(None, [s.lower().strip(string.punctuation) for s in val.split()])
+        This column can be indexed, which will allow for searching for words
+        contained in the column, extracted via::
 
-    .. note:: only one column in any given model can be unique.
+            filter(None, [s.lower().strip(string.punctuation) for s in val.split()])
 
-    Used via::
+        .. note:: if Lua writing is disabled, only one String column per model can
+         be used.
 
-        class MyModel(Model):
-            col = String()
-    '''
-    _allowed = str
-    def _to_redis(self, value):
-        return value
+        Used via::
+
+            class MyModel(Model):
+                col = String()
+        '''
+        _allowed = str
+        def _to_redis(self, value):
+            return value
 
 class Text(Column):
     '''
-    A unicode string column.
-
-    All standard arguments supported, except for ``unique``.
-
-    Aside from not supporting ``unique`` indices, will generally have the same
-    behavior as a ``String`` column, only supporting unicode strings. Data is
-    encoded via utf-8 before writing to Redis. If you would like to create
-    your own column to encode/decode differently, examine the source find out
-    how to do it.
+    A unicode string column. All standard arguments supported. Behavior is
+    more or less identical to the String column type, except that unicode is
+    supported (unicode in 2.x, str in 3.x). UTF-8 is used by default as the
+    encoding to bytes on the wire.
 
     Used via::
 
@@ -360,11 +363,10 @@ class Text(Column):
     '''
     _allowed = six.text_type
     def _to_redis(self, value):
-        return value.encode('utf-8')
+        return value.encode('utf-8') if six.PY2 or not USE_LUA else value
     def _from_redis(self, value):
-        if isinstance(value, str):
+        if isinstance(value, six.binary_type):
             return value.decode('utf-8')
-        assert not isinstance(value, six.string_types), "JMXXX"
         return value
 
 class Json(Column):
@@ -524,10 +526,8 @@ class ForeignModel(Column):
     def _to_redis(self, value):
         if not value:
             return None
-        if isinstance(value, (str,) + six.integer_types):
+        if isinstance(value, six.integer_types):
             return str(value)
-        else:
-            assert not isinstance(value, six.string_types), "JMXXX"
         return str(value.id)
 
 class OneToMany(Column):

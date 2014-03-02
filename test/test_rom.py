@@ -5,6 +5,7 @@ import time
 import unittest
 
 import redis
+import six
 
 from rom import util
 
@@ -30,8 +31,9 @@ def get_state():
     c = connect(None)
     data = []
     for k in c.keys('*'):
-        k = k.decode()
-        t = c.type(k).decode()
+        k = k.decode() if six.PY3 else k
+        t = c.type(k)
+        t = t.decode() if six.PY3 else t
         if t == 'string':
             data.append((k, c.get(k)))
         elif t == 'list':
@@ -60,7 +62,7 @@ class TestORM(unittest.TestCase):
             val = Integer()
             oval = Integer(default=7)
             created_at = Float(default=_default_time)
-            req = String(required=True)
+            req = Text(required=True)
 
         self.assertRaises(ColumnError, RomTestBasicModel)
         self.assertRaises(InvalidColumnValue, lambda: RomTestBasicModel(oval='t', req='X'))
@@ -94,7 +96,7 @@ class TestORM(unittest.TestCase):
         self.assertRaises(ColumnError, foo2)
 
         class RomTestIndexModel(Model):
-            key = String(required=True, unique=True)
+            key = Text(required=True, unique=True)
 
         self.assertRaises(MissingColumn, RomTestIndexModel)
         item = RomTestIndexModel(key="hello")
@@ -139,7 +141,7 @@ class TestORM(unittest.TestCase):
 
     def test_unique(self):
         class RomTestUnique(Model):
-            attr = String(unique=True)
+            attr = Text(unique=True)
 
         a = RomTestUnique(attr='hello')
         b = RomTestUnique(attr='hello2')
@@ -156,7 +158,7 @@ class TestORM(unittest.TestCase):
 
     def test_saving(self):
         class RomTestNormal(Model):
-            attr = String()
+            attr = Text()
 
         self.assertTrue(RomTestNormal().save())
         self.assertTrue(RomTestNormal(attr='hello').save())
@@ -169,8 +171,8 @@ class TestORM(unittest.TestCase):
 
     def test_index(self):
         class RomTestIndexedModel(Model):
-            attr = String(index=True)
-            attr2 = String(index=True)
+            attr = Text(index=True)
+            attr2 = Text(index=True)
             attr3 = Integer(index=True)
             attr4 = Float(index=True)
             attr5 = Decimal(index=True)
@@ -288,9 +290,9 @@ class TestORM(unittest.TestCase):
         columns. Issue: https://github.com/josiahcarlson/rom/issues/2. """
 
         class RomTestM(Model):
-            u = String(unique=True)
+            u = Text(unique=True)
             i = Integer(index=True)
-            unrelated = String()
+            unrelated = Text()
 
         RomTestM(u='foo', i=11).save()
 
@@ -357,7 +359,7 @@ class TestORM(unittest.TestCase):
 
     def test_deletion(self):
         class RomTestDeletionTest(Model):
-            col1 = String(index=True)
+            col1 = Text(index=True)
 
         x = RomTestDeletionTest(col1="this is a test string that should be indexed")
         session.commit()
@@ -371,7 +373,7 @@ class TestORM(unittest.TestCase):
 
     def test_empty_query(self):
         class RomTestEmptyQueryTest(Model):
-            col1 = String()
+            col1 = Text()
 
         RomTestEmptyQueryTest().save()
         self.assertRaises(QueryError, RomTestEmptyQueryTest.query.all)
@@ -380,7 +382,7 @@ class TestORM(unittest.TestCase):
 
     def test_refresh(self):
         class RomTestRefresh(Model):
-            col = String()
+            col = Text()
 
         d = RomTestRefresh(col='hello')
         d.save()
@@ -416,7 +418,7 @@ class TestORM(unittest.TestCase):
             return
 
         class RomTestPSP(Model):
-            col = String(prefix=True, suffix=True)
+            col = Text(prefix=True, suffix=True)
 
         x = RomTestPSP(col="hello world how are you doing, join us today")
         x.save()
@@ -429,6 +431,36 @@ class TestORM(unittest.TestCase):
         self.assertEqual(RomTestPSP.query.like(col='*oin+').count(), 1)
         self.assertEqual(RomTestPSP.query.like(col='oin').count(), 0)
         self.assertEqual(RomTestPSP.query.like(col='+oin').like(col='wor!d').count(), 1)
+
+    def test_unicode_text(self):
+        import rom
+        ch = unichr(0xfeff) if six.PY2 else chr(0xfeff)
+        pre = ch + 'hello'
+        suf = 'hello' + ch
+
+        class RomTestUnicode1(Model):
+            col = Text(index=True, unique=True)
+
+        RomTestUnicode1(col=pre).save()
+        RomTestUnicode1(col=suf).save()
+
+        self.assertEqual(RomTestUnicode1.query.filter(col=pre).count(), 1)
+        self.assertEqual(RomTestUnicode1.query.filter(col=suf).count(), 1)
+        self.assertTrue(RomTestUnicode1.get_by(col=pre))
+        self.assertTrue(RomTestUnicode1.get_by(col=suf))
+
+        import rom
+        if rom.USE_LUA:
+            class RomTestUnicode2(Model):
+                col = Text(prefix=True, suffix=True)
+
+            RomTestUnicode2(col=pre).save()
+            RomTestUnicode2(col=suf).save()
+
+            self.assertEqual(RomTestUnicode2.query.startswith(col="h").count(), 1)
+            self.assertEqual(RomTestUnicode2.query.startswith(col=ch).count(), 1)
+            self.assertEqual(RomTestUnicode2.query.endswith(col="o").count(), 1)
+            self.assertEqual(RomTestUnicode2.query.endswith(col=ch).count(), 1)
 
     def test_infinite_ranges(self):
         """ Infinite range lookups via None in tuple.
@@ -480,10 +512,15 @@ class TestORM(unittest.TestCase):
             (dict(num=(None, -1)), 0),
         )
         for i, (kwargs, count) in enumerate(ranges):
-            msg = 'test %d: range %s, expect: %d' % (i, kwargs, count)
             try:
+                st = 1
                 self.assertEqual(len(RomTestInfRange.get_by(**kwargs)), count)
+                st = 2
+                self.assertEqual(RomTestInfRange.query.filter(**kwargs).count(), count)
+                st = 3
+                self.assertEqual(len(RomTestInfRange.query.filter(**kwargs).execute()), count)
             except Exception:
+                msg = 'test %d step %d: range %s, expect: %d' % (i, st, kwargs, count)
                 print(msg)
                 raise
 
@@ -497,9 +534,9 @@ class TestORM(unittest.TestCase):
             1,
             200,
             1<<15,
-            #1<<63,
-            #1<<128,
-            #1<<256,
+            1<<63,
+            1<<128,
+            1<<256,
         ]
 
         for i, num in enumerate(numbers):
@@ -513,12 +550,18 @@ if __name__ == '__main__':
     _disable_lua_writes()
     global_setup()
     print("Testing standard writing")
-    unittest.main(exit=False)
+    try:
+        unittest.main()
+    except SystemExit:
+        pass
     data = get_state()
     global_setup()
     _enable_lua_writes()
     print("Testing Lua writing")
-    unittest.main(exit=False)
+    try:
+        unittest.main()
+    except SystemExit:
+        pass
     lua_data = get_state()
     global_setup()
 
