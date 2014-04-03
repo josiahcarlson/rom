@@ -1,3 +1,9 @@
+#---------------------------------- 0.26.1 -----------------------------------
+[fixed] issue with deleted entity resurrection, bug report and fix thanks to
+    Justin Mayfield https://github.com/mayfield
+[fixed] issue with deleted entities not being completely cleared out during
+    delete with Lua writes enabled, bug report and fix also curtesy of Justin
+    Mayfield https://github.com/mayfield
 #---------------------------------- 0.26.0 -----------------------------------
 [added] support for Python 3.3 thanks to the six library and porting effort
     from Justin Mayfield https://github.com/mayfield, which also includes some
