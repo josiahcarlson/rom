@@ -432,7 +432,7 @@ class Model(six.with_metaclass(_ModelMetaclass, object)):
             id_only = str(pk)
             if use_lua:
                 redis_writer_lua(conn, model, id_only, unique, udeleted,
-                    deleted, data, list(keys), scores, prefix, suffix)
+                    deleted, data, list(keys), scores, prefix, suffix, delete)
                 return changes
             elif delete:
                 changes += 1
@@ -479,7 +479,6 @@ class Model(six.with_metaclass(_ModelMetaclass, object)):
         self._apply_changes(self._last, {}, delete=True)
         self._modified = True
         self._deleted = True
-        session.add(self)
 
     def copy(self):
         '''
@@ -617,6 +616,7 @@ class Model(six.with_metaclass(_ModelMetaclass, object)):
 _redis_writer_lua = _script_load('''
 local namespace = ARGV[1]
 local id = ARGV[2]
+local is_delete = cjson.decode(ARGV[11])
 
 -- check and update unique column constraints
 for i, write in ipairs({false, true}) do
@@ -680,6 +680,10 @@ if idata then
     end
 end
 
+if is_delete then
+    redis.call('DEL', string.format('%s:%s', namespace, id))
+end
+
 -- add new key index data
 local nkeys = cjson.decode(ARGV[7])
 for i, key in ipairs(nkeys) do
@@ -717,7 +721,8 @@ redis.call('HSET', namespace .. '::', id, encoded)
 return #nkeys + #nscored + #nprefix + #nsuffix
 ''')
 
-def redis_writer_lua(conn, namespace, id, unique, udelete, delete, data, keys, scored, prefix, suffix):
+def redis_writer_lua(conn, namespace, id, unique, udelete, delete, data, keys,
+                     scored, prefix, suffix, is_delete):
     ldata = []
     for pair in data.items():
         ldata.extend(pair)
@@ -728,7 +733,7 @@ def redis_writer_lua(conn, namespace, id, unique, udelete, delete, data, keys, s
         item.append(_prefix_score(item[-1]))
 
     result = _redis_writer_lua(conn, [], [namespace, id] + list(map(json.dumps, [
-        unique, udelete, delete, ldata, keys, scored, prefix, suffix])))
+        unique, udelete, delete, ldata, keys, scored, prefix, suffix, is_delete])))
     if isinstance(result, six.binary_type):
         result = result.decode()
         raise UniqueKeyViolation("Value %r for %s:%s:uidx not distinct"%(unique[result], namespace, result))

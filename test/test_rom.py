@@ -283,7 +283,7 @@ class TestORM(unittest.TestCase):
             RomTestGoo()
 
         g = RomTestGoo.get(i)
-        self.assertTrue(f is g)
+        self.assertIs(f, g)
 
     def test_index_preservation(self):
         """ Edits to unrelated columns should not remove the index of other
@@ -545,6 +545,69 @@ class TestORM(unittest.TestCase):
             session.rollback()
             echo = RomTestBigInt.get(i+1).num
             self.assertEqual(num, echo)
+
+    def test_cleanup(self):
+        """ Ensure no side effects are left in the db after a delete. """
+        redis = connect(None)
+
+        class CleanupA(Model):
+            foo = Text()
+            blist = OneToMany('CleanupB')
+
+        class CleanupB(Model):
+            bar = Text()
+            a = ManyToOne('CleanupA')
+
+        a = CleanupA(foo='foo')
+        a.save()
+        b = CleanupB(bar='foo', a=a)
+        b.save()
+        b.delete()
+        self.assertFalse(redis.hkeys('CleanupB:%d' % b.id))
+        a.delete()
+        self.assertFalse(redis.hkeys('CleanupA:%d' % a.id))
+
+        # Test delete() where a column value does not change. This affects
+        # the writer logic which checks for deltas as a means to determine
+        # what keys should be removed from the redis hash bucket.
+        a = CleanupA(foo='foo')
+        a.save()
+        b = CleanupB(bar='foo', a=a)
+        b.save()
+        a.delete()  # Nullify FK on b.
+        self.assertFalse(redis.hkeys('CleanupA:%d' % a.id))
+        session.rollback() # XXX purge session cache
+        b = CleanupB.get(b.id)
+        b.delete()  # Nullify FK on b.
+        self.assertFalse(redis.hkeys('CleanupB:%d' % b.id))
+
+    def test_delete_writethrough(self):
+        """ Verify that a Model.delete() writes through backing and session. """
+
+        class Delete(Model):
+            pass
+
+        # write-through backing
+        a = Delete()
+        a.save()
+        a.delete()
+        session.commit()
+        session.rollback() # XXX
+        self.assertIsNone(Delete.get(a.id))
+
+        # write-through cache auto-commit (session)
+        a = Delete()
+        a.save()
+        a.delete()
+        self.assertIsNone(Delete.get(a.id))
+
+        # write-through cache force-commit (session)
+        a = Delete()
+        a.save()
+        a.delete()
+        session.commit()
+        self.assertIsNone(Delete.get(a.id))
+
 
 if __name__ == '__main__':
     _disable_lua_writes()
