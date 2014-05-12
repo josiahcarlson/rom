@@ -366,7 +366,7 @@ local found_match = function(v)
 end
 
 -- core matching loop
-local has_prefix = psize > 0
+local has_prefix = psize > 0 and tonumber(ARGV[4]) == 0
 for i=start_index,end_index,100 do
     local data = redis.call('ZRANGE', idx, i, i+99)
     local last

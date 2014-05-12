@@ -1,8 +1,23 @@
+#---------------------------------- 0.26.2 -----------------------------------
+[fixed] issue when pattern-match queries wouldn't always return full results,
+    bug report, test, and initial fix thanks to https://github.com/Alanperd
+[fixed] two testing errors in Python 2.6.
+[fixed] some test cases that weren't properly namespaced for easy cleanup.
+[removed] built documention from rom source distribution (see
+    http://pythonhosted.org/rom/ instead).
+[fixed] base documention about rom including the readme is now a part of the
+    docs available at http://pythonhosted.org/rom/ , thanks to
+    https://github.com/pconerly for the report on incomplete docs.
+[fixed] added modern requirements thanks to report from
+    https://github.com/pconerly .
+[fixed] documentation on per-model connection objects.
+[removed] extraneous and confusing documentation about the `index` and
+    `columns` submodules.
 #---------------------------------- 0.26.1 -----------------------------------
 [fixed] issue with deleted entity resurrection, bug report and fix thanks to
     Justin Mayfield https://github.com/mayfield
 [fixed] issue with deleted entities not being completely cleared out during
-    delete with Lua writes enabled, bug report and fix also curtesy of Justin
+    delete with Lua writes enabled, bug report and fix also courtesy of Justin
     Mayfield https://github.com/mayfield
 #---------------------------------- 0.26.0 -----------------------------------
 [added] support for Python 3.3 thanks to the six library and porting effort

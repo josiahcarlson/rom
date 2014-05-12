@@ -78,11 +78,14 @@ Getting started
 
 7. Create a model::
 
-    class User(Model):
-        email = String(required=True, unique=True, suffix=True)
-        salt = String()
-        hash = String()
-        created_at = Float(default=time.time)
+    import rom
+
+    # All models to be handled by rom must derived from rom.Model
+    class User(rom.Model):
+        email = rom.String(required=True, unique=True, suffix=True)
+        salt = rom.String()
+        hash = rom.String()
+        created_at = rom.Float(default=time.time)
 
 8. Create an instance of the model and save it::
 

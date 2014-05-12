@@ -1,6 +1,9 @@
 #!/usr/bin/env python
 
-from distutils.core import setup
+try:
+    from setuptools import setup
+except:
+    from distutils.core import setup
 
 long_description = open('README.rst').read()
 version = open('VERSION').read().strip()
@@ -26,5 +29,6 @@ setup(
     license='GNU LGPL v2.1',
     long_description=long_description,
     requires=['redis', 'six'],
+    install_requires=['redis', 'six'],
 )
 

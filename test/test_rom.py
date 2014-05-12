@@ -57,6 +57,12 @@ class TestORM(unittest.TestCase):
     def setUp(self):
         session.rollback()
 
+    # for Python 2.6
+    def assertIsNone(self, arg):
+        assert arg is None
+    def assertIs(self, arg1, arg2):
+        assert arg1 is arg2
+
     def test_basic_model(self):
         class RomTestBasicModel(Model):
             val = Integer()
@@ -550,66 +556,93 @@ class TestORM(unittest.TestCase):
         """ Ensure no side effects are left in the db after a delete. """
         redis = connect(None)
 
-        class CleanupA(Model):
+        class RomTestCleanupA(Model):
             foo = Text()
-            blist = OneToMany('CleanupB')
+            blist = OneToMany('RomTestCleanupB')
 
-        class CleanupB(Model):
+        class RomTestCleanupB(Model):
             bar = Text()
-            a = ManyToOne('CleanupA')
+            a = ManyToOne('RomTestCleanupA')
 
-        a = CleanupA(foo='foo')
+        a = RomTestCleanupA(foo='foo')
         a.save()
-        b = CleanupB(bar='foo', a=a)
+        b = RomTestCleanupB(bar='foo', a=a)
         b.save()
         b.delete()
-        self.assertFalse(redis.hkeys('CleanupB:%d' % b.id))
+        self.assertFalse(redis.hkeys('RomTestCleanupB:%d' % b.id))
         a.delete()
-        self.assertFalse(redis.hkeys('CleanupA:%d' % a.id))
+        self.assertFalse(redis.hkeys('RomTestCleanupA:%d' % a.id))
 
         # Test delete() where a column value does not change. This affects
         # the writer logic which checks for deltas as a means to determine
         # what keys should be removed from the redis hash bucket.
-        a = CleanupA(foo='foo')
+        a = RomTestCleanupA(foo='foo')
         a.save()
-        b = CleanupB(bar='foo', a=a)
+        b = RomTestCleanupB(bar='foo', a=a)
         b.save()
         a.delete()  # Nullify FK on b.
-        self.assertFalse(redis.hkeys('CleanupA:%d' % a.id))
+        self.assertFalse(redis.hkeys('RomTestCleanupA:%d' % a.id))
         session.rollback() # XXX purge session cache
-        b = CleanupB.get(b.id)
+        b = RomTestCleanupB.get(b.id)
         b.delete()  # Nullify FK on b.
-        self.assertFalse(redis.hkeys('CleanupB:%d' % b.id))
+        self.assertFalse(redis.hkeys('RomTestCleanupB:%d' % b.id))
 
     def test_delete_writethrough(self):
         """ Verify that a Model.delete() writes through backing and session. """
 
-        class Delete(Model):
+        class RomTestDelete(Model):
             pass
 
         # write-through backing
-        a = Delete()
+        a = RomTestDelete()
         a.save()
         a.delete()
         session.commit()
-        session.rollback() # XXX
-        self.assertIsNone(Delete.get(a.id))
+        session.rollback()
+        self.assertIsNone(RomTestDelete.get(a.id))
 
         # write-through cache auto-commit (session)
-        a = Delete()
+        a = RomTestDelete()
         a.save()
         a.delete()
-        self.assertIsNone(Delete.get(a.id))
+        self.assertIsNone(RomTestDelete.get(a.id))
 
         # write-through cache force-commit (session)
-        a = Delete()
+        a = RomTestDelete()
         a.save()
         a.delete()
         session.commit()
-        self.assertIsNone(Delete.get(a.id))
+        self.assertIsNone(RomTestDelete.get(a.id))
 
+    def test_(self):
+        from rom import columns
+        if not columns.USE_LUA:
+            return
+        class RomTestPerson(Model):
+            name = Text(prefix=True, suffix=True, index=True)
 
-if __name__ == '__main__':
+        names = ['Acasaoi', 'Maria Williamson IV', 'Rodrigo Howe',
+            'Mr. Willow Goldner', 'Melody Prohaska', 'Hulda Botsford',
+            'Lester Swaniawski MD', 'Vilma Mohr Sr.', 'Pierre Moen',
+            'Beau Streich', 'Mrs. Laron Morar III', 'bmliodasas',
+            'Jewell Stroman', 'Garfield Stark', 'Dr. Ignatius Kuvalis PhD',
+            'Nikita Okuneva', 'Daija Turcotte', 'Royce Halvorson',
+            'Tess Schimmel', 'Ms. Monte Heathcote', 'Johann Glover',
+            'Kade Lueilwitz', 'bsaasao', 'Casper Pouros',
+            'Miss Griffin Corkery II', 'Cierra Volkman V', 'Sean McLaughlin',
+            'Cmlio', 'Cdsdmlio', 'Dasao', 'Dioasu', 'Eioasu', 'Fasao',
+            'Emilie Towne II', 'G h o', 'Jhorecgssd',
+            'H Mrs. Newton Murazik Sr.  Zidfdfoaxaol dfgdfggf ',
+            'Zidfdfoasaol dfgdfggf Mrs. Newton Murazik Sr.  ',
+            'Perry Ankunding', 'Dusty Kessler', 'Jacinthe Bechtelar',
+            'Dr. Jordan Hintz PhD', 'Miss Monty Kuvalis']
+        for name in names:
+            RomTestPerson(name=name)
+        session.commit()
+
+        self.assertEqual(RomTestPerson.query.like(name='*asao*').count(), 5)
+
+def main():
     _disable_lua_writes()
     global_setup()
     print("Testing standard writing")
@@ -633,3 +666,6 @@ if __name__ == '__main__':
         ## import pprint
         ## pprint.pprint(data)
         ## pprint.pprint(lua_data)
+
+if __name__ == '__main__':
+    main()
