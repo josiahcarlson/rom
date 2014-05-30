@@ -13,9 +13,9 @@ There are 4 ways to change the way that ``rom`` connects to Redis.
 
     rom.util.set_connection_settings(host='myhost', db=7)
 
-2. Give each model its own Redis connection on creation, called _connection,
-   which will be used whenever any Redis-related calls are made on instances
-   of that model::
+2. Give each model its own Redis connection on creation, called _conn, which
+   will be used whenever any Redis-related calls are made on instances of that
+   model::
 
     import rom
 

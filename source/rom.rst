@@ -1,34 +1,14 @@
 rom Package
 ===========
 
-:mod:`rom` Package
-------------------
-
-.. automodule:: rom.__init__
+.. automodule:: rom
     :members:
-    :undoc-members:
-    :show-inheritance:
-
-:mod:`columns` Module
-------------------------
-
-.. automodule:: rom.columns
-    :members:
-    :undoc-members:
     :show-inheritance:
 
 :mod:`exceptions` Module
 ------------------------
 
 .. automodule:: rom.exceptions
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
-:mod:`index` Module
--------------------
-
-.. automodule:: rom.index
     :members:
     :undoc-members:
     :show-inheritance:

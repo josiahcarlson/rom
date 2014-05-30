@@ -364,17 +364,9 @@ local found_match = function(v)
     end
     return redis.call('ZADD', tkey, 0, string.sub(v, endv+1, #v))
 end
+
 -- core matching loop
--- ALP 12/02/2014, If we look for pattern, we can not leave the bukle in search of data. The error occurs with many records, when we are searching for pattern
--- ALP local has_prefix = psize > 0
-
-if tonumber(ARGV[4]) > 0 then
-    has_prefix = false
-else
-    -- APL 12/02/2014, psize always is more than zero.
-    has_prefix = psize > 0
-end
-
+local has_prefix = psize > 0 and tonumber(ARGV[4]) == 0
 for i=start_index,end_index,100 do
     local data = redis.call('ZRANGE', idx, i, i+99)
     local last

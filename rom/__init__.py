@@ -78,11 +78,14 @@ Getting started
 
 7. Create a model::
 
-    class User(Model):
-        email = String(required=True, unique=True, suffix=True)
-        salt = String()
-        hash = String()
-        created_at = Float(default=time.time)
+    import rom
+
+    # All models to be handled by rom must derived from rom.Model
+    class User(rom.Model):
+        email = rom.String(required=True, unique=True, suffix=True)
+        salt = rom.String()
+        hash = rom.String()
+        created_at = rom.Float(default=time.time)
 
 8. Create an instance of the model and save it::
 
@@ -136,7 +139,7 @@ from .index import GeneralIndex, Pattern, Prefix, Suffix
 from .util import (ClassProperty, _connect, session, dt2ts, t2ts,
     _prefix_score, _script_load)
 
-VERSION = '0.26.1'
+VERSION = '0.26.2'
 
 COLUMN_TYPES = [Column, Integer, Boolean, Float, Decimal, DateTime, Date,
 Time, Text, Json, PrimaryKey, ManyToOne, ForeignModel, OneToMany]
