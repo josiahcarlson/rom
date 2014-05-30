@@ -227,6 +227,7 @@ class GeneralIndex(object):
                     pipe.zremrangebyscore(temp_id, _to_score(ma, True), 'inf')
             first = False
             intersect = pipe.zinterstore
+            pipe.execute() # ALP 29/05/2014, the changes are confirmed  in each round bukle 
         return pipe, intersect, temp_id
 
     def search(self, conn, filters, order_by, offset=None, count=None, timeout=None):
