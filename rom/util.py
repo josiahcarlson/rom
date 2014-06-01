@@ -51,6 +51,7 @@ import threading
 import weakref
 
 import redis
+from redis.client import BasePipeline
 import six
 
 from .exceptions import ORMError
@@ -414,7 +415,7 @@ def refresh_indices(model, block_size=100):
 
 def _script_load(script):
     '''
-    Borrowed from my book, Redis in Action:
+    Borrowed/modified from my book, Redis in Action:
     https://github.com/josiahcarlson/redis-in-action/blob/master/python/ch11_listing_source.py
 
     Used for Lua scripting support when writing against Redis 2.6+ to allow
@@ -424,8 +425,8 @@ def _script_load(script):
     def call(conn, keys=[], args=[], force_eval=False):
         if not force_eval:
             if not sha[0]:
-                sha[0] = conn.execute_command(
-                    "SCRIPT", "LOAD", script, parse="LOAD")
+                ec = conn.immediate_execute_command if isinstance(conn, BasePipeline) else conn.execute_command
+                sha[0] = ec("SCRIPT", "LOAD", script, parse="LOAD")
 
             try:
                 return conn.execute_command(
@@ -439,4 +440,3 @@ def _script_load(script):
             "EVAL", script, len(keys), *(keys+args))
 
     return call
-

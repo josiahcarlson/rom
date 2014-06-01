@@ -614,7 +614,7 @@ class TestORM(unittest.TestCase):
         session.commit()
         self.assertIsNone(RomTestDelete.get(a.id))
 
-    def test_(self):
+    def test_prefix_suffix1(self):
         from rom import columns
         if not columns.USE_LUA:
             return
@@ -641,6 +641,31 @@ class TestORM(unittest.TestCase):
         session.commit()
 
         self.assertEqual(RomTestPerson.query.like(name='*asao*').count(), 5)
+
+    def test_prefix_suffix2(self):
+        from rom import columns
+        if not columns.USE_LUA:
+            return
+        string = String if six.PY2 else Text
+        class RomTestPerson2(Model):
+            idPerson = string(prefix=True, suffix=True, index=True)
+            description = string(prefix=True, suffix=True, index=True)
+        data = [
+            ["8947589545872", "ayuntamientodeciudad"],
+            ["8947589545872", "ayuntamientodeguipuzcoa"],
+            ["8947589545872", "ayuntamientodepalencia"],
+            ["8947589545872", "ayuntamientodeciudad"],
+            ["8947589569872", "ayuntamientodeburgos"], #
+            ["8947689545872", "ayuntamientodeburgos"],
+            ["8947689545872", "ayuntamientodeburgos"],
+            ["894789545872", "ayuntamientodeciudad"]
+        ]
+        cols = ['idPerson', 'description']
+        for d in data:
+            RomTestPerson2(**dict(zip(cols, d)))
+        session.commit()
+
+        self.assertEqual(RomTestPerson2.query.startswith(idPerson='89475').filter(description="ayuntamientodeburgos").count(),1)
 
 def main():
     _disable_lua_writes()

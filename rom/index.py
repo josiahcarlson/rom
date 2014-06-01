@@ -206,9 +206,9 @@ class GeneralIndex(object):
                 # simple string/tag search
                 intersect(temp_id, {temp_id:0, '%s:%s:idx'%(self.namespace, fltr):0})
             elif isinstance(fltr, Prefix):
-                redis_prefix_lua(conn, temp_id, '%s:%s:pre'%(self.namespace, fltr.attr), fltr.prefix, first)
+                redis_prefix_lua(pipe, temp_id, '%s:%s:pre'%(self.namespace, fltr.attr), fltr.prefix, first)
             elif isinstance(fltr, Suffix):
-                redis_prefix_lua(conn, temp_id, '%s:%s:suf'%(self.namespace, fltr.attr), fltr.suffix, first)
+                redis_prefix_lua(pipe, temp_id, '%s:%s:suf'%(self.namespace, fltr.attr), fltr.suffix, first)
             elif isinstance(fltr, Pattern):
                 redis_prefix_lua(conn, temp_id,
                     '%s:%s:pre'%(self.namespace, fltr.attr),
@@ -402,8 +402,7 @@ def redis_prefix_lua(conn, dest, index, prefix, is_first, pattern=None):
     start, end = _start_end(prefix)
     return _redis_prefix_lua(conn,
         [dest, tkey, index],
-        [start, end, pattern or prefix, int(pattern is not None), int(bool(is_first))],
-        force_eval=True
+        [start, end, pattern or prefix, int(pattern is not None), int(bool(is_first))]
     )
 
 _estimate_work_lua = _script_load('''

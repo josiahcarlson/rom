@@ -1,3 +1,7 @@
+#---------------------------------- 0.26.3 -----------------------------------
+[fixed] issue when pattern match queries would sometimes produce more results
+    than would be correct, bug report, test, and initial fix thanks to
+    https://github.com/Alanperd
 #---------------------------------- 0.26.2 -----------------------------------
 [fixed] issue when pattern-match queries wouldn't always return full results,
     bug report, test, and initial fix thanks to https://github.com/Alanperd
