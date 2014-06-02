@@ -1,3 +1,7 @@
+#---------------------------------- 0.26.4 -----------------------------------
+[fixed] forgot one reference that should have been fixed in 0.26.3. Everyone
+    should upgrade from 0.26.3 . Thanks to https://github.com/Alanperd for the
+    report and test case.
 #---------------------------------- 0.26.3 -----------------------------------
 [fixed] issue when pattern match queries would sometimes produce more results
     than would be correct, bug report, test, and initial fix thanks to

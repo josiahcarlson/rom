@@ -655,7 +655,7 @@ class TestORM(unittest.TestCase):
             ["8947589545872", "ayuntamientodeguipuzcoa"],
             ["8947589545872", "ayuntamientodepalencia"],
             ["8947589545872", "ayuntamientodeciudad"],
-            ["8947589569872", "ayuntamientodeburgos"], #
+            ["8937589569872", "ayuntamientodeburgos"],
             ["8947689545872", "ayuntamientodeburgos"],
             ["8947689545872", "ayuntamientodeburgos"],
             ["894789545872", "ayuntamientodeciudad"]
@@ -665,7 +665,8 @@ class TestORM(unittest.TestCase):
             RomTestPerson2(**dict(zip(cols, d)))
         session.commit()
 
-        self.assertEqual(RomTestPerson2.query.startswith(idPerson='89475').filter(description="ayuntamientodeburgos").count(),1)
+        self.assertEqual(RomTestPerson2.query.startswith(idPerson='89375').filter(description="ayuntamientodeburgos").count(), 1)
+        self.assertEqual(RomTestPerson2.query.like(idPerson='*94*').filter(description="ayuntamientodeburgos").count(), 2)
 
 def main():
     _disable_lua_writes()

@@ -210,7 +210,7 @@ class GeneralIndex(object):
             elif isinstance(fltr, Suffix):
                 redis_prefix_lua(pipe, temp_id, '%s:%s:suf'%(self.namespace, fltr.attr), fltr.suffix, first)
             elif isinstance(fltr, Pattern):
-                redis_prefix_lua(conn, temp_id,
+                redis_prefix_lua(pipe, temp_id,
                     '%s:%s:pre'%(self.namespace, fltr.attr),
                     _find_prefix(fltr.pattern),
                     first, '^' + _pattern_to_lua_pattern(fltr.pattern),

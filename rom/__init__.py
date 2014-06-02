@@ -139,7 +139,7 @@ from .index import GeneralIndex, Pattern, Prefix, Suffix
 from .util import (ClassProperty, _connect, session, dt2ts, t2ts,
     _prefix_score, _script_load)
 
-VERSION = '0.26.3'
+VERSION = '0.26.4'
 
 COLUMN_TYPES = [Column, Integer, Boolean, Float, Decimal, DateTime, Date,
 Time, Text, Json, PrimaryKey, ManyToOne, ForeignModel, OneToMany]
