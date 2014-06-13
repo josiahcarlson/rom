@@ -493,7 +493,7 @@ class Model(six.with_metaclass(_ModelMetaclass, object)):
         return self.__class__(**x)
 
     @classmethod
-    def get(cls, ids):
+    def get(cls, ids, no_cache=False):
         '''
         Will fetch one or more entities of this type from the session or
         Redis.
@@ -513,7 +513,10 @@ class Model(six.with_metaclass(_ModelMetaclass, object)):
             ids = [ids]
         pks = ['%s:%s'%(cls.__name__, id) for id in map(int, ids)]
         # get from the session, if possible
-        out = list(map(session.get, pks))
+		if (no_cache == False)
+			out = list(map(session.get, pks))
+		else
+			out = list(map(None, pks))
         # if we couldn't get an instance from the session, load from Redis
         if None in out:
             pipe = conn.pipeline(True)
@@ -747,12 +750,13 @@ class Query(object):
     operation performed on Query objects returns a new Query object. The old
     Query object *does not* have any updated filters.
     '''
-    __slots__ = '_model _filters _order_by _limit'.split()
-    def __init__(self, model, filters=(), order_by=None, limit=None):
+    __slots__ = '_model _filters _order_by _limit _no_cache'.split()
+    def __init__(self, model, filters=(), order_by=None, limit=None, no_cache=None):
         self._model = model
         self._filters = filters
         self._order_by = order_by
         self._limit = limit
+		self._no_cache = no_cache
 
     def replace(self, **kwargs):
         '''
@@ -764,6 +768,7 @@ class Query(object):
             'filters': self._filters,
             'order_by': self._order_by,
             'limit': self._limit,
+			'no_cache': self._no_cache,
         }
         data.update(**kwargs)
         return Query(**data)
@@ -982,7 +987,7 @@ class Query(object):
         filters, ordered by the specified ordering (if any), limited by any
         earlier limit calls.
         '''
-        return self._model.get(self._search())
+        return self._model.get(self._search(),no_cache=_no_cache)
 
     def all(self):
         '''
