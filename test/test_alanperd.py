@@ -95,10 +95,53 @@ class TestFilter(unittest.TestCase):
         for c in Person.query.like(idPerson='*94*').filter(description="ayuntamientodeburgos").all():
             print c.name + " " + c.idPerson
         self.assertEqual(Person.query.like(idPerson='*94*').filter(description="ayuntamientodeburgos").count(),2)
-        
+    
+    
+    
 
+
+def get_person_by_age():
+    import time 
+    while True:
+        objPerson= Person.query.filter(edad=21).first()
+        print objPerson.name
+        time.sleep(5)
+        
 if __name__ == '__main__':
+    import time
+    import threading
+    objPerson= Person.query.filter(edad=21).first()
+    objPerson.name="Alan"
+    objPerson.save()
+    t = threading.Thread(target=get_person_by_age)
+    t.daemon=True
+    t.start()
+    
+    objPerson= Person.query.filter(edad=21).first()
+    objPerson.name="Juan"
+    objPerson.save()
+    
+    t = threading.Thread(target=get_person_by_age)
+    t.daemon=True
+    t.start()
+          
+    while True:
+        print "--- Waiting ---"
+        time.sleep(1)
+  
+    
+    
+    #objPerson.name="Alan"
+    
+    #objPerson.save()
+    #print objPerson.name
+    
+    
     unittest.main()
+    
+    
+    
+    
     #import time 
     #while True:
     #    print "This prints once a minute."
