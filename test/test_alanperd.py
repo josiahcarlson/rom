@@ -98,10 +98,55 @@ class TestFilter(unittest.TestCase):
         
 
 if __name__ == '__main__':
+
+    import time
+    import threading
+    
+    lstCount=[]
+    objPerson= Person.query.filter(edad=20).all(lstCount=lstCount)
+    objPerson= Person.query.filter(edad=20).all()
+    
+    print lstCount
+    
+    #for c in objPerson:
+    #    print c.name
+    
+    
+    print Person.query.filter(edad=20).count()
+    
+    """
+    objPerson.name="Alan"
+    objPerson.save()
+    t = threading.Thread(target=get_person_by_age)
+    t.daemon=True
+    t.start()
+    time.sleep(1)
+    
+    objPerson= Person.query.filter(edad=21).first()
+    objPerson.name="Juan"
+    objPerson.save()
+    
+    t = threading.Thread(target=get_person_by_age)
+    t.daemon=True
+    t.start()
+          
+    while True:
+        print "--- Waiting ---"
+        time.sleep(1)
+    
+    
+    
+    #objPerson.name="Alan"
+    
+    #objPerson.save()
+    #print objPerson.name
+    
+    
+>>>>>>> Option count is added in the search method.
     unittest.main()
     #import time 
     #while True:
     #    print "This prints once a minute."
     #    time.sleep(60)
-    
+    """
     
