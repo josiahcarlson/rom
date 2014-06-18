@@ -1,3 +1,6 @@
+#---------------------------------- 0.26.5 -----------------------------------
+[added] the ability to selectively choose rom's session caching behavior, see
+    http://pythonhosted.org//rom/rom.html#using-a-non-caching-session-object
 #---------------------------------- 0.26.4 -----------------------------------
 [fixed] forgot one reference that should have been fixed in 0.26.3. Everyone
     should upgrade from 0.26.3 . Thanks to https://github.com/Alanperd for the

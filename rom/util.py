@@ -69,8 +69,8 @@ global or per-thread basis.
 2. To override behavior on a per-thread basis, you can set the attribute
    ``null_session`` on the ``session`` object (which is available as
    ``rom.session``, ``rom.columns.session``, or ``rom.util.session``), which
-   will set the thread's behavior to be cached (``session.null_session = True``),
-   uncached (``session.null_session = False``), or the global default
+   will set the thread's behavior to be uncached (``session.null_session =
+   True``), cached (``session.null_session = False``), or the global default
    (``del session.null_session``).
 
 '''
