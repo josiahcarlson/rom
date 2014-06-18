@@ -229,7 +229,7 @@ class GeneralIndex(object):
             intersect = pipe.zinterstore
         return pipe, intersect, temp_id
 
-    def search(self, conn, filters, order_by, offset=None, count=None, timeout=None):
+    def search(self, conn, filters, order_by, offset=None, count=None, timeout=None,rowcount=None): #ALP
         '''
         Search for model ids that match the provided filters.
 
@@ -293,11 +293,23 @@ class GeneralIndex(object):
             pipe.execute()
             return temp_id
 
+        if (rowcount<>None):
+           pipe.zcard(temp_id) #ALP
+        
         offset = offset if offset is not None else 0
         end = (offset + count - 1) if count and count > 0 else -1
         pipe.zrange(temp_id, offset, end)
+        
         pipe.delete(temp_id)
-        return pipe.execute()[-2]
+        
+        lst=pipe.execute()
+        
+        if (rowcount<>None):
+           rowcount.append((lst[-3])) #ALP
+        
+        return lst[-2]
+        
+        #return pipe.execute()[-2]
 
     def count(self, conn, filters):
         '''
@@ -309,6 +321,8 @@ class GeneralIndex(object):
         pipe, intersect, temp_id = self._prepare(conn, filters)
         pipe.zcard(temp_id)
         pipe.delete(temp_id)
+                
+        
         return pipe.execute()[-2]
 
 _redis_prefix_lua = _script_load('''
