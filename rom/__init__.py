@@ -940,15 +940,15 @@ class Query(object):
             raise QueryError("You are missing filter or order criteria")
         return self._model._gindex.count(_connect(self._model), filters)
 
-    def _search(self,lstCount=None):
+    def _search(self,rowcount=None):
         if not (self._filters or self._order_by):
             raise QueryError("You are missing filter or order criteria")
         limit = () if not self._limit else self._limit
         
         
-        if lstCount<>None:
+        if rowcount<>None:
             return self._model._gindex.search(
-                _connect(self._model), self._filters, self._order_by, *limit,lstCount=lstCount)
+                _connect(self._model), self._filters, self._order_by, *limit,rowcount=rowcount)
         else:
             return self._model._gindex.search(
                 _connect(self._model), self._filters, self._order_by, *limit)
@@ -983,26 +983,26 @@ class Query(object):
         return self._model._gindex.search(
             _connect(self._model), self._filters, self._order_by, timeout=timeout)
 
-    def execute(self,lstCount=None):
+    def execute(self,rowcount=None):
         '''
         Actually executes the query, returning any entities that match the
         filters, ordered by the specified ordering (if any), limited by any
         earlier limit calls.
         '''
         
-        if (lstCount<>None):
-            return self._model.get(self._search(lstCount=lstCount))
+        if (rowcount<>None):
+            return self._model.get(self._search(rowcount=rowcount))
         else:
             return self._model.get(self._search())
             #ALP Option count is added in the search method.
 
-    def all(self,lstCount=None):
+    def all(self,rowcount=None):
         '''
         Alias for ``execute()``.
         '''
         
-        if lstCount<> None:
-            self.execute(lstCount=lstCount)
+        if rowcount<> None:
+            self.execute(rowcount=rowcount)
         else:        
             return self.execute()
 

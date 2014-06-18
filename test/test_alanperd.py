@@ -95,26 +95,20 @@ class TestFilter(unittest.TestCase):
         for c in Person.query.like(idPerson='*94*').filter(description="ayuntamientodeburgos").all():
             print c.name + " " + c.idPerson
         self.assertEqual(Person.query.like(idPerson='*94*').filter(description="ayuntamientodeburgos").count(),2)
-        
+    
+    def test_rowcount(self):
+        CountPersons=[]
+        objPerson= Person.query.filter(edad=20).all(rowcount=CountPersons)
+        self.assertEqual(CountPersons[0],Person.query.filter(edad=20).count())
+   
 
 if __name__ == '__main__':
-
-    import time
-    import threading
-    
-    lstCount=[]
-    objPerson= Person.query.filter(edad=20).all(lstCount=lstCount)
-    objPerson= Person.query.filter(edad=20).all()
-    
-    print lstCount
-    
-    #for c in objPerson:
-    #    print c.name
-    
-    
-    print Person.query.filter(edad=20).count()
+    unittest.main()
+  
     
     """
+    util.use_null_session()
+    objPerson= Person.query.filter(edad=21).first()
     objPerson.name="Alan"
     objPerson.save()
     t = threading.Thread(target=get_person_by_age)
@@ -134,19 +128,20 @@ if __name__ == '__main__':
         print "--- Waiting ---"
         time.sleep(1)
     
-    
-    
+    """
     #objPerson.name="Alan"
     
     #objPerson.save()
     #print objPerson.name
     
     
->>>>>>> Option count is added in the search method.
-    unittest.main()
+    #unittest.main()
+    
+    
+    
+    
     #import time 
     #while True:
     #    print "This prints once a minute."
     #    time.sleep(60)
-    """
     
