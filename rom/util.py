@@ -3,7 +3,7 @@
 Changing connection settings
 ============================
 
-There are 4 ways to change the way that ``rom`` connects to Redis.
+There are four ways to change the way that ``rom`` connects to Redis.
 
 1. Set the global default connection settings by calling
    ``rom.util.set_connection_settings()``` with the same arguments you would
@@ -43,6 +43,36 @@ There are 4 ways to change the way that ``rom`` connects to Redis.
         return redis.Redis(host='myhost', db=7)
 
     rom.util.get_connection = my_connection
+
+
+Using a non-caching session object
+==================================
+
+If you would like to stop ``rom`` from caching your data for later
+``session.commit()`` or faster data fetching (and there are several reasons for
+doing this), ``rom`` offers two methods to enable or disable caching on either a
+global or per-thread basis.
+
+1. To set the global default behavior as not caching anything, you can::
+
+    import rom.util
+    rom.util.use_null_session()
+
+   From the point that ``rom.util.use_null_session()`` is called, no additional
+   caching will be performed. You must explicitly ``.save()`` any newly created
+   entities, and ``session.commit()`` will only save those objects that had been
+   cached prior to the ``rom.util.use_null_session()`` call.
+
+   You can switch back to the standard ``rom`` behavior by calling
+   ``rom.util.use_rom_session()``.
+
+2. To override behavior on a per-thread basis, you can set the attribute
+   ``null_session`` on the ``session`` object (which is available as
+   ``rom.session``, ``rom.columns.session``, or ``rom.util.session``), which
+   will set the thread's behavior to be cached (``session.null_session = True``),
+   uncached (``session.null_session = False``), or the global default
+   (``del session.null_session``).
+
 '''
 
 from datetime import datetime, date, time as dtime
@@ -216,6 +246,8 @@ def ts2t(value):
     second, value = divmod(value, 1)
     return dtime(*map(int, [hour, minute, second, value*1000000]))
 
+NULL_SESSION = False
+
 class Session(threading.local):
     '''
     This is a very dumb session. All it tries to do is to keep a cache of
@@ -236,10 +268,25 @@ class Session(threading.local):
             self.known = {}
             self.wknown = weakref.WeakValueDictionary()
 
+    @property
+    def null_session(self):
+        return getattr(self, '_null_session', NULL_SESSION)
+
+    @null_session.setter
+    def null_session(self, value):
+        self._null_session = value
+
+    @null_session.deleter
+    def null_session(self):
+        self._null_session = None
+        del self._null_session
+
     def add(self, obj):
         '''
         Adds an entity to the session.
         '''
+        if self.null_session:
+            return
         self._init()
         self.known[obj._pk] = obj
         self.wknown[obj._pk] = obj
@@ -303,7 +350,7 @@ class Session(threading.local):
 
     def save(self, *objects, **kwargs):
         '''
-        This method an alternate API for saving many entities (possibly not
+        This method is an alternate API for saving many entities (possibly not
         tracked by the session). You can call::
 
             session.save(obj)
@@ -374,6 +421,28 @@ class Session(threading.local):
         To force reloading for modified entities, you can pass ``force=True``.
         '''
         self.refresh(*self.known.values(), force=kwargs.get('force'))
+
+def use_null_session():
+    '''
+    If you call ``use_null_session()``, you will change the default session for
+    all threads to *not cache*. You can override the default on a per-thread
+    basis by manipulating ``session.null_session`` (set to ``True``, ``False``,
+    or delete the attribute to not cache, cache, or use the global default,
+    respectively).
+    '''
+    global NULL_SESSION
+    NULL_SESSION = True
+
+def use_rom_session():
+    '''
+    If you call ``use_rom_session()``, you will change the default session for
+    all threads to *cache*. You can override the default on a per-thread basis
+    by manipulating ``session.null_session`` (set to ``True``, ``False``, or
+    delete the attribute to not cache, cache, or use the global default,
+    respectively).
+    '''
+    global NULL_SESSION
+    NULL_SESSION = False
 
 session = Session()
 

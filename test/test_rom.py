@@ -668,6 +668,26 @@ class TestORM(unittest.TestCase):
         self.assertEqual(RomTestPerson2.query.startswith(idPerson='89375').filter(description="ayuntamientodeburgos").count(), 1)
         self.assertEqual(RomTestPerson2.query.like(idPerson='*94*').filter(description="ayuntamientodeburgos").count(), 2)
 
+    def test_null_session(self):
+        class RomTestNullSession(Model):
+            data = String() if six.PY2 else Text()
+
+        x = RomTestNullSession(data="test")
+        x.save()
+        session.rollback()
+
+        util.use_null_session()
+        y = RomTestNullSession.get(x.id)
+        self.assertNotEqual(x, y)
+        self.assertEqual(util.session.get(x._pk), None)
+
+        util.use_rom_session()
+        z = RomTestNullSession.get(x.id)
+        self.assertEqual(util.session.get(x._pk), z)
+
+        util.session.rollback()
+        del x, y, z
+
 def main():
     _disable_lua_writes()
     global_setup()
