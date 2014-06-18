@@ -493,7 +493,7 @@ class Model(six.with_metaclass(_ModelMetaclass, object)):
         return self.__class__(**x)
 
     @classmethod
-    def get(cls, ids):
+    def get(cls, ids, no_cache=False):
         '''
         Will fetch one or more entities of this type from the session or
         Redis.
@@ -513,7 +513,13 @@ class Model(six.with_metaclass(_ModelMetaclass, object)):
             ids = [ids]
         pks = ['%s:%s'%(cls.__name__, id) for id in map(int, ids)]
         # get from the session, if possible
-        out = list(map(session.get, pks))
+		
+        if (no_cache == False) or (no_cache==None):
+		    out = list(map(session.get, pks))
+        else: #ALP 16/06/2014, in case that the cahe option isn't activated
+            out=[]
+            for c in pks:
+                out.append(None)
         # if we couldn't get an instance from the session, load from Redis
         if None in out:
             pipe = conn.pipeline(True)
@@ -536,7 +542,7 @@ class Model(six.with_metaclass(_ModelMetaclass, object)):
         return out
 
     @classmethod
-    def get_by(cls, **kwargs):
+    def get_by(cls, **kwargs): #ALP 16/06/2014 
         '''
         This method offers a simple query method for fetching entities of this
         type via attribute numeric ranges (such columns must be ``indexed``),
@@ -747,12 +753,13 @@ class Query(object):
     operation performed on Query objects returns a new Query object. The old
     Query object *does not* have any updated filters.
     '''
-    __slots__ = '_model _filters _order_by _limit'.split()
-    def __init__(self, model, filters=(), order_by=None, limit=None):
+    __slots__ = '_model _filters _order_by _limit _no_cache'.split()
+    def __init__(self, model, filters=(), order_by=None, limit=None, no_cache=None):
         self._model = model
         self._filters = filters
         self._order_by = order_by
         self._limit = limit
+        self._no_cache = no_cache
 
     def replace(self, **kwargs):
         '''
@@ -764,9 +771,15 @@ class Query(object):
             'filters': self._filters,
             'order_by': self._order_by,
             'limit': self._limit,
+			'no_cache': self._no_cache,
         }
         data.update(**kwargs)
         return Query(**data)
+
+    def no_cache(self,**kwargs):
+        self._no_cache= kwargs["no_cache"]
+        
+        return self.replace(no_cache=self._no_cache)
 
     def filter(self, **kwargs):
         '''
@@ -982,7 +995,7 @@ class Query(object):
         filters, ordered by the specified ordering (if any), limited by any
         earlier limit calls.
         '''
-        return self._model.get(self._search())
+        return self._model.get(self._search(),no_cache=self._no_cache)
 
     def all(self):
         '''
@@ -999,5 +1012,5 @@ class Query(object):
             lim[0] = self._limit[0]
         ids = self.limit(*lim)._search()
         if ids:
-            return self._model.get(ids[0])
+            return self._model.get(ids[0],self._no_cache)
         return None
