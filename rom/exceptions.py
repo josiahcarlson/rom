@@ -2,7 +2,7 @@
 __all__ = '''
     ORMError UniqueKeyViolation InvalidOperation
     QueryError ColumnError MissingColumn
-    InvalidColumnValue'''.split()
+    InvalidColumnValue RestrictError'''.split()
 
 class ORMError(Exception):
     'Base class for all ORM-related errors'
@@ -15,6 +15,9 @@ class InvalidOperation(ORMError):
 
 class QueryError(InvalidOperation):
     'Raised when arguments to ``Model.get_by()`` or ``Query.filter`` are not valid'
+
+class RestrictError(InvalidOperation):
+    'Raised when deleting an object referenced by other objects'
 
 class ColumnError(ORMError):
     'Raised when your column definitions are not kosher'
