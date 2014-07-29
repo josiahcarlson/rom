@@ -707,6 +707,19 @@ class TestORM(unittest.TestCase):
         util.session.rollback()
         del x, y, z
 
+    def test_saving_after_modifying_datetime_object(self):
+        class RomTestObjectChangeAndSave(Model):
+            col1 = DateTime()
+
+        x = RomTestObjectChangeAndSave(col1=_now)
+        self.assertTrue(x.save())
+
+        y = RomTestObjectChangeAndSave.get(x.id)
+        y.col1 = datetime.now()
+        self.assertTrue(y.save())
+
+        
+
 def main():
     _disable_lua_writes()
     global_setup()
