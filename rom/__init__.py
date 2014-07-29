@@ -134,7 +134,7 @@ from .columns import (Column, Integer, Boolean, Float, Decimal, DateTime,
     Date, Time, Text, Json, PrimaryKey, ManyToOne, ForeignModel, OneToMany,
     MODELS)
 from .exceptions import (ORMError, UniqueKeyViolation, InvalidOperation,
-    QueryError, ColumnError, MissingColumn, InvalidColumnValue)
+    QueryError, ColumnError, MissingColumn, InvalidColumnValue, RestrictError)
 from .index import GeneralIndex, Pattern, Prefix, Suffix
 from .util import (ClassProperty, _connect, session, dt2ts, t2ts,
     _prefix_score, _script_load)
@@ -476,8 +476,14 @@ class Model(six.with_metaclass(_ModelMetaclass, object)):
 
     def delete(self):
         '''
-        Deletes the entity immediately.
+        Deletes the entity immediately.  Checks for any references from 
+        ManyToOne fields, and raises RestrictError in that case.
         '''
+        for attr in self._columns:
+            if (isinstance(self._columns[attr], OneToMany) and 
+                len(getattr(self, attr))):
+                raise RestrictError()
+
         session.forget(self)
         self._apply_changes(self._last, {}, delete=True)
         self._modified = True

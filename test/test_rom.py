@@ -580,12 +580,12 @@ class TestORM(unittest.TestCase):
         a.save()
         b = RomTestCleanupB(bar='foo', a=a)
         b.save()
-        a.delete()  # Nullify FK on b.
-        self.assertFalse(redis.hkeys('RomTestCleanupA:%d' % a.id))
-        session.rollback() # XXX purge session cache
-        b = RomTestCleanupB.get(b.id)
         b.delete()  # Nullify FK on b.
         self.assertFalse(redis.hkeys('RomTestCleanupB:%d' % b.id))
+        session.rollback() # XXX purge session cache
+        a = RomTestCleanupA.get(a.id)
+        a.delete()  # Nullify FK on b.
+        self.assertFalse(redis.hkeys('RomTestCleanupA:%d' % a.id))
 
     def test_delete_writethrough(self):
         """ Verify that a Model.delete() writes through backing and session. """
@@ -613,6 +613,25 @@ class TestORM(unittest.TestCase):
         a.delete()
         session.commit()
         self.assertIsNone(RomTestDelete.get(a.id))
+
+    def test_restrict_on_delete(self):
+        """ Verify that Restrict is thrown when there is a foreign object referencing
+            the deleted object."""
+        redis = connect(None)
+
+        class RestrictA(Model):
+            foo = Text()
+            blist = OneToMany('RestrictB')
+
+        class RestrictB(Model):
+            bar = Text()
+            a = ManyToOne('RestrictA')
+
+        a = RestrictA(foo='foo')
+        a.save()
+        b = RestrictB(bar='foo', a=a)
+        b.save()
+        self.assertRaises(RestrictError, a.delete)
 
     def test_prefix_suffix1(self):
         from rom import columns
