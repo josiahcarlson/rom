@@ -122,14 +122,14 @@ class TestORM(unittest.TestCase):
 
         def foo2():
             class RomTestBFkey2(Model):
-                bad = OneToMany("RomTestBad")
+                bad = OneToMany("RomTestBad", 'no action')
             RomTestBFkey2()
         self.assertRaises(ORMError, foo2)
 
         class RomTestFkey1(Model):
             fkey2 = ManyToOne("RomTestFkey2")
         class RomTestFkey2(Model):
-            fkey1 = OneToMany("RomTestFkey1")
+            fkey1 = OneToMany("RomTestFkey1", 'no action')
 
         x = RomTestFkey2()
         y = RomTestFkey1(fkey2=x) # implicitly saves x
@@ -558,7 +558,7 @@ class TestORM(unittest.TestCase):
 
         class RomTestCleanupA(Model):
             foo = Text()
-            blist = OneToMany('RomTestCleanupB')
+            blist = OneToMany('RomTestCleanupB', 'no action')
 
         class RomTestCleanupB(Model):
             bar = Text()
@@ -580,12 +580,23 @@ class TestORM(unittest.TestCase):
         a.save()
         b = RomTestCleanupB(bar='foo', a=a)
         b.save()
-        b.delete()  # Nullify FK on b.
-        self.assertFalse(redis.hkeys('RomTestCleanupB:%d' % b.id))
-        session.rollback() # XXX purge session cache
-        a = RomTestCleanupA.get(a.id)
+        aid = a.id
+        apk = a._pk
+        self.assertTrue(b.a)
+
         a.delete()  # Nullify FK on b.
         self.assertFalse(redis.hkeys('RomTestCleanupA:%d' % a.id))
+        # verify removal from the session object
+        self.assertFalse(RomTestCleanupA.get(aid))
+        self.assertFalse(apk in session.known)
+        self.assertFalse(apk in session.wknown)
+        session.rollback() # XXX purge session cache
+
+        b = RomTestCleanupB.get(b.id)
+        self.assertFalse(b.a)
+
+        b.delete()  # Nullify FK on b.
+        self.assertFalse(redis.hkeys('RomTestCleanupB:%d' % b.id))
 
     def test_delete_writethrough(self):
         """ Verify that a Model.delete() writes through backing and session. """
@@ -617,11 +628,10 @@ class TestORM(unittest.TestCase):
     def test_restrict_on_delete(self):
         """ Verify that Restrict is thrown when there is a foreign object referencing
             the deleted object."""
-        redis = connect(None)
 
         class RestrictA(Model):
             foo = Text()
-            blist = OneToMany('RestrictB')
+            blist = OneToMany('RestrictB', 'restrict')
 
         class RestrictB(Model):
             bar = Text()

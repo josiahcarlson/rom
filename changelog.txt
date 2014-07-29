@@ -1,3 +1,14 @@
+#---------------------------------- 0.27.0 -----------------------------------
+[changed] Added auto-tagging support for release versions pushed to PyPI.
+[added] Foreign key references defined with a OneToMany and ManyToOne
+    relationship will now have the "one" side of the relationship deletion
+    optionally restrict. Thanks to https://github.com/pconerly for the initial
+    request and patch.
+[added] Additional warnings and tests for future on_delete behavior choices.
+[fixed] Re-save issue for datetime objects, as well as any future re-save
+    issues (like what happened with json columns in rom 0.15). Thanks to
+    https://github.com/iamkhush for the bug report and example testcase that
+    lead to the solution.
 #---------------------------------- 0.26.5 -----------------------------------
 [added] the ability to selectively choose rom's session caching behavior, see
     http://pythonhosted.org//rom/rom.html#using-a-non-caching-session-object

@@ -2,11 +2,12 @@
 from datetime import datetime, date, time as dtime
 from decimal import Decimal as _Decimal
 import json
+import warnings
 
 import six
 
 from .exceptions import (ORMError, InvalidOperation, ColumnError,
-    MissingColumn, InvalidColumnValue)
+    MissingColumn, InvalidColumnValue, RestrictError)
 from .util import (_numeric_keygen, _string_keygen, _many_to_one_keygen,
     _boolean_keygen, dt2ts, ts2dt, t2ts, ts2t, session, _connect)
 
@@ -14,6 +15,18 @@ NULL = object()
 MODELS = {}
 _NUMERIC = (0, 0.0, _Decimal('0'), datetime(1970, 1, 1), date(1970, 1, 1), dtime(0, 0, 0))
 USE_LUA = True
+NO_ACTION_DEFAULT = object()
+
+def _restrict(entity, attr, refs):
+    name = entity.__class__.__name__
+    raise RestrictError(
+        "Cannot delete entity %s with pk %s, %i foreign references from %s.%s exist"%(
+            name, getattr(entity, entity._pkey), len(refs), name, attr))
+
+ON_DELETE = {
+    'no action': lambda entity, attr, refs: None,
+    'restrict': _restrict,
+}
 
 class Column(object):
     '''
@@ -530,6 +543,11 @@ class ForeignModel(Column):
             return str(value)
         return str(value.id)
 
+_on_delete_warning = '''You have not specified an on_delete behavior. Rom will
+default to 'no action' to be consistent with behavior prior to 0.27.0. Provide
+an explicit behavior to remove this warning. This will become an exception in
+rom >= 0.28.0.'''.replace('\n', ' ')
+
 class OneToMany(Column):
     '''
     OneToMany columns do not actually store any information. They rely on a
@@ -541,13 +559,33 @@ class OneToMany(Column):
     Used via::
 
         class MyModel(Model):
-            col = OneToMany('OtherModelName')
+            col = OneToMany('OtherModelName', on_delete='restrict')
+            ocol = OneToMany('ModelName', on_delete='no action')
+
+    As of rom 0.27.0, OneToMany columns have an optional ``on_delete``
+    argument(which will become required in 0.28.0) , which defines how
+    referring entities should be handled. The two available options are
+    ``'no action'``, which is the only behavior available for rom versions
+    prior to 0.27.0, and ``'restrict'``, which aborts the delete if there
+    there are any entities with a reference to the entity being deleted.
+
     '''
-    __slots__ = '_model _attr _ftable _required _unique _index _prefix _suffix _keygen'.split()
-    def __init__(self, ftable):
+    __slots__ = '_model _attr _ftable _required _unique _index _prefix _suffix _keygen _on_delete'.split()
+    def __init__(self, ftable, on_delete=NO_ACTION_DEFAULT):
+        if on_delete is NO_ACTION_DEFAULT:
+            import sys
+            if sys.modules[__name__.rpartition('.')[0]].VERSION >= '0.28.0':
+                raise ColumnError("No on_delete action specified")
+
+            warnings.warn(_on_delete_warning, FutureWarning, stacklevel=2)
+            on_delete = 'no action'
+        if on_delete not in ON_DELETE:
+            raise ColumnError("on_delete argument must be one of %r, you provided %r"%(
+                list(ON_DELETE), on_delete))
         self._ftable = ftable
         self._required = self._unique = self._index = self._prefix = self._suffix = False
         self._model = self._attr = self._keygen = None
+        self._on_delete = ON_DELETE[on_delete]
 
     def _to_redis(self, value):
         return ''

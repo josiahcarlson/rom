@@ -26,6 +26,8 @@ install:
 	python setup.py install
 
 upload:
+	git tag `cat VERSION`
+	git push origin --tags
 	python setup.py sdist upload
 
 test:

@@ -139,7 +139,7 @@ from .index import GeneralIndex, Pattern, Prefix, Suffix
 from .util import (ClassProperty, _connect, session, dt2ts, t2ts,
     _prefix_score, _script_load)
 
-VERSION = '0.26.5'
+VERSION = '0.27.0'
 
 COLUMN_TYPES = [Column, Integer, Boolean, Float, Decimal, DateTime, Date,
 Time, Text, Json, PrimaryKey, ManyToOne, ForeignModel, OneToMany]
@@ -469,20 +469,28 @@ class Model(six.with_metaclass(_ModelMetaclass, object)):
         new = self.to_dict()
         ret = self._apply_changes(self._last, new, full or self._new)
         self._new = False
-        self._last = new
+        # Now explicitly encode data for the _last attribute to make re-saving
+        # work correctly in all cases.
+        last = {}
+        cols = self._columns
+        for attr, data in new.items():
+            last[attr] = cols[attr]._to_redis(data) if data is not None else None
+
+        self._last = last
         self._modified = False
         self._deleted = False
         return ret
 
     def delete(self):
         '''
-        Deletes the entity immediately.  Checks for any references from 
-        ManyToOne fields, and raises RestrictError in that case.
+        Deletes the entity immediately. Also performs any on_delete operations
+        specified as part of column definition.
         '''
-        for attr in self._columns:
-            if (isinstance(self._columns[attr], OneToMany) and 
-                len(getattr(self, attr))):
-                raise RestrictError()
+        for attr, col in self._columns.items():
+            if isinstance(col, OneToMany):
+                refs = getattr(self, attr)
+                if refs:
+                    col._on_delete(self, attr, refs)
 
         session.forget(self)
         self._apply_changes(self._last, {}, delete=True)
