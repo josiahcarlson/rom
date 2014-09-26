@@ -44,6 +44,7 @@ Indexes:
 * Prefix matching (can be used for prefix-based autocomplete)
 * Suffix matching (can be used for suffix-based autocomplete)
 * Pattern matching on string-based columns
+* All indexing is available when using Redis 2.6.0 and later
 
 Other features:
 
@@ -56,7 +57,7 @@ Getting started
 ===============
 
 1. Make sure you have Python 2.6, 2.7, or 3.3+ installed
-2. Make sure that you have Andy McCurdy's Redis library installed:
+2. Make sure that you have Andy McCurdy's Redis client library installed:
    https://github.com/andymccurdy/redis-py/ or
    https://pypi.python.org/pypi/redis
 3. Make sure that you have the Python 2 and 3 compatibility library, 'six'
