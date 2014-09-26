@@ -18,9 +18,10 @@ from rom.exceptions import *
 
 def global_setup():
     c = connect(None)
-    keys = c.keys('RomTest*')
-    if keys:
-        c.delete(*keys)
+    for p in ('RomTest*', 'RestrictA*', 'RestrictB*'):
+        keys = c.keys(p)
+        if keys:
+            c.delete(*keys)
     from rom.columns import MODELS
     Model = MODELS['Model']
     for k, v in MODELS.copy().items():
@@ -629,17 +630,17 @@ class TestORM(unittest.TestCase):
         """ Verify that Restrict is thrown when there is a foreign object referencing
             the deleted object."""
 
-        class RestrictA(Model):
+        class RomTestRestrictA(Model):
             foo = Text()
-            blist = OneToMany('RestrictB', 'restrict')
+            blist = OneToMany('RomTestRestrictB', 'restrict')
 
-        class RestrictB(Model):
+        class RomTestRestrictB(Model):
             bar = Text()
-            a = ManyToOne('RestrictA')
+            a = ManyToOne('RomTestRestrictA')
 
-        a = RestrictA(foo='foo')
+        a = RomTestRestrictA(foo='foo')
         a.save()
-        b = RestrictB(bar='foo', a=a)
+        b = RomTestRestrictB(bar='foo', a=a)
         b.save()
         self.assertRaises(RestrictError, a.delete)
 
@@ -728,7 +729,49 @@ class TestORM(unittest.TestCase):
         y.col1 = datetime.now()
         self.assertTrue(y.save())
 
-        
+    def test_index_cleared(self):
+        class RomTestIndexClear(Model):
+            col1 = Integer(index=True)
+
+        for i in range(10):
+            RomTestIndexClear(col1=i)
+        session.commit()
+        session.rollback()
+
+        for j in range(1, 11):
+            RomTestIndexClear.get(j).delete()
+        conn = connect(None)
+        self.assertEqual(conn.hgetall('RomTestIndexClear::'), {})
+
+    def test_multi_col_unique_index(self):
+        from rom import columns
+        if not columns.USE_LUA:
+            return
+
+        class RomTestCompositeUnique(Model):
+            col1 = Integer()
+            col2 = Integer()
+            col3 = String() if six.PY2 else Text()
+
+            unique_together = [
+                ('col1', 'col2', 'col3'),
+            ]
+
+        for c1 in range(10):
+            for c2 in range(10):
+                for c3 in ('a', 'b', 'c', 'test', 'blah'):
+                    RomTestCompositeUnique(col1=c1, col2=c2, col3=c3).save()
+
+        self.assertRaises(UniqueKeyViolation, RomTestCompositeUnique(col1=5, col2=5, col3='c').save)
+
+        a = RomTestCompositeUnique.get(5)
+        a.col1 = 4
+        self.assertRaises(UniqueKeyViolation, a.save)
+        a.col3 = 'world'
+        a.save()
+        a.col1 = 0
+        a.col3 = 'blah'
+        a.save()
 
 def main():
     _disable_lua_writes()

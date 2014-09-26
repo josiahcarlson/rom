@@ -75,9 +75,12 @@ global or per-thread basis.
 
 '''
 
+from __future__ import print_function
 from datetime import datetime, date, time as dtime
+from itertools import chain
 import string
 import threading
+import time
 import weakref
 
 import redis
@@ -245,6 +248,19 @@ def ts2t(value):
     minute, value = divmod(value, 60)
     second, value = divmod(value, 1)
     return dtime(*map(int, [hour, minute, second, value*1000000]))
+
+def _encode_unique_constraint(data):
+    cleaned = []
+    for col in data:
+        col = (col or b'')
+        if not isinstance(col, (six.text_type, six.binary_type)):
+            col = six.text_type(col)
+        if isinstance(col, six.text_type):
+            col = col.encode('utf-8')
+        cleaned.append(b'\0\0' + col)
+
+    ret = b'\0'.join(cleaned)
+    return ret if six.PY2 else ret.decode('latin-1')
 
 NULL_SESSION = False
 
@@ -469,7 +485,6 @@ def refresh_indices(model, block_size=100):
     .. note: This uses the session object to handle index refresh via calls to
       ``.commit()``. If you have any outstanding entities known in the
       session, they will be committed.
-
     '''
     conn = _connect(model)
     max_id = int(conn.get('%s:%s:'%(model.__name__, model._pkey)) or '0')
@@ -481,6 +496,80 @@ def refresh_indices(model, block_size=100):
         # re-save un-modified data, resulting in index-only updates
         session.commit(all=True)
         yield min(i+block_size, max_id), max_id
+
+def clean_old_index(model, block_size=100):
+    '''
+    This utility function will clean out old index data that was accidentally
+    left during item deletion in rom versions <= 0.27.0 . You should run this
+    after you have upgraded all of your clients to version 0.27.1 or later.
+
+    Arguments:
+
+        * *model* - the model whose entities you want to reindex
+        * *block_size* - the maximum number of items to check at a time
+          defaulting to 100
+
+    This function will yield its progression through re-checking all of the
+    data that could be left over.
+
+    Example use::
+
+        for progress, total in clean_old_index(MyModel, block_size=200):
+            print "%s of %s"%(progress, total)
+    '''
+
+    conn = _connect(model)
+    pipe = conn.pipeline(True)
+    prefix = '%s:'%model.__name__
+    index = prefix + ':'
+    max_id = int(conn.get('%s%s:'%(prefix, model._pkey)) or '0')
+    block_size = max(block_size, 10)
+
+    for i in range(1, max_id+1, block_size):
+        ids = list(range(i, min(i+block_size, max_id+1)))
+        for id in ids:
+            pipe.exists(prefix + str(id))
+            pipe.hexists(index, id)
+        result = iter(pipe.execute())
+        remove = [id for id, (ent, ind) in enumerate(zip(result, result)) if ind and not ent]
+        if remove:
+            conn.hdel(index, *remove)
+
+        yield min(i+block_size, max_id-1), max_id
+
+    yield max_id, max_id
+
+def show_progress(job):
+    '''
+    This utility function will print the progress of a passed iterator job as
+    started by ``refresh_indices()`` and ``clean_old_index()``.
+
+    Usage example::
+
+        class RomTest(Model):
+            pass
+
+        for i in xrange(1000):
+            RomTest().save()
+
+        util.show_progress(util.clean_old_index(RomTest))
+    '''
+    start = time.time()
+    last_print = 0
+    last_line = 0
+    for prog, total in chain(job, [(1, 1)]):
+        # Only print a line when we start, finish, or every .1 seconds
+        if (time.time() - last_print) > .1 or prog >= total:
+            delta = (time.time() - start) or .0001
+            line = "%.1f%% complete, %.1f seconds elapsed, %.1f seconds remaining"%(
+                100. * prog / (total or 1), delta, total * delta / (prog or 1) - delta)
+            length = len(line)
+            # pad the line out with spaces just in case our line got shorter
+            line += max(last_line - length, 0) * ' '
+            print(line, end="\r")
+            last_line = length
+            last_print = time.time()
+    print()
 
 def _script_load(script):
     '''

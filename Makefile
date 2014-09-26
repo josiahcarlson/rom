@@ -34,6 +34,7 @@ test:
 	PYTHONPATH=`pwd` python2.6 test/test_rom.py
 	PYTHONPATH=`pwd` python2.7 test/test_rom.py
 	PYTHONPATH=`pwd` python3.3 test/test_rom.py
+	PYTHONPATH=`pwd` python3.4 test/test_rom.py
 
 docs:
 	python -c "import rom; open('README.rst', 'wb').write(rom.__doc__); open('VERSION', 'wb').write(rom.VERSION);"

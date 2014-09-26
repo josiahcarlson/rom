@@ -350,9 +350,6 @@ if six.PY2:
 
             filter(None, [s.lower().strip(string.punctuation) for s in val.split()])
 
-        .. note:: if Lua writing is disabled, only one String column per model can
-         be used.
-
         Used via::
 
             class MyModel(Model):

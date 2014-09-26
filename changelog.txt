@@ -1,3 +1,17 @@
+#---------------------------------- 0.28.0 -----------------------------------
+[added] Composite unique constraints like SQLAlchemy's UniqueConstraint() and
+    Django's unique_together, spelled and used like Django's unique_together.
+    See http://pythonhosted.org//rom/rom.html#rom.Model for details.
+[fixed] Deleting entities will no longer leave extra index data around
+    (regardless of whether the entitiy had any indexes defined).
+[added] Convenience function for cleaning out old index data from deleted
+    entities. See and read the help on util.clean_old_index() .
+[added] Convenience function util.show_progress() to show the progress of
+    util.refresh_indices() and util.clean_old_index() . See and read the help
+    on util.show_progress() for usage.
+[fixed] Tests to no longer leave testing data in db 15, and running tests
+    again should clean out the testing data.
+[fixed] Incorrect documentation about the String column type.
 #---------------------------------- 0.27.0 -----------------------------------
 [changed] Added auto-tagging support for release versions pushed to PyPI.
 [added] Foreign key references defined with a OneToMany and ManyToOne

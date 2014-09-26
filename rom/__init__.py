@@ -44,6 +44,7 @@ Indexes:
 * Prefix matching (can be used for prefix-based autocomplete)
 * Suffix matching (can be used for suffix-based autocomplete)
 * Pattern matching on string-based columns
+* All indexing is available when using Redis 2.6.0 and later
 
 Other features:
 
@@ -56,7 +57,7 @@ Getting started
 ===============
 
 1. Make sure you have Python 2.6, 2.7, or 3.3+ installed
-2. Make sure that you have Andy McCurdy's Redis library installed:
+2. Make sure that you have Andy McCurdy's Redis client library installed:
    https://github.com/andymccurdy/redis-py/ or
    https://pypi.python.org/pypi/redis
 3. Make sure that you have the Python 2 and 3 compatibility library, 'six'
@@ -137,9 +138,9 @@ from .exceptions import (ORMError, UniqueKeyViolation, InvalidOperation,
     QueryError, ColumnError, MissingColumn, InvalidColumnValue, RestrictError)
 from .index import GeneralIndex, Pattern, Prefix, Suffix
 from .util import (ClassProperty, _connect, session, dt2ts, t2ts,
-    _prefix_score, _script_load)
+    _prefix_score, _script_load, _encode_unique_constraint)
 
-VERSION = '0.27.0'
+VERSION = '0.28.0'
 
 COLUMN_TYPES = [Column, Integer, Boolean, Float, Decimal, DateTime, Date,
 Time, Text, Json, PrimaryKey, ManyToOne, ForeignModel, OneToMany]
@@ -175,6 +176,7 @@ class _ModelMetaclass(type):
         dict['_required'] = required = set()
         dict['_index'] = index = set()
         dict['_unique'] = unique = set()
+        dict['_cunique'] = cunique = set()
         dict['_prefix'] = prefix = set()
         dict['_suffix'] = suffix = set()
 
@@ -193,6 +195,8 @@ class _ModelMetaclass(type):
             if 'id' in dict:
                 raise ColumnError("Cannot have non-primary key named 'id'")
             dict['id'] = PrimaryKey()
+
+        composite_unique = []
 
         # validate all of our columns to ensure that they fulfill our
         # expectations
@@ -215,7 +219,7 @@ class _ModelMetaclass(type):
                     # We only allow one for performance when USE_LUA is False
                     if unique and not USE_LUA:
                         raise ColumnError(
-                            "Only one unique column allowed, you have: %s %s"%(
+                            "Only one unique column allowed, you have at least two: %s %s"%(
                             attr, unique)
                         )
                     unique.add(attr)
@@ -225,6 +229,31 @@ class _ModelMetaclass(type):
                         pkey, attr)
                     )
                 pkey = attr
+
+            if attr == 'unique_together':
+                if not USE_LUA:
+                    raise ColumnError("Lua scripting must be enabled to support multi-column uniqueness constraints")
+                composite_unique = col
+
+        # handle multi-column uniqueness constraints
+        if composite_unique and isinstance(composite_unique[0], six.string_types):
+            composite_unique = [composite_unique]
+
+        seen = {}
+        for comp in composite_unique:
+            key = tuple(sorted(set(comp)))
+            if len(key) == 1:
+                raise ColumnError("Single-column unique constraint: %r should be defined via 'unique=True' on the %r column"%(
+                    comp, key[0]))
+            if key in seen:
+                raise ColumnError("Multi-column unique constraint: %r not different than earlier constrant: %r"%(
+                    comp, seen[key]))
+            for col in key:
+                if col not in columns:
+                    raise ColumnError("Multi-column unique index %r references non-existant column %r"%(
+                        comp, col))
+            seen[key] = comp
+            cunique.add(key)
 
         dict['_pkey'] = pkey
         dict['_gindex'] = GeneralIndex(name)
@@ -262,6 +291,32 @@ class Model(six.with_metaclass(_ModelMetaclass, object)):
     .. note: You can perform single or chained queries against any/all columns
       that were defined with ``index=True``.
 
+    **Composite/multi-column unique constraints**
+
+    As of version 0.28.0 and later, rom supports the ability for you to have a
+    unique constraint involving multiple columns. Individual columns can be
+    defined unique by passing the 'unique=True' specifier during column
+    definition as always.
+
+    The attribute ``unique_together`` defines those groups of columns that when
+    taken together must be unique for ``.save()`` to complete successfully.
+    This will work almost exactly the same as Django's ``unique_together``, and
+    is comparable to SQLAlchemy's ``UniqueConstraint()``.
+
+    Usage::
+
+        class UniquePosition(Model):
+            x = Integer()
+            y = Integer()
+
+            unique_together = [
+                ('x', 'y'),
+            ]
+
+    .. note: If one or more of the column values on an entity that is part of a
+        unique constrant is None in Python, the unique constraint won't apply.
+        This is the typical behavior of nulls in unique constraints inside both
+        MySQL and Postgres.
     '''
     def __init__(self, **kwargs):
         self._new = not kwargs.pop('_loading', False)
@@ -330,6 +385,10 @@ class Model(six.with_metaclass(_ModelMetaclass, object)):
             if len(cls._unique) > 1 and not use_lua:
                 raise ColumnError(
                     "Only one unique column allowed, you have: %s"%(unique,))
+
+            if cls._cunique and not use_lua:
+                raise ColumnError(
+                    "Cannot use multi-column unique constraint 'unique_together' with Lua disabled")
 
             if not use_lua:
                 for col in cls._unique:
@@ -431,6 +490,20 @@ class Model(six.with_metaclass(_ModelMetaclass, object)):
                         if oval is not None:
                             pipe.hdel(ikey, roval)
                         pipe.hset(ikey, rnval, pk)
+
+            # Add/update multi-column unique constraint
+            for uniq in cls._cunique:
+                attr = ':'.join(uniq)
+
+                odata = [old.get(c) for c in uniq]
+                ndata = [new.get(c) for c in uniq]
+                ndata = [columns[c]._to_redis(nv) if nv is not None else None for c, nv in zip(uniq, ndata)]
+
+                if odata != ndata and None not in odata:
+                    udeleted[attr] = _encode_unique_constraint(odata)
+
+                if None not in ndata:
+                    unique[attr] = _encode_unique_constraint(ndata)
 
             id_only = str(pk)
             if use_lua:
@@ -699,6 +772,7 @@ end
 
 if is_delete then
     redis.call('DEL', string.format('%s:%s', namespace, id))
+    redis.call('HDEL', namespace .. '::', id)
 end
 
 -- add new key index data
@@ -732,9 +806,11 @@ for i, data in ipairs(cjson.decode(ARGV[10])) do
     nsuffix[#nsuffix + 1] = {data[1], data[2]}
 end
 
--- update known index data
-local encoded = cjson.encode({nkeys, nscored, nprefix, nsuffix})
-redis.call('HSET', namespace .. '::', id, encoded)
+if not is_delete then
+    -- update known index data
+    local encoded = cjson.encode({nkeys, nscored, nprefix, nsuffix})
+    redis.call('HSET', namespace .. '::', id, encoded)
+end
 return #nkeys + #nscored + #nprefix + #nsuffix
 ''')
 
@@ -861,7 +937,9 @@ class Query(object):
         When provided with keyword arguments of the form ``col=prefix``, this
         will limit the entities returned to those that have a word with the
         provided prefix in the specified column(s). This requires that the
-        ``prefix=True`` option was provided during column definition.::
+        ``prefix=True`` option was provided during column definition.
+
+        Usage::
 
             User.query.startswith(email='user@').execute()
 
@@ -876,7 +954,9 @@ class Query(object):
         When provided with keyword arguments of the form ``col=suffix``, this
         will limit the entities returned to those that have a word with the
         provided suffix in the specified column(s). This requires that the
-        ``suffix=True`` option was provided during column definition.::
+        ``suffix=True`` option was provided during column definition.
+
+        Usage::
 
             User.query.endswith(email='@gmail.com').execute()
 
