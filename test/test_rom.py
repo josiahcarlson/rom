@@ -630,18 +630,29 @@ class TestORM(unittest.TestCase):
         """ Verify that Restrict is thrown when there is a foreign object referencing
             the deleted object."""
 
+        class RomTestCascadeRestrict(Model):
+            alist = OneToMany('RomTestRestrictA', 'cascade')
+
         class RomTestRestrictA(Model):
             foo = Text()
+            cref = ManyToOne('RomTestCascadeRestrict')
             blist = OneToMany('RomTestRestrictB', 'restrict')
 
         class RomTestRestrictB(Model):
             bar = Text()
             a = ManyToOne('RomTestRestrictA')
 
-        a = RomTestRestrictA(foo='foo')
+        c = RomTestCascadeRestrict()
+        c.save()
+        a = RomTestRestrictA(foo='foo', cref=c)
         a.save()
         b = RomTestRestrictB(bar='foo', a=a)
         b.save()
+        self.assertRaises(RestrictError, c.delete)
+        self.assertRaises(RestrictError, a.delete)
+        del a.cref
+        a.save()
+        c.delete()
         self.assertRaises(RestrictError, a.delete)
 
     def test_prefix_suffix1(self):
@@ -772,6 +783,91 @@ class TestORM(unittest.TestCase):
         a.col1 = 0
         a.col3 = 'blah'
         a.save()
+
+    def test_iter_result(self):
+        # also tests alternate column names for the primary key, and an index
+        # on the primary key
+        class RomTestIterResult(Model):
+            _id = PrimaryKey(index=True)
+            id = Integer()
+            col1 = Integer(index=True)
+
+        for i in range(1, 51):
+            RomTestIterResult(col1=i).save()
+
+        session.rollback()
+        total = 0
+        for it in RomTestIterResult.query.order_by('col1').iter_result(30, 10):
+            total += it.col1
+        session.rollback()
+        self.assertEqual(total, 50 * 51 / 2)
+        # also test open-ended get_by() on the indexed primary key
+        self.assertEqual(len(RomTestIterResult.get_by(_id=(None, None))), 50)
+        # also test order-by on the indexed primary key
+        self.assertEqual(len(RomTestIterResult.query.order_by('_id').all()), 50)
+
+    def test_foreign_model_references(self):
+        class RomTestM2O(Model):
+            col1 = ManyToOne('RomTestO2M')
+            col2 = ManyToOne('RomTestO2M')
+
+        def r():
+            class RomTestO2M(Model):
+                col1 = OneToMany('RomTestM2O', 'no action')
+
+        def ok():
+            class RomTestO2M(Model):
+                col1 = OneToMany('RomTestM2O', 'no action', 'col2')
+
+        self.assertRaises(ColumnError, r)
+        ok()
+
+        class RomTestO2M_(Model):
+            col1 = OneToMany('RomTestM2O_', 'no action')
+
+        def r():
+            class RomTestM2O_(Model):
+                col1 = ManyToOne('RomTestO2M_')
+                col2 = ManyToOne('RomTestO2M_')
+
+        self.assertRaises(ColumnError, r)
+
+        class RomTestO2M__(Model):
+            col1 = OneToMany('RomTestM2O__', 'no action', 'col2')
+        
+        class RomTestM2O__(Model):
+            col1 = ManyToOne('RomTestO2M__')
+            col2 = ManyToOne('RomTestO2M__')
+
+    def test_clean_old_index(self):
+        from rom import util
+        if not util.USE_LUA:
+            return
+
+        class RomTestCleanOld(Model):
+            col1 = Integer(index=True)
+            col2 = String(index=True) if six.PY2 else Text(index=True)
+
+        a = RomTestCleanOld(col1=6, col2="this is content that should be indexed")
+        a.save()
+        id = a.id
+        self.assertEqual(len(RomTestCleanOld.get_by(col1=6)), 1)
+        self.assertEqual(len(RomTestCleanOld.get_by(col1=(5, 7))), 1)
+        self.assertEqual(len(RomTestCleanOld.get_by(col2='content')), 1)
+        session.rollback()
+        del a
+        c = connect(None)
+        self.assertEqual(c.hlen('RomTestCleanOld::'), 1)
+        self.assertEqual(c.scard('RomTestCleanOld:col2:content:idx'), 1)
+        self.assertEqual(c.zcard('RomTestCleanOld:col1:idx'), 1)
+
+        self.assertEqual(c.delete('RomTestCleanOld:%s'%id), 1)
+        all(util.clean_old_index(RomTestCleanOld))
+
+        self.assertEqual(c.hlen('RomTestCleanOld::'), 0)
+        self.assertEqual(c.scard('RomTestCleanOld:col2:content:idx'), 0)
+        self.assertEqual(c.zcard('RomTestCleanOld:col1:idx'), 0)
+
 
 def main():
     _disable_lua_writes()

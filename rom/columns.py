@@ -16,6 +16,8 @@ MODELS = {}
 _NUMERIC = (0, 0.0, _Decimal('0'), datetime(1970, 1, 1), date(1970, 1, 1), dtime(0, 0, 0))
 USE_LUA = True
 NO_ACTION_DEFAULT = object()
+SKIP_ON_DELETE = object()
+ON_DELETE = ('no action', 'restrict', 'cascade')
 
 def _restrict(entity, attr, refs):
     name = entity.__class__.__name__
@@ -23,10 +25,41 @@ def _restrict(entity, attr, refs):
         "Cannot delete entity %s with pk %s, %i foreign references from %s.%s exist"%(
             name, getattr(entity, entity._pkey), len(refs), name, attr))
 
-ON_DELETE = {
-    'no action': lambda entity, attr, refs: None,
-    'restrict': _restrict,
-}
+def _on_delete(ent):
+    '''
+    This function handles all on_delete semantics defined on OneToMany columns.
+
+    This function only exists because 'cascade' is *very* hard to get right.
+    '''
+    seen = set([ent._pk])
+    to_delete = [ent]
+    for self in to_delete:
+        for attr, col in self._columns.items():
+            if not isinstance(col, OneToMany):
+                continue
+
+            if col._on_delete == 'no action':
+                continue
+
+            # get the references
+            refs = getattr(self, attr)
+            if not refs:
+                continue
+
+            if col._on_delete == 'restrict':
+                # restrict will raise an exception
+                _restrict(self, attr, refs)
+
+            # otherwise col._on_delete == 'cascade'
+            for ent in refs:
+                if ent._pk not in seen:
+                    seen.add(ent._pk)
+                    to_delete.append(ent)
+
+    # If we got here, then to_delete includes all items to delete. Let's delete
+    # them!
+    for self in to_delete:
+        self.delete(skip_on_delete_i_really_mean_it=SKIP_ON_DELETE)
 
 class Column(object):
     '''
@@ -551,7 +584,14 @@ class OneToMany(Column):
     properly defined reverse ManyToOne column on the referenced model in order
     to be able to fetch a list of referring entities.
 
-    Only the name of the other model can be passed.
+    Only three arguments are supported:
+
+        * *ftable* - the name of the other model
+        * *on_delete* - how to handle foreign key references on delete,
+            supported options include: 'no action', 'restrict', and 'cascade'
+        * *column* - the attribute on the other model with the reference to
+            this column, required if the foreign model has multiple columns
+            referencing this model
 
     Used via::
 
@@ -567,8 +607,8 @@ class OneToMany(Column):
     there are any entities with a reference to the entity being deleted.
 
     '''
-    __slots__ = '_model _attr _ftable _required _unique _index _prefix _suffix _keygen _on_delete'.split()
-    def __init__(self, ftable, on_delete=NO_ACTION_DEFAULT):
+    __slots__ = '_model _attr _ftable _required _unique _index _prefix _suffix _keygen _on_delete _column'.split()
+    def __init__(self, ftable, on_delete=NO_ACTION_DEFAULT, column=None):
         if on_delete is NO_ACTION_DEFAULT:
             import sys
             if sys.modules[__name__.rpartition('.')[0]].VERSION >= '0.28.0':
@@ -582,7 +622,8 @@ class OneToMany(Column):
         self._ftable = ftable
         self._required = self._unique = self._index = self._prefix = self._suffix = False
         self._model = self._attr = self._keygen = None
-        self._on_delete = ON_DELETE[on_delete]
+        self._on_delete = on_delete
+        self._column = column
 
     def _to_redis(self, value):
         return ''
@@ -602,6 +643,9 @@ class OneToMany(Column):
             model = MODELS[self._ftable]
         except KeyError:
             raise ORMError("Missing foreign table %r referenced by %s.%s"%(self._ftable, self._model, self._attr))
+
+        if self._column:
+            return model.get_by(**{self._column: getattr(obj, obj._pkey)})
 
         for attr, col in model._columns.items():
             if isinstance(col, ManyToOne) and col._ftable == self._model:

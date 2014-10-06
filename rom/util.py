@@ -93,6 +93,7 @@ __all__ = '''
     get_connection Session refresh_indices set_connection_settings'''.split()
 
 CONNECTION = redis.Redis()
+USE_LUA = True
 
 def set_connection_settings(*args, **kwargs):
     '''
@@ -501,7 +502,7 @@ def clean_old_index(model, block_size=100):
     '''
     This utility function will clean out old index data that was accidentally
     left during item deletion in rom versions <= 0.27.0 . You should run this
-    after you have upgraded all of your clients to version 0.27.1 or later.
+    after you have upgraded all of your clients to version 0.28.0 or later.
 
     Arguments:
 
@@ -518,6 +519,9 @@ def clean_old_index(model, block_size=100):
             print "%s of %s"%(progress, total)
     '''
 
+    if not USE_LUA:
+        raise Exception("Lua must be enabled to clean out old indexes")
+
     conn = _connect(model)
     pipe = conn.pipeline(True)
     prefix = '%s:'%model.__name__
@@ -531,9 +535,9 @@ def clean_old_index(model, block_size=100):
             pipe.exists(prefix + str(id))
             pipe.hexists(index, id)
         result = iter(pipe.execute())
-        remove = [id for id, (ent, ind) in enumerate(zip(result, result)) if ind and not ent]
+        remove = [id for id, ent, ind in zip(ids, result, result) if ind and not ent]
         if remove:
-            conn.hdel(index, *remove)
+            _clean_index_lua(conn, [model.__name__], remove)
 
         yield min(i+block_size, max_id-1), max_id
 
@@ -598,3 +602,38 @@ def _script_load(script):
             "EVAL", script, len(keys), *(keys+args))
 
     return call
+
+_clean_index_lua = _script_load('''
+-- remove old index data
+local namespace = KEYS[1]
+local cleaned = 0
+for _, id in ipairs(ARGV) do
+    local idata = redis.call('HGET', namespace .. '::', id)
+    if idata then
+        cleaned = cleaned + 1
+        idata = cjson.decode(idata)
+        if #idata == 2 then
+            idata[3] = {}
+            idata[4] = {}
+        end
+        for i, key in ipairs(idata[1]) do
+            redis.call('SREM', string.format('%s:%s:idx', namespace, key), id)
+        end
+        for i, key in ipairs(idata[2]) do
+            redis.call('ZREM', string.format('%s:%s:idx', namespace, key), id)
+        end
+        for i, data in ipairs(idata[3]) do
+            local key = string.format('%s:%s:pre', namespace, data[1])
+            local mem = string.format('%s\0%s', data[2], id)
+            redis.call('ZREM', key, mem)
+        end
+        for i, data in ipairs(idata[4]) do
+            local key = string.format('%s:%s:suf', namespace, data[1])
+            local mem = string.format('%s\0%s', data[2], id)
+            redis.call('ZREM', key, mem)
+        end
+        redis.call('HDEL', namespace .. '::', id)
+    end
+end
+return cleaned
+''')

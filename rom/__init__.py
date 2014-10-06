@@ -124,6 +124,7 @@ you should call ``rom._disable_lua_writes()``, which will prevent you from
 using features that require Lua scripting support.
 '''
 
+from collections import defaultdict
 from datetime import datetime, date, time as dtime
 from decimal import Decimal as _Decimal
 import json
@@ -133,14 +134,14 @@ import six
 
 from .columns import (Column, Integer, Boolean, Float, Decimal, DateTime,
     Date, Time, Text, Json, PrimaryKey, ManyToOne, ForeignModel, OneToMany,
-    MODELS)
+    MODELS, _on_delete, SKIP_ON_DELETE)
 from .exceptions import (ORMError, UniqueKeyViolation, InvalidOperation,
     QueryError, ColumnError, MissingColumn, InvalidColumnValue, RestrictError)
 from .index import GeneralIndex, Pattern, Prefix, Suffix
 from .util import (ClassProperty, _connect, session, dt2ts, t2ts,
     _prefix_score, _script_load, _encode_unique_constraint)
 
-VERSION = '0.28.0'
+VERSION = '0.29.0'
 
 COLUMN_TYPES = [Column, Integer, Boolean, Float, Decimal, DateTime, Date,
 Time, Text, Json, PrimaryKey, ManyToOne, ForeignModel, OneToMany]
@@ -152,13 +153,15 @@ MissingColumn, InvalidOperation # silence pyflakes
 USE_LUA = True
 def _enable_lua_writes():
     from . import columns
+    from . import util
     global USE_LUA
-    columns.USE_LUA = USE_LUA = True
+    util.USE_LUA = columns.USE_LUA = USE_LUA = True
 
 def _disable_lua_writes():
     from . import columns
+    from . import util
     global USE_LUA
-    columns.USE_LUA = USE_LUA = False
+    util.USE_LUA = columns.USE_LUA = USE_LUA = False
 
 __all__ = '''
     Model Column Integer Float Decimal Text Json PrimaryKey ManyToOne
@@ -193,10 +196,11 @@ class _ModelMetaclass(type):
 
         if not any(isinstance(col, PrimaryKey) for col in dict.values()):
             if 'id' in dict:
-                raise ColumnError("Cannot have non-primary key named 'id'")
+                raise ColumnError("Cannot have non-primary key named 'id' when no explicit PrimaryKey() is defined")
             dict['id'] = PrimaryKey()
 
         composite_unique = []
+        many_to_one = defaultdict(list)
 
         # validate all of our columns to ensure that they fulfill our
         # expectations
@@ -230,10 +234,35 @@ class _ModelMetaclass(type):
                     )
                 pkey = attr
 
+            if isinstance(col, OneToMany) and not col._column and col._ftable in MODELS:
+                # Check to make sure that the foreign ManyToOne table doesn't
+                # have multiple references to this table to require an explicit
+                # foreign column.
+                refs = []
+                for _a, _c in MODELS[col._ftable]._columns.items():
+                    if isinstance(_c, ManyToOne) and _c._ftable == name:
+                        refs.append(_a)
+                if len(refs) > 1:
+                    raise ColumnError("Missing required column argument to OneToMany definition on column %s"%(attr,))
+
+            if isinstance(col, ManyToOne):
+                many_to_one[col._ftable].append((attr, col))
+
             if attr == 'unique_together':
                 if not USE_LUA:
                     raise ColumnError("Lua scripting must be enabled to support multi-column uniqueness constraints")
                 composite_unique = col
+
+        # verify reverse OneToMany attributes for these ManyToOne attributes if
+        # created after referenced models
+        for t, cols in many_to_one.items():
+            if len(cols) == 1:
+                continue
+            if t not in MODELS:
+                continue
+            for _a, _c in MODELS[t]._columns.items():
+                if isinstance(_c, OneToMany) and _c._ftable == name and not _c._column:
+                    raise ColumnError("Foreign model OneToMany attribute %s.%s missing column argument"%(t, _a))
 
         # handle multi-column uniqueness constraints
         if composite_unique and isinstance(composite_unique[0], six.string_types):
@@ -554,16 +583,13 @@ class Model(six.with_metaclass(_ModelMetaclass, object)):
         self._deleted = False
         return ret
 
-    def delete(self):
+    def delete(self, **kwargs):
         '''
         Deletes the entity immediately. Also performs any on_delete operations
-        specified as part of column definition.
+        specified as part of column definitions.
         '''
-        for attr, col in self._columns.items():
-            if isinstance(col, OneToMany):
-                refs = getattr(self, attr)
-                if refs:
-                    col._on_delete(self, attr, refs)
+        if kwargs.get('skip_on_delete_i_really_mean_it') is not SKIP_ON_DELETE:
+            _on_delete(self)
 
         session.forget(self)
         self._apply_changes(self._last, {}, delete=True)
@@ -639,6 +665,9 @@ class Model(six.with_metaclass(_ModelMetaclass, object)):
 
         If you would like to make queries against multiple columns or with
         multiple criteria, look into the Model.query class property.
+
+        .. note: Ranged queries with `get_by(col=(start, end))` will only work
+            with columns that use a numeric index.
         '''
         conn = _connect(cls)
         model = cls.__name__
@@ -744,7 +773,7 @@ if #data > 0 then
     redis.call('HMSET', string.format('%s:%s', namespace, id), unpack(data))
 end
 
--- remove old index data
+-- remove old index data, update util.clean_index_lua when changed
 local idata = redis.call('HGET', namespace .. '::', id)
 if idata then
     idata = cjson.decode(idata)
@@ -895,6 +924,9 @@ class Query(object):
                 .filter(ncol=5) \\
                 .execute()
 
+        .. note: Trying to use a range query `attribute=(min, max)` on string
+            columns won't return any results.
+
         '''
         cur_filters = list(self._filters)
         for attr, value in kwargs.items():
@@ -1040,6 +1072,35 @@ class Query(object):
         limit = () if not self._limit else self._limit
         return self._model._gindex.search(
             _connect(self._model), self._filters, self._order_by, *limit)
+
+    def iter_result(self, timeout=30, pagesize=100):
+        '''
+        Iterate over the results of your query instead of getting them all with
+        `.all()`. Will only perform a single query. If you expect that your
+        processing will take more than 30 seconds to process 100 items, you
+        should pass `timeout` and `pagesize` to reflect an appropriate timeout
+        and page size to fetch at once.
+
+        .. note: Limit clauses are ignored and not passed.
+
+        Usage::
+
+            for user in User.query.endswith(email='@gmail.com').iter_result():
+                # do something with user
+                ...
+        '''
+        key = self.cached_result(timeout)
+        conn = _connect(self._model)
+        for i in range(0, conn.zcard(key), pagesize):
+            conn.expire(key, timeout)
+            ids = conn.zrange(key, i, i+pagesize-1)
+            # No need to fill up memory with paginated items hanging around the
+            # session. Remove all entities from the session that are not
+            # already modified (were already in the session and modified).
+            for ent in self._model.get(ids):
+                if not ent._modified:
+                    session.forget(ent)
+                yield ent
 
     def cached_result(self, timeout):
         '''

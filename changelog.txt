@@ -1,3 +1,20 @@
+#---------------------------------- 0.29.0 -----------------------------------
+[added] Query result iterator: query.iter_result(timeout, pagesize) that
+    automatically wraps query.cached_result(timeout) for convenient iteration
+    over all entities in the query. Added at the request of Github user
+    https://github.com/JamesHutchison .
+[added] On delete for OneToMany columns now support 'cascade' for recursively
+    deleting all referencing entities. All on delete behavior is checked
+    before deleting (a restrict in an entity after 100 levels of 'cascade'
+    will prevent all deletions). Requested by
+    https://github.com/JamesHutchison and closes issue #39.
+[added] OneToMany columns can now include a reference to the foreign model's
+    ManyToOne column name that references *this* OneToMany. Useful for cases
+    where models have multiple OneToMany or ManyToOne columns referencing the
+    same models. Closes issue #23.
+[fixes] Index clearing with util.clean_old_index()
+[changed] Index clearing with util.clean_old_index() will also clean out index
+    data for entities directly deleted or expired in Redis. Closes issue #40.
 #---------------------------------- 0.28.0 -----------------------------------
 [added] Composite unique constraints like SQLAlchemy's UniqueConstraint() and
     Django's unique_together, spelled and used like Django's unique_together.
