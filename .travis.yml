@@ -1,0 +1,7 @@
+language: python
+install:
+  - pip install tox
+script:
+  - make test-tox
+services:
+  - redis-server

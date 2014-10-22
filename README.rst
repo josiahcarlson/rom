@@ -1,3 +1,5 @@
+.. image:: https://travis-ci.org/josiahcarlson/rom.svg?branch=master
+    :target: https://travis-ci.org/josiahcarlson/rom
 
 Rom - the Redis object mapper for Python
 
