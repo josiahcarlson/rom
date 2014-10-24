@@ -870,23 +870,27 @@ class TestORM(unittest.TestCase):
 
 
 def main():
+    testsFailed = False
     _disable_lua_writes()
     global_setup()
     print("Testing standard writing")
     try:
         unittest.main()
-    except SystemExit:
-        pass
+    except SystemExit as err:
+        testsFailed = testsFailed or err.code
     data = get_state()
     global_setup()
     _enable_lua_writes()
     print("Testing Lua writing")
     try:
         unittest.main()
-    except SystemExit:
-        pass
+    except SystemExit as err:
+        testsFailed = testsFailed or err.code
     lua_data = get_state()
     global_setup()
+
+    if testsFailed:
+        raise Exception("Tests failed.")
 
     ## if data != lua_data:
         ## print("WARNING: Regular/Lua data writing does not match!")

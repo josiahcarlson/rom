@@ -36,6 +36,9 @@ test:
 	PYTHONPATH=`pwd` python3.3 test/test_rom.py
 	PYTHONPATH=`pwd` python3.4 test/test_rom.py
 
+test-tox:
+	tox
+
 docs:
 	python -c "import rom; open('README.rst', 'wb').write(rom.__doc__); open('VERSION', 'wb').write(rom.VERSION);"
 	$(SPHINXBUILD) -b html $(ALLSPHINXOPTS) $(BUILDDIR)/html
