@@ -1,3 +1,6 @@
+#---------------------------- 0.29.1 (unreleased) ----------------------------
+[added] Thanks to https://github.com/pconerly travis-ci integration and
+    optional tox-based testing has been added
 #---------------------------------- 0.29.0 -----------------------------------
 [added] Query result iterator: query.iter_result(timeout, pagesize) that
     automatically wraps query.cached_result(timeout) for convenient iteration
