@@ -834,7 +834,7 @@ class TestORM(unittest.TestCase):
 
         class RomTestO2M__(Model):
             col1 = OneToMany('RomTestM2O__', 'no action', 'col2')
-        
+
         class RomTestM2O__(Model):
             col1 = ManyToOne('RomTestO2M__')
             col2 = ManyToOne('RomTestO2M__')
@@ -862,11 +862,33 @@ class TestORM(unittest.TestCase):
         self.assertEqual(c.zcard('RomTestCleanOld:col1:idx'), 1)
 
         self.assertEqual(c.delete('RomTestCleanOld:%s'%id), 1)
-        all(util.clean_old_index(RomTestCleanOld))
+        all(util.clean_old_index(RomTestCleanOld, force_hscan=None))
 
         self.assertEqual(c.hlen('RomTestCleanOld::'), 0)
         self.assertEqual(c.scard('RomTestCleanOld:col2:content:idx'), 0)
         self.assertEqual(c.zcard('RomTestCleanOld:col1:idx'), 0)
+
+        # okay, now test for longer scan/clear.
+        minid = int(c.get('RomTestCleanOld:id:')) + 1
+        _count = 100
+        for i in range(_count):
+            RomTestCleanOld(col1=i).save()
+        session.rollback()
+
+        version = list(map(int, c.info('server')['redis_version'].split('.')[:2]))
+        has_hscan = version >= [2, 8]
+
+        to_delete = list(range(minid, minid + _count, 37))
+        c.delete(*['RomTestCleanOld:%i'%i for i in to_delete])
+        self.assertTrue(all(c.hexists('RomTestCleanOld::', i) for i in to_delete))
+        all(util.clean_old_index(RomTestCleanOld, 10, force_hscan=has_hscan))
+        self.assertTrue(all(not c.hexists('RomTestCleanOld::', i) for i in to_delete))
+
+        to_delete = list(range(minid+29, minid + _count, 29))
+        c.delete(*['RomTestCleanOld:%i'%i for i in to_delete])
+        self.assertTrue(all(c.hexists('RomTestCleanOld::', i) for i in to_delete))
+        all(util.clean_old_index(RomTestCleanOld, 10, force_hscan=None))
+        self.assertTrue(all(not c.hexists('RomTestCleanOld::', i) for i in to_delete))
 
 
 def main():

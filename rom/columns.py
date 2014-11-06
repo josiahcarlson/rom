@@ -112,13 +112,13 @@ class Column(object):
         * If you set *required* to True, then you must have the column set
           during object construction: ``MyModel(col=val)``
         * If *index* and *prefix*, or *index* and *suffix* are set, the same
-          keygen for both the regular *index* as well as the *prefix* and/or
-          *suffix* searches
+          keygen will be used for both the regular *index* as well as the
+          *prefix* and/or *suffix* searches
         * If *prefix* is set, you can perform pattern matches over your data.
           See documention for ``Query.like()`` for details.
         * Pattern matching over data is only guaranteed to be valid or correct
           for ANSI strings that do not include nulls, though we make an effort
-          to support
+          to support unicode strings and strings with nulls
         * Prefix, suffix, and pattern matching are performed within a Lua
           script, so may have substantial execution time if there are a large
           number of matching prefix or suffix entries

@@ -1,3 +1,8 @@
+#---------------------------------- 0.29.2 -----------------------------------
+[added] HSCAN-based index cleanup for Model keyspaces with many deleted
+    entities. Should improve index cleanup performance for users of Redis 2.8+
+[added] better testing for index cleanup
+[fixed] some documentation
 #---------------------------- 0.29.1 (unreleased) ----------------------------
 [added] Thanks to https://github.com/pconerly travis-ci integration and
     optional tox-based testing has been added

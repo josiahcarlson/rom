@@ -6,7 +6,7 @@ Changing connection settings
 There are four ways to change the way that ``rom`` connects to Redis.
 
 1. Set the global default connection settings by calling
-   ``rom.util.set_connection_settings()``` with the same arguments you would
+   ``rom.util.set_connection_settings()`` with the same arguments you would
    pass to the redis.Redis() constructor::
 
     import rom.util
@@ -77,6 +77,7 @@ global or per-thread basis.
 
 from __future__ import print_function
 from datetime import datetime, date, time as dtime
+from hashlib import sha1
 from itertools import chain
 import string
 import threading
@@ -90,7 +91,8 @@ import six
 from .exceptions import ORMError
 
 __all__ = '''
-    get_connection Session refresh_indices set_connection_settings'''.split()
+    get_connection Session refresh_indices set_connection_settings
+    clean_old_index show_progress use_null_session use_rom_session'''.split()
 
 CONNECTION = redis.Redis()
 USE_LUA = True
@@ -342,6 +344,7 @@ class Session(threading.local):
         See the ``.commit()`` method for arguments and their meanings.
         '''
         self._init()
+
         changes = 0
         for value in self.known.values():
             if not value._deleted and (all or value._modified):
@@ -498,7 +501,7 @@ def refresh_indices(model, block_size=100):
         session.commit(all=True)
         yield min(i+block_size, max_id), max_id
 
-def clean_old_index(model, block_size=100):
+def clean_old_index(model, block_size=100, **kwargs):
     '''
     This utility function will clean out old index data that was accidentally
     left during item deletion in rom versions <= 0.27.0 . You should run this
@@ -523,25 +526,45 @@ def clean_old_index(model, block_size=100):
         raise Exception("Lua must be enabled to clean out old indexes")
 
     conn = _connect(model)
+    version = list(map(int, conn.info('server')['redis_version'].split('.')[:2]))
+    has_hscan = version >= [2, 8]
     pipe = conn.pipeline(True)
     prefix = '%s:'%model.__name__
     index = prefix + ':'
-    max_id = int(conn.get('%s%s:'%(prefix, model._pkey)) or '0')
     block_size = max(block_size, 10)
 
-    for i in range(1, max_id+1, block_size):
-        ids = list(range(i, min(i+block_size, max_id+1)))
-        for id in ids:
-            pipe.exists(prefix + str(id))
-            pipe.hexists(index, id)
-        result = iter(pipe.execute())
-        remove = [id for id, ent, ind in zip(ids, result, result) if ind and not ent]
-        if remove:
-            _clean_index_lua(conn, [model.__name__], remove)
+    force_hscan = kwargs.get('force_hscan', False)
+    if (has_hscan or force_hscan) and force_hscan is not None:
+        max_id = conn.hlen(index)
+        cursor = None
+        scanned = 0
+        while cursor != b'0':
+            cursor, remove = _scan_index_lua(conn, [prefix], [cursor or '0', block_size])
+            if remove:
+                _clean_index_lua(conn, [model.__name__], remove)
 
-        yield min(i+block_size, max_id-1), max_id
+            scanned += block_size
+            if scanned > max_id:
+                max_id = scanned + 1
+            yield scanned, max_id
+
+    else:
+        max_id = int(conn.get('%s%s:'%(prefix, model._pkey)) or '0')
+        for i in range(1, max_id+1, block_size):
+            ids = list(range(i, min(i+block_size, max_id+1)))
+            for id in ids:
+                pipe.exists(prefix + str(id))
+                pipe.hexists(index, id)
+
+            result = iter(pipe.execute())
+            remove = [id for id, ent, ind in zip(ids, result, result) if ind and not ent]
+            if remove:
+                _clean_index_lua(conn, [model.__name__], remove)
+
+            yield min(i+block_size, max_id-1), max_id
 
     yield max_id, max_id
+
 
 def show_progress(job):
     '''
@@ -583,12 +606,20 @@ def _script_load(script):
     Used for Lua scripting support when writing against Redis 2.6+ to allow
     for multiple unique columns per model.
     '''
-    sha = [None]
+    script = script.encode('utf-8') if isinstance(script, six.text_type) else script
+    sha = [None, sha1(script).hexdigest()]
     def call(conn, keys=[], args=[], force_eval=False):
+        keys = tuple(keys)
+        args = tuple(args)
         if not force_eval:
             if not sha[0]:
-                ec = conn.immediate_execute_command if isinstance(conn, BasePipeline) else conn.execute_command
-                sha[0] = ec("SCRIPT", "LOAD", script, parse="LOAD")
+                try:
+                    # executing the script implicitly loads it
+                    return conn.execute_command(
+                        'EVAL', script, len(keys), *(keys + args))
+                finally:
+                    # thread safe by re-using the GIL ;)
+                    del sha[:-1]
 
             try:
                 return conn.execute_command(
@@ -602,6 +633,18 @@ def _script_load(script):
             "EVAL", script, len(keys), *(keys+args))
 
     return call
+
+_scan_index_lua = _script_load('''
+local page = redis.call('HSCAN', KEYS[1] .. ':', ARGV[1], 'COUNT', ARGV[2] or 100)
+local clear = {}
+for i=1, #page[2], 2 do
+    if redis.call('EXISTS', KEYS[1] .. page[2][i]) == 0 then
+        table.insert(clear, page[2][i])
+    end
+end
+
+return {page[1], clear}
+''')
 
 _clean_index_lua = _script_load('''
 -- remove old index data

@@ -1,4 +1,7 @@
 '''
+.. image:: https://travis-ci.org/josiahcarlson/rom.svg?branch=master
+    :target: https://travis-ci.org/josiahcarlson/rom
+
 Rom - the Redis object mapper for Python
 
 Copyright 2013-2014 Josiah Carlson
@@ -141,7 +144,7 @@ from .index import GeneralIndex, Pattern, Prefix, Suffix
 from .util import (ClassProperty, _connect, session, dt2ts, t2ts,
     _prefix_score, _script_load, _encode_unique_constraint)
 
-VERSION = '0.29.0'
+VERSION = '0.29.2'
 
 COLUMN_TYPES = [Column, Integer, Boolean, Float, Decimal, DateTime, Date,
 Time, Text, Json, PrimaryKey, ManyToOne, ForeignModel, OneToMany]
