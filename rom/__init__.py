@@ -574,7 +574,7 @@ class Model(six.with_metaclass(_ModelMetaclass, object)):
         default, but you can force a full save by passing ``full=True``.
         '''
         new = self.to_dict()
-        ret = self._apply_changes(self._last, new, ttl=ttl, full or self._new)
+        ret = self._apply_changes(self._last, new, full or self._new, ttl=ttl)
         self._new = False
         # Now explicitly encode data for the _last attribute to make re-saving
         # work correctly in all cases.
