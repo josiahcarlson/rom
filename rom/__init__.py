@@ -390,7 +390,7 @@ class Model(six.with_metaclass(_ModelMetaclass, object)):
         return '%s:%s'%(self.__class__.__name__, getattr(self, self._pkey))
 
     @classmethod
-    def _apply_changes(cls, old, new, full=False, delete=False):
+    def _apply_changes(cls, old, new, ttl=None, full=False, delete=False):
         use_lua = USE_LUA
         conn = _connect(cls)
         pk = old.get(cls._pkey) or new.get(cls._pkey)
@@ -540,7 +540,7 @@ class Model(six.with_metaclass(_ModelMetaclass, object)):
             id_only = str(pk)
             if use_lua:
                 redis_writer_lua(conn, model, id_only, unique, udeleted,
-                    deleted, data, list(keys), scores, prefix, suffix, delete)
+                    deleted, data, list(keys), scores, prefix, suffix, delete, ttl)
                 return changes
             elif delete:
                 changes += 1
@@ -549,6 +549,8 @@ class Model(six.with_metaclass(_ModelMetaclass, object)):
             else:
                 if data:
                     pipe.hmset(key, data)
+                    if ttl:
+                        pipe.expire(key, ttl)
                 cls._gindex.index(conn, id_only, keys, scores, prefix, suffix, pipe=pipe)
 
             try:
@@ -566,13 +568,13 @@ class Model(six.with_metaclass(_ModelMetaclass, object)):
         '''
         return dict(self._data)
 
-    def save(self, full=False):
+    def save(self, full=False, ttl=None):
         '''
         Saves the current entity to Redis. Will only save changed data by
         default, but you can force a full save by passing ``full=True``.
         '''
         new = self.to_dict()
-        ret = self._apply_changes(self._last, new, full or self._new)
+        ret = self._apply_changes(self._last, new, full or self._new, ttl=ttl)
         self._new = False
         # Now explicitly encode data for the _last attribute to make re-saving
         # work correctly in all cases.
@@ -739,6 +741,7 @@ _redis_writer_lua = _script_load('''
 local namespace = ARGV[1]
 local id = ARGV[2]
 local is_delete = cjson.decode(ARGV[11])
+local ttl = ARGV[12]
 
 -- check and update unique column constraints
 for i, write in ipairs({false, true}) do
@@ -774,6 +777,9 @@ end
 local data = cjson.decode(ARGV[6])
 if #data > 0 then
     redis.call('HMSET', string.format('%s:%s', namespace, id), unpack(data))
+    if ttl then
+        redis.call('EXPIRE', string.format('%s:%s', namespace, id), ttl)
+    end
 end
 
 -- remove old index data, update util.clean_index_lua when changed
@@ -842,12 +848,15 @@ if not is_delete then
     -- update known index data
     local encoded = cjson.encode({nkeys, nscored, nprefix, nsuffix})
     redis.call('HSET', namespace .. '::', id, encoded)
+    if ttl then
+        redis.call('EXPIRE', string.format('%s:%s', namespace, id), ttl)
+    end
 end
 return #nkeys + #nscored + #nprefix + #nsuffix
 ''')
 
 def redis_writer_lua(conn, namespace, id, unique, udelete, delete, data, keys,
-                     scored, prefix, suffix, is_delete):
+                     scored, prefix, suffix, is_delete, ttl):
     ldata = []
     for pair in data.items():
         ldata.extend(pair)
@@ -858,7 +867,7 @@ def redis_writer_lua(conn, namespace, id, unique, udelete, delete, data, keys,
         item.append(_prefix_score(item[-1]))
 
     result = _redis_writer_lua(conn, [], [namespace, id] + list(map(json.dumps, [
-        unique, udelete, delete, ldata, keys, scored, prefix, suffix, is_delete])))
+        unique, udelete, delete, ldata, keys, scored, prefix, suffix, is_delete, ttl])))
     if isinstance(result, six.binary_type):
         result = result.decode()
         raise UniqueKeyViolation("Value %r for %s:%s:uidx not distinct"%(unique[result], namespace, result))
