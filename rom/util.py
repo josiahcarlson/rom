@@ -109,7 +109,7 @@ def get_connection():
     '''
     Override me for one of the ways to change the way I connect to Redis.
     '''
-    return redis.Redis(pool=CONNECTION)
+    return redis.Redis(connection_pool=CONNECTION)
 
 def _connect(obj):
     '''
