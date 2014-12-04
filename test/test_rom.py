@@ -9,7 +9,7 @@ import six
 
 from rom import util
 
-util.CONNECTION = redis.Redis(db=15)
+util.CONNECTION = redis.ConnectionPool(db=15)
 connect = util._connect
 
 from rom import *
