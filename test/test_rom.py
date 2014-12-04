@@ -270,7 +270,7 @@ class TestORM(unittest.TestCase):
         RomTestFoo().save()
         RomTestBar().save()
         
-        connection = redis.Redis(connection_pool=CONNECTION)
+        connection = redis.Redis(connection_pool=util.CONNECTION)
         self.assertEqual(RomTestBar._conn.get('RomTestBar:id:').decode(), '1')
         self.assertEqual(connection.get('RomTestBar:id:'), None)
         RomTestBar.get(1).delete()
