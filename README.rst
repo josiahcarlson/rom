@@ -125,3 +125,10 @@ If you are using a version of Redis prior to 2.6, you should upgrade Redis. If
 you are unable or unwilling to upgrade Redis, but you still wish to use rom,
 you should call ``rom._disable_lua_writes()``, which will prevent you from
 using features that require Lua scripting support.
+
+Serializing with MsgPack
+========================
+By default rom serializes data using JSON both internally and in redis lua scripts.
+However rom also provides optional support to serialize data using MsgPack in order to reduce network I/O since MsgPack is more compact.
+In order to enable MsgPack support type::
+    pip install rom[msgpack]
