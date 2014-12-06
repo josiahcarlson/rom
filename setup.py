@@ -30,5 +30,6 @@ setup(
     long_description=long_description,
     requires=['redis', 'six'],
     install_requires=['redis', 'six'],
+    extra_requires={'msgpack': ['msgpack-python']}
 )
 
