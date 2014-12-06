@@ -9,7 +9,6 @@ import six
 
 from rom import util
 
-util.CONNECTION = redis.Redis(db=15)
 connect = util._connect
 
 from rom import *
@@ -890,6 +889,19 @@ class TestORM(unittest.TestCase):
         all(util.clean_old_index(RomTestCleanOld, 10, force_hscan=None))
         self.assertTrue(all(not c.hexists('RomTestCleanOld::', i) for i in to_delete))
 
+    def test_multiple_dbs(self):
+        class RomTestMultipleDBs(Model):
+            col1 = Integer(index=True)
+
+            db = 1
+
+        a = RomTestMultipleDBs(col1=1)
+        a.save()
+        c = connect(a)
+        self.assertEqual(int(c.hgetall('RomTestMultipleDBs:%s' % a.id)['col1']), 1)
+
+        c = connect(None)
+        self.assertFalse(c.hexists('RomTestMultipleDBs:%s' % a.id, 'col1'))
 
 def main():
     testsFailed = False
