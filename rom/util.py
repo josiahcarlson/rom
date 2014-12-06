@@ -129,7 +129,9 @@ def _connect(obj):
     if hasattr(obj, '_conn'):
         return obj._conn
     if hasattr(obj, 'db'):
-        connection = get_connection(db=obj.db)
+        kwargs = next(CONNECTION).connection_pool.connection_kwargs
+        kwargs.pop('db', None)
+        connection = get_connection(db=obj.db, **kwargs)
         return connection
     else:
         connection = get_connection()
