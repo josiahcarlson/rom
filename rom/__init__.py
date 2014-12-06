@@ -130,7 +130,6 @@ using features that require Lua scripting support.
 from collections import defaultdict
 from datetime import datetime, date, time as dtime
 from decimal import Decimal as _Decimal
-import json
 
 import redis
 import six
@@ -142,7 +141,7 @@ from .exceptions import (ORMError, UniqueKeyViolation, InvalidOperation,
     QueryError, ColumnError, MissingColumn, InvalidColumnValue, RestrictError)
 from .index import GeneralIndex, Pattern, Prefix, Suffix
 from .util import (ClassProperty, _connect, session, dt2ts, t2ts,
-    _prefix_score, _script_load, _encode_unique_constraint)
+    _prefix_score, _script_load, _encode_unique_constraint, dumps, _lua_encoder, _lua_decoder)
 
 VERSION = '0.29.2'
 
@@ -738,11 +737,10 @@ class Model(six.with_metaclass(_ModelMetaclass, object)):
 _redis_writer_lua = _script_load('''
 local namespace = ARGV[1]
 local id = ARGV[2]
-local is_delete = cjson.decode(ARGV[11])
-
+local is_delete = {0}(ARGV[11])
 -- check and update unique column constraints
-for i, write in ipairs({false, true}) do
-    for col, value in pairs(cjson.decode(ARGV[3])) do
+for i, write in ipairs({{false, true}}) do
+    for col, value in pairs({0}(ARGV[3])) do
         local key = string.format('%s:%s:uidx', namespace, col)
         if write then
             redis.call('HSET', key, value, id)
@@ -756,7 +754,7 @@ for i, write in ipairs({false, true}) do
 end
 
 -- remove deleted unique constraints
-for col, value in pairs(cjson.decode(ARGV[4])) do
+for col, value in pairs({0}(ARGV[4])) do
     local key = string.format('%s:%s:uidx', namespace, col)
     local known = redis.call('HGET', key, value)
     if known == id then
@@ -765,13 +763,13 @@ for col, value in pairs(cjson.decode(ARGV[4])) do
 end
 
 -- remove deleted columns
-local deleted = cjson.decode(ARGV[5])
+local deleted = {0}(ARGV[5])
 if #deleted > 0 then
     redis.call('HDEL', string.format('%s:%s', namespace, id), unpack(deleted))
 end
 
 -- update changed/added columns
-local data = cjson.decode(ARGV[6])
+local data = {0}(ARGV[6])
 if #data > 0 then
     redis.call('HMSET', string.format('%s:%s', namespace, id), unpack(data))
 end
@@ -779,10 +777,10 @@ end
 -- remove old index data, update util.clean_index_lua when changed
 local idata = redis.call('HGET', namespace .. '::', id)
 if idata then
-    idata = cjson.decode(idata)
+    idata = {0}(idata)
     if #idata == 2 then
-        idata[3] = {}
-        idata[4] = {}
+        idata[3] = {{}}
+        idata[4] = {{}}
     end
     for i, key in ipairs(idata[1]) do
         redis.call('SREM', string.format('%s:%s:idx', namespace, key), id)
@@ -808,43 +806,43 @@ if is_delete then
 end
 
 -- add new key index data
-local nkeys = cjson.decode(ARGV[7])
+local nkeys = {0}(ARGV[7])
 for i, key in ipairs(nkeys) do
     redis.call('SADD', string.format('%s:%s:idx', namespace, key), id)
 end
 
 -- add new scored index data
-local nscored = {}
-for key, score in pairs(cjson.decode(ARGV[8])) do
+local nscored = {{}}
+for key, score in pairs({0}(ARGV[8])) do
     redis.call('ZADD', string.format('%s:%s:idx', namespace, key), score, id)
     nscored[#nscored + 1] = key
 end
 
 -- add new prefix data
-local nprefix = {}
-for i, data in ipairs(cjson.decode(ARGV[9])) do
+local nprefix = {{}}
+for i, data in ipairs({0}(ARGV[9])) do
     local key = string.format('%s:%s:pre', namespace, data[1])
     local mem = string.format("%s\0%s", data[2], id)
     redis.call('ZADD', key, data[3], mem)
-    nprefix[#nprefix + 1] = {data[1], data[2]}
+    nprefix[#nprefix + 1] = {{data[1], data[2]}}
 end
 
 -- add new suffix data
-local nsuffix = {}
-for i, data in ipairs(cjson.decode(ARGV[10])) do
+local nsuffix = {{}}
+for i, data in ipairs({0}(ARGV[10])) do
     local key = string.format('%s:%s:suf', namespace, data[1])
     local mem = string.format("%s\0%s", data[2], id)
     redis.call('ZADD', key, data[3], mem)
-    nsuffix[#nsuffix + 1] = {data[1], data[2]}
+    nsuffix[#nsuffix + 1] = {{data[1], data[2]}}
 end
 
 if not is_delete then
     -- update known index data
-    local encoded = cjson.encode({nkeys, nscored, nprefix, nsuffix})
+    local encoded = {1}({{nkeys, nscored, nprefix, nsuffix}})
     redis.call('HSET', namespace .. '::', id, encoded)
 end
 return #nkeys + #nscored + #nprefix + #nsuffix
-''')
+'''.format(_lua_decoder, _lua_encoder))
 
 def redis_writer_lua(conn, namespace, id, unique, udelete, delete, data, keys,
                      scored, prefix, suffix, is_delete):
@@ -857,7 +855,7 @@ def redis_writer_lua(conn, namespace, id, unique, udelete, delete, data, keys,
     for item in suffix:
         item.append(_prefix_score(item[-1]))
 
-    result = _redis_writer_lua(conn, [], [namespace, id] + list(map(json.dumps, [
+    result = _redis_writer_lua(conn, [], [namespace, id] + list(map(dumps, [
         unique, udelete, delete, ldata, keys, scored, prefix, suffix, is_delete])))
     if isinstance(result, six.binary_type):
         result = result.decode()

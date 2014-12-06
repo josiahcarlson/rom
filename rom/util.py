@@ -83,6 +83,17 @@ import string
 import threading
 import time
 import weakref
+try:
+    import msgpack
+    USE_MSGPACK = True
+    dumps = msgpack.dumps
+except ImportError:
+    import json
+    USE_MSGPACK = False
+    dumps = json.dumps
+
+_lua_encoder = 'cmsgpack.pack' if USE_MSGPACK else 'cjson.encode'
+_lua_decoder = 'cmsgpack.unpack' if USE_MSGPACK else 'cjson.decode'
 
 import redis
 from redis.client import BasePipeline
@@ -92,7 +103,7 @@ from .exceptions import ORMError
 
 __all__ = '''
     get_connection Session refresh_indices set_connection_settings
-    clean_old_index show_progress use_null_session use_rom_session'''.split()
+    clean_old_index show_progress use_null_session use_rom_session dumps _lua_encoder _lua_decoder'''.split()
 
 CONNECTION = redis.Redis()
 USE_LUA = True
@@ -654,10 +665,10 @@ for _, id in ipairs(ARGV) do
     local idata = redis.call('HGET', namespace .. '::', id)
     if idata then
         cleaned = cleaned + 1
-        idata = cjson.decode(idata)
+        idata = {0}(idata)
         if #idata == 2 then
-            idata[3] = {}
-            idata[4] = {}
+            idata[3] = {{}}
+            idata[4] = {{}}
         end
         for i, key in ipairs(idata[1]) do
             redis.call('SREM', string.format('%s:%s:idx', namespace, key), id)
@@ -679,4 +690,4 @@ for _, id in ipairs(ARGV) do
     end
 end
 return cleaned
-''')
+'''.format(_lua_decoder))
