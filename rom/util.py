@@ -105,10 +105,14 @@ def set_connection_settings(*args, **kwargs):
     global CONNECTION
     CONNECTION = redis.Redis(*args, **kwargs)
 
-def get_connection():
+def get_connection(*args, **kwargs):
     '''
     Override me for one of the ways to change the way I connect to Redis.
     '''
+
+    if args or kwargs:
+        return redis.Redis(*args, **kwargs)
+
     return CONNECTION
 
 def _connect(obj):
@@ -121,6 +125,10 @@ def _connect(obj):
         obj = obj.__class__
     if hasattr(obj, '_conn'):
         return obj._conn
+    if obj and hasattr(obj, 'db'):
+        connection = get_connection(db=obj.db)
+        setattr(obj, '_conn', connection)
+        return connection
     return get_connection()
 
 class ClassProperty(object):
