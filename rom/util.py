@@ -94,7 +94,7 @@ __all__ = '''
     get_connection Session refresh_indices set_connection_settings
     clean_old_index show_progress use_null_session use_rom_session'''.split()
 
-CONNECTION = redis.Redis()
+CONNECTION = {0: redis.Redis()}
 USE_LUA = True
 
 def set_connection_settings(*args, **kwargs):
@@ -103,17 +103,20 @@ def set_connection_settings(*args, **kwargs):
     model-specific connections.
     '''
     global CONNECTION
-    CONNECTION = redis.Redis(*args, **kwargs)
+    db = kwargs.get('db', 0)
+    CONNECTION[db] = redis.Redis(*args, **kwargs)
 
 def get_connection(*args, **kwargs):
     '''
     Override me for one of the ways to change the way I connect to Redis.
     '''
 
-    if args or kwargs:
-        return redis.Redis(*args, **kwargs)
+    db = kwargs.get('db', 0)
 
-    return CONNECTION
+    if not db in CONNECTION:
+        set_connection_settings(*args, **kwargs)
+
+    return CONNECTION[db]
 
 def _connect(obj):
     '''
@@ -125,11 +128,15 @@ def _connect(obj):
         obj = obj.__class__
     if hasattr(obj, '_conn'):
         return obj._conn
-    if obj and hasattr(obj, 'db'):
+    if hasattr(obj, 'db'):
         connection = get_connection(db=obj.db)
-        setattr(obj, '_conn', connection)
         return connection
-    return get_connection()
+    else:
+        connection = get_connection()
+    if obj:
+        setattr(obj, '_conn', connection)
+
+    return connection
 
 class ClassProperty(object):
     '''
