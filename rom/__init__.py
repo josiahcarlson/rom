@@ -541,7 +541,7 @@ class Model(six.with_metaclass(_ModelMetaclass, object)):
             if use_lua:
                 redis_writer_lua(conn, model, id_only, unique, udeleted,
                     deleted, data, list(keys), scores, prefix, suffix, delete)
-                return changes
+                return changes, data
             elif delete:
                 changes += 1
                 cls._gindex._unindex(conn, pipe, id_only)
@@ -556,7 +556,7 @@ class Model(six.with_metaclass(_ModelMetaclass, object)):
             except redis.exceptions.WatchError:
                 continue
             else:
-                return changes
+                return changes, {}
 
     def to_dict(self):
         '''
@@ -572,16 +572,17 @@ class Model(six.with_metaclass(_ModelMetaclass, object)):
         default, but you can force a full save by passing ``full=True``.
         '''
         new = self.to_dict()
-        ret = self._apply_changes(self._last, new, full or self._new)
+        ret, rnew = self._apply_changes(self._last, new, full or self._new)
         self._new = False
-        # Now explicitly encode data for the _last attribute to make re-saving
-        # work correctly in all cases.
-        last = {}
-        cols = self._columns
-        for attr, data in new.items():
-            last[attr] = cols[attr]._to_redis(data) if data is not None else None
+        # # Now explicitly encode data for the _last attribute to make re-saving
+        # # work correctly in all cases.
+        # last = {}
+        # cols = self._columns
+        # for attr, data in new.items():
+        #     last[attr] = cols[attr]._to_redis(data) if data is not None else None
 
-        self._last = last
+        self._last.update(rnew)
+        self._last[self._pkey] = getattr(self, self._pkey, None)
         self._modified = False
         self._deleted = False
         return ret

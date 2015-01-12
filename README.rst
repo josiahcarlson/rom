@@ -2,6 +2,9 @@
 .. image:: https://travis-ci.org/josiahcarlson/rom.svg?branch=master
     :target: https://travis-ci.org/josiahcarlson/rom
 
+.. image:: https://travis-ci.org/huangwei1024/rom.svg?branch=master
+    :target: https://travis-ci.org/huangwei1024/rom
+    
 Rom - the Redis object mapper for Python
 
 Copyright 2013-2014 Josiah Carlson
