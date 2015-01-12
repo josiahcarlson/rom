@@ -582,6 +582,7 @@ class Model(six.with_metaclass(_ModelMetaclass, object)):
         #     last[attr] = cols[attr]._to_redis(data) if data is not None else None
 
         self._last.update(rnew)
+        self._last[self._pkey] = getattr(self, self._pkey, None)
         self._modified = False
         self._deleted = False
         return ret
