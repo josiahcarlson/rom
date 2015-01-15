@@ -83,6 +83,7 @@ import string
 import threading
 import time
 import weakref
+import warnings
 
 import redis
 from redis.client import BasePipeline
@@ -121,6 +122,8 @@ def _connect(obj):
         obj = obj.__class__
     if hasattr(obj, '_conn'):
         return obj._conn
+    if hasattr(obj, 'CONN'):
+        return obj.CONN
     return get_connection()
 
 class ClassProperty(object):
@@ -539,7 +542,7 @@ def clean_old_index(model, block_size=100, **kwargs):
         cursor = None
         scanned = 0
         while cursor != b'0':
-            cursor, remove = _scan_index_lua(conn, [prefix], [cursor or '0', block_size])
+            cursor, remove = _scan_index_lua(conn, [index, prefix], [cursor or '0', block_size, 0])
             if remove:
                 _clean_index_lua(conn, [model.__name__], remove)
 
@@ -548,7 +551,28 @@ def clean_old_index(model, block_size=100, **kwargs):
                 max_id = scanned + 1
             yield scanned, max_id
 
+        # need to scan over unique indexes :/
+        for uniq in chain(model._unique, model._cunique):
+            name = uniq if isinstance(uniq, six.string_types) else ':'.join(uniq)
+            idx = prefix + name + ':uidx'
+
+            cursor = None
+            while cursor != b'0':
+                cursor, remove = _scan_index_lua(conn, [idx, prefix], [cursor or '0', block_size, 1])
+                if remove:
+                    conn.hdel(idx, *remove)
+
+                scanned += block_size
+                if scanned > max_id:
+                    max_id = scanned + 1
+                yield scanned, max_id
     else:
+        if model._unique or model._cunique:
+            if has_hscan:
+                warnings.warn("You have disabled the use of HSCAN to clean up indexes, this will prevent unique index cleanup", stacklevel=2)
+            else:
+                warnings.warn("Unique indexes cannot be cleaned up in Redis versions prior to 2.8", stacklevel=2)
+
         max_id = int(conn.get('%s%s:'%(prefix, model._pkey)) or '0')
         for i in range(1, max_id+1, block_size):
             ids = list(range(i, min(i+block_size, max_id+1)))
@@ -635,11 +659,12 @@ def _script_load(script):
     return call
 
 _scan_index_lua = _script_load('''
-local page = redis.call('HSCAN', KEYS[1] .. ':', ARGV[1], 'COUNT', ARGV[2] or 100)
+local page = redis.call('HSCAN', KEYS[1], ARGV[1], 'COUNT', ARGV[2] or 100)
 local clear = {}
-for i=1, #page[2], 2 do
-    if redis.call('EXISTS', KEYS[1] .. page[2][i]) == 0 then
-        table.insert(clear, page[2][i])
+local skip = tonumber(ARGV[3])
+for i=(1+skip), #page[2], 2 do
+    if redis.call('EXISTS', KEYS[2] .. page[2][i]) == 0 then
+        table.insert(clear, page[2][i - skip])
     end
 end
 

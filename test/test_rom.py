@@ -3,6 +3,7 @@ from datetime import datetime, timedelta
 from decimal import Decimal as _Decimal
 import time
 import unittest
+import warnings
 
 import redis
 import six
@@ -202,7 +203,7 @@ class TestORM(unittest.TestCase):
         self.assertEqual(RomTestIndexedModel.query.filter(attr='hello').count(), 1)
         self.assertEqual(RomTestIndexedModel.query.filter(attr2='how').filter(attr2='are').count(), 1)
         self.assertEqual(RomTestIndexedModel.query.filter(attr='hello').filter(attr2='how').filter(attr2='are').count(), 1)
-        self.assertEqual(RomTestIndexedModel.query.filter(attr='hello', noattr='bad').filter(attr2='how').filter(attr2='are').count(), 0)
+        self.assertRaises(QueryError, lambda: RomTestIndexedModel.query.filter(attr='hello', noattr='bad'))
         self.assertEqual(RomTestIndexedModel.query.filter(attr='hello', attr3=(None, None)).count(), 1)
         self.assertEqual(RomTestIndexedModel.query.filter(attr='hello', attr3=(None, 10)).count(), 1)
         self.assertEqual(RomTestIndexedModel.query.filter(attr='hello', attr3=(None, 10)).execute()[0].id, 1)
@@ -231,6 +232,13 @@ class TestORM(unittest.TestCase):
         self.assertTrue(conn.ttl(key) <= 30)
         self.assertEqual(conn.zcard(key), 1)
         conn.delete(key)
+        self.assertRaises(QueryError, lambda: RomTestIndexedModel.query.order_by('attr6'))
+        if not util.USE_LUA:
+            # Only the first call raises the warning, so only bother to call it
+            # for our first pass through tests (non-Lua case).
+            with warnings.catch_warnings(record=True) as w:
+                RomTestIndexedModel.query.order_by('attr')
+                self.assertEqual(len(w), 1)
 
     def test_alternate_models(self):
         ctr = [0]
@@ -847,32 +855,43 @@ class TestORM(unittest.TestCase):
         class RomTestCleanOld(Model):
             col1 = Integer(index=True)
             col2 = String(index=True) if six.PY2 else Text(index=True)
+            col3 = String(unique=True) if six.PY2 else Text(unique=True)
 
-        a = RomTestCleanOld(col1=6, col2="this is content that should be indexed")
+        now = str(time.time())
+
+        a = RomTestCleanOld(col1=6, col2="this is content that should be indexed", col3=now)
         a.save()
         id = a.id
         self.assertEqual(len(RomTestCleanOld.get_by(col1=6)), 1)
         self.assertEqual(len(RomTestCleanOld.get_by(col1=(5, 7))), 1)
         self.assertEqual(len(RomTestCleanOld.get_by(col2='content')), 1)
+        self.assertTrue(RomTestCleanOld.get_by(col3=now))
         session.rollback()
         del a
         c = connect(None)
         self.assertEqual(c.hlen('RomTestCleanOld::'), 1)
         self.assertEqual(c.scard('RomTestCleanOld:col2:content:idx'), 1)
         self.assertEqual(c.zcard('RomTestCleanOld:col1:idx'), 1)
+        self.assertEqual(c.hlen('RomTestCleanOld:col3:uidx'), 1)
 
         self.assertEqual(c.delete('RomTestCleanOld:%s'%id), 1)
-        all(util.clean_old_index(RomTestCleanOld, force_hscan=None))
+
+        with warnings.catch_warnings(record=True) as w:
+            all(util.clean_old_index(RomTestCleanOld, force_hscan=None))
+            self.assertEqual(len(w), 1)
 
         self.assertEqual(c.hlen('RomTestCleanOld::'), 0)
         self.assertEqual(c.scard('RomTestCleanOld:col2:content:idx'), 0)
         self.assertEqual(c.zcard('RomTestCleanOld:col1:idx'), 0)
+        # can't clean out unique index when force_hscan is None - aka HSCAN disabled
+        self.assertEqual(c.hlen('RomTestCleanOld:col3:uidx'), 1)
+        c.delete('RomTestCleanOld:col3:uidx')
 
         # okay, now test for longer scan/clear.
         minid = int(c.get('RomTestCleanOld:id:')) + 1
         _count = 100
-        for i in range(_count):
-            RomTestCleanOld(col1=i).save()
+        for i in range(minid, minid+_count):
+            RomTestCleanOld(col1=i, col3=str(i)).save()
         session.rollback()
 
         version = list(map(int, c.info('server')['redis_version'].split('.')[:2]))
@@ -883,12 +902,19 @@ class TestORM(unittest.TestCase):
         self.assertTrue(all(c.hexists('RomTestCleanOld::', i) for i in to_delete))
         all(util.clean_old_index(RomTestCleanOld, 10, force_hscan=has_hscan))
         self.assertTrue(all(not c.hexists('RomTestCleanOld::', i) for i in to_delete))
+        self.assertTrue(all(not c.hexists('RomTestCleanOld:col3:uidx', i) for i in to_delete))
 
         to_delete = list(range(minid+29, minid + _count, 29))
         c.delete(*['RomTestCleanOld:%i'%i for i in to_delete])
         self.assertTrue(all(c.hexists('RomTestCleanOld::', i) for i in to_delete))
-        all(util.clean_old_index(RomTestCleanOld, 10, force_hscan=None))
+        # should cause a warning
+        with warnings.catch_warnings(record=True) as w:
+            all(util.clean_old_index(RomTestCleanOld, 10, force_hscan=None))
+            self.assertEqual(len(w), 1)
         self.assertTrue(all(not c.hexists('RomTestCleanOld::', i) for i in to_delete))
+        # We can't really clean out unique indexes when hscan is disabled or not
+        # available. :/
+        self.assertTrue(all(c.hexists('RomTestCleanOld:col3:uidx', i) for i in to_delete))
 
 
 def main():
