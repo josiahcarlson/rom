@@ -1,4 +1,7 @@
 '''
+.. image:: https://travis-ci.org/josiahcarlson/rom.svg?branch=master
+    :target: https://travis-ci.org/josiahcarlson/rom
+
 Rom - the Redis object mapper for Python
 
 Copyright 2013-2014 Josiah Carlson
@@ -15,8 +18,8 @@ What
 ====
 
 Rom is a package whose purpose is to offer active-record style data modeling
-within Redis from Python, similar to the semantics of Django ORM, SQLAlchemy +
-Elixir, Google's Appengine datastore, and others.
+within Redis from Python, similar to the semantics of Django ORM, SQLAlchemy,
+Google's Appengine datastore, and others.
 
 Why
 ===
@@ -114,7 +117,7 @@ Lua support
 
 From version 0.25.0 and on, rom assumes that you are using Redis version 2.6
 or later, which supports server-side Lua scripting. This allows for the
-support of multiple unique columns without potentially nasty race conditions
+support of multiple unique column constraints without annoying race conditions
 and retries. This also allows for the support of prefix, suffix, and pattern
 matching on certain column types.
 
@@ -128,6 +131,7 @@ from collections import defaultdict
 from datetime import datetime, date, time as dtime
 from decimal import Decimal as _Decimal
 import json
+import warnings
 
 import redis
 import six
@@ -141,7 +145,7 @@ from .index import GeneralIndex, Pattern, Prefix, Suffix
 from .util import (ClassProperty, _connect, session, dt2ts, t2ts,
     _prefix_score, _script_load, _encode_unique_constraint)
 
-VERSION = '0.29.0'
+VERSION = '0.29.3'
 
 COLUMN_TYPES = [Column, Integer, Boolean, Float, Decimal, DateTime, Date,
 Time, Text, Json, PrimaryKey, ManyToOne, ForeignModel, OneToMany]
@@ -409,6 +413,7 @@ class Model(six.with_metaclass(_ModelMetaclass, object)):
             udeleted = {}
             prefix = []
             suffix = []
+            redis_data = {}
 
             # check for unique keys
             if len(cls._unique) > 1 and not use_lua:
@@ -453,6 +458,8 @@ class Model(six.with_metaclass(_ModelMetaclass, object)):
 
                 nval = new.get(attr)
                 rnval = ca._to_redis(nval) if nval is not None else None
+                if rnval is not None:
+                    redis_data[attr] = rnval
 
                 # Add/update standard index
                 if ca._keygen and not delete and nval is not None and (ca._index or ca._prefix or ca._suffix):
@@ -538,7 +545,7 @@ class Model(six.with_metaclass(_ModelMetaclass, object)):
             if use_lua:
                 redis_writer_lua(conn, model, id_only, unique, udeleted,
                     deleted, data, list(keys), scores, prefix, suffix, delete)
-                return changes
+                return changes, redis_data
             elif delete:
                 changes += 1
                 cls._gindex._unindex(conn, pipe, id_only)
@@ -553,7 +560,7 @@ class Model(six.with_metaclass(_ModelMetaclass, object)):
             except redis.exceptions.WatchError:
                 continue
             else:
-                return changes
+                return changes, redis_data
 
     def to_dict(self):
         '''
@@ -569,16 +576,9 @@ class Model(six.with_metaclass(_ModelMetaclass, object)):
         default, but you can force a full save by passing ``full=True``.
         '''
         new = self.to_dict()
-        ret = self._apply_changes(self._last, new, full or self._new)
+        ret, data = self._apply_changes(self._last, new, full or self._new)
+        self._last = data
         self._new = False
-        # Now explicitly encode data for the _last attribute to make re-saving
-        # work correctly in all cases.
-        last = {}
-        cols = self._columns
-        for attr, data in new.items():
-            last[attr] = cols[attr]._to_redis(data) if data is not None else None
-
-        self._last = last
         self._modified = False
         self._deleted = False
         return ret
@@ -873,6 +873,13 @@ class Query(object):
         self._order_by = order_by
         self._limit = limit
 
+    def _check(self, column):
+        column = column.strip('-')
+        col = self._model._columns.get(column)
+        if not col:
+            raise QueryError("Cannot order by a non-existent column %r"%(column,))
+        return col
+
     def replace(self, **kwargs):
         '''
         Copy the Query object, optionally replacing the filters, order_by, or
@@ -930,6 +937,7 @@ class Query(object):
         '''
         cur_filters = list(self._filters)
         for attr, value in kwargs.items():
+            self._check(attr)
             if isinstance(value, bool):
                 value = str(bool(value))
 
@@ -978,6 +986,7 @@ class Query(object):
         '''
         new = []
         for k, v in kwargs.items():
+            self._check(k)
             new.append(Prefix(k, v))
         return self.replace(filters=self._filters+tuple(new))
 
@@ -995,6 +1004,7 @@ class Query(object):
         '''
         new = []
         for k, v in kwargs.items():
+            self._check(k)
             new.append(Suffix(k, v[::-1]))
         return self.replace(filters=self._filters+tuple(new))
 
@@ -1029,6 +1039,7 @@ class Query(object):
         '''
         new = []
         for k, v in kwargs.items():
+            self._check(k)
             new.append(Pattern(k, v))
         return self.replace(filters=self._filters+tuple(new))
 
@@ -1040,6 +1051,13 @@ class Query(object):
             # descending order
             User.query.order_by('-created_at').execute()
         '''
+        cname = column.lstrip('-')
+        col = self._check(cname)
+        if type(col).__name__ in ('String', 'Text', 'Json'):
+            warnings.warn("You are trying to order by a non-numeric column %r. "
+                          "Unless you have provided your own keygen, this probably "
+                          "won't work the way you expect it."%(cname,), stacklevel=2)
+
         return self.replace(order_by=column)
 
     def limit(self, offset, count):

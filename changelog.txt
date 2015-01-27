@@ -1,3 +1,26 @@
+#---------------------------------- 0.29.3 -----------------------------------
+[fixed] index cleanup will now also clean any unique indexes that had not
+    previously been cleaned out when using Redis 2.8+. Note that data deleted
+    normally using entity.delete() or cascading deletes from rom 0.29.0 and
+    later should be fine. The only users that should be affected by this are
+    those who have directly manipulated keys in Redis.
+[added] more testing for index cleanup
+[changed] when trying to filter or order by a non-existent column, rom will
+    now raise an exception referring to the missing column. Rom used to let
+    these queries silently return an empty result set.
+[added] warning when trying to order by a json, string, or text columns where
+    the user would need to provide a custom keygen
+[fixed] rom will no longer encode updated data twice when saving, thanks to
+    Github user https://github.com/huangwei1024 for the bug report and first
+    pass at a patch
+#---------------------------------- 0.29.2 -----------------------------------
+[added] HSCAN-based index cleanup for Model keyspaces with many deleted
+    entities. Should improve index cleanup performance for users of Redis 2.8+
+[added] better testing for index cleanup
+[fixed] some documentation
+#---------------------------- 0.29.1 (unreleased) ----------------------------
+[added] Thanks to https://github.com/pconerly travis-ci integration and
+    optional tox-based testing has been added
 #---------------------------------- 0.29.0 -----------------------------------
 [added] Query result iterator: query.iter_result(timeout, pagesize) that
     automatically wraps query.cached_result(timeout) for convenient iteration
@@ -12,7 +35,7 @@
     ManyToOne column name that references *this* OneToMany. Useful for cases
     where models have multiple OneToMany or ManyToOne columns referencing the
     same models. Closes issue #23.
-[fixes] Index clearing with util.clean_old_index()
+[fixed] Index clearing with util.clean_old_index()
 [changed] Index clearing with util.clean_old_index() will also clean out index
     data for entities directly deleted or expired in Redis. Closes issue #40.
 #---------------------------------- 0.28.0 -----------------------------------

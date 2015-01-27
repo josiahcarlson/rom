@@ -1,3 +1,4 @@
+
 .. image:: https://travis-ci.org/josiahcarlson/rom.svg?branch=master
     :target: https://travis-ci.org/josiahcarlson/rom
 
@@ -17,8 +18,8 @@ What
 ====
 
 Rom is a package whose purpose is to offer active-record style data modeling
-within Redis from Python, similar to the semantics of Django ORM, SQLAlchemy +
-Elixir, Google's Appengine datastore, and others.
+within Redis from Python, similar to the semantics of Django ORM, SQLAlchemy,
+Google's Appengine datastore, and others.
 
 Why
 ===
@@ -116,7 +117,7 @@ Lua support
 
 From version 0.25.0 and on, rom assumes that you are using Redis version 2.6
 or later, which supports server-side Lua scripting. This allows for the
-support of multiple unique columns without potentially nasty race conditions
+support of multiple unique column constraints without annoying race conditions
 and retries. This also allows for the support of prefix, suffix, and pattern
 matching on certain column types.
 
