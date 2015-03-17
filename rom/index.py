@@ -170,7 +170,7 @@ class GeneralIndex(object):
             # reorder filters based on the size of the underlying set/zset
             for fltr in filters:
                 if isinstance(fltr, six.string_types):
-                    pipe.scard('%s:%s:idx'%(self.namespace, fltr))
+                    estimate_work_lua(pipe, '%s:%s:idx'%(self.namespace, fltr), None)
                 elif isinstance(fltr, Prefix):
                     estimate_work_lua(pipe, '%s:%s:pre'%(self.namespace, fltr.attr), fltr.prefix)
                 elif isinstance(fltr, Suffix):
@@ -178,7 +178,7 @@ class GeneralIndex(object):
                 elif isinstance(fltr, Pattern):
                     estimate_work_lua(pipe, '%s:%s:pre'%(self.namespace, fltr.attr), _find_prefix(fltr.pattern))
                 elif isinstance(fltr, (tuple, list)):
-                    pipe.zcard('%s:%s:idx'%(self.namespace, fltr[0]))
+                    estimate_work_lua(pipe, '%s:%s:idx'%(self.namespace, fltr[0]), None)
                 else:
                     raise QueryError("Don't know how to handle a filter of: %r"%(fltr,))
             sizes = list(enumerate(pipe.execute()))
@@ -429,10 +429,25 @@ end
 return math.max(0, end_index - start_index + 1)
 ''')
 
+_estimate_work_lua2 = _script_load('''
+-- These indexes will be on numbers or strings, which requires us to check both
+-- sorted set cardinality and set cardinality - depending on type.
+local idx = KEYS[1]
+local typ = redis.call('TYPE', idx)
+if typ == 'set' then
+    return tonumber(redis.call('scard', idx))
+elseif typ == 'zset' then
+    return tonumber(redis.call('zcard', idx))
+end
+return 0
+''')
+
 def estimate_work_lua(conn, index, prefix):
     '''
     Estimates the total work necessary to calculate the prefix match over the
     given index with the provided prefix.
     '''
+    if index.endswith(':idx'):
+        return _estimate_work_lua2(conn, [index], [], force_eval=True)
     start, end = _start_end(prefix)
     return _estimate_work_lua(conn, [index], [start, end], force_eval=True)

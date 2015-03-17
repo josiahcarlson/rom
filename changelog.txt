@@ -1,3 +1,14 @@
+#---------------------------------- 0.29.4 -----------------------------------
+[added] the ability to explicitly set the namespace all of your data will live
+    inside. Feature request and first pass at a patch thanks to github user
+    https://github.com/cabowabo-de
+[fixed] bug #56, allowing to set a ManyToOne() column to None as being the
+    same as deleting the attribute. Thanks to Github user
+    https://github.com/hakib for the feature request/bug report.
+[fixed] bug #57, in which an exception could be raised when making composite
+    string queries like:
+    Model.query.filter(a='this', b=['other', 'thing']).execute()
+    Thanks to github user https://github.com/liorchen for the bug report.
 #---------------------------------- 0.29.3 -----------------------------------
 [fixed] index cleanup will now also clean any unique indexes that had not
     previously been cleaned out when using Redis 2.8+. Note that data deleted

@@ -17,6 +17,8 @@ from rom import *
 from rom import _disable_lua_writes, _enable_lua_writes
 from rom.exceptions import *
 
+string = String if six.PY2 else Text
+
 def global_setup():
     c = connect(None)
     for p in ('RomTest*', 'RestrictA*', 'RestrictB*'):
@@ -146,6 +148,32 @@ class TestORM(unittest.TestCase):
 
         self.assertEqual(len(fk1), 1)
         self.assertEqual(fk1[0].id, y.id)
+
+    def test_foreign_key_delete(self):
+        class RomTestM2Ofk(Model):
+            ref = ManyToOne("RomTestO2Mfk")
+        class RomTestO2Mfk(Model):
+            lst = OneToMany("RomTestM2Ofk", 'no action')
+
+        x = RomTestO2Mfk()
+        x.save()
+        ys = [RomTestM2Ofk(ref=x) for z in range(5)]
+        [y.save() for y in ys]
+
+        del ys[0].ref
+        ys[0].save()
+        self.assertEqual(ys[0].ref, None)
+        ys[0].ref = x
+        ys[0].save()
+        self.assertEqual(ys[1].ref, x)
+
+        ys[1].ref = None
+        ys[1].save()
+        self.assertEqual(ys[1].ref, None)
+        self.assertEqual(len(x.lst), 4)
+        ys[1].ref = x
+        ys[1].save()
+        self.assertEqual(ys[1].ref, x)
 
     def test_unique(self):
         class RomTestUnique(Model):
@@ -695,7 +723,6 @@ class TestORM(unittest.TestCase):
         from rom import columns
         if not columns.USE_LUA:
             return
-        string = String if six.PY2 else Text
         class RomTestPerson2(Model):
             idPerson = string(prefix=True, suffix=True, index=True)
             description = string(prefix=True, suffix=True, index=True)
@@ -719,7 +746,7 @@ class TestORM(unittest.TestCase):
 
     def test_null_session(self):
         class RomTestNullSession(Model):
-            data = String() if six.PY2 else Text()
+            data = string()
 
         x = RomTestNullSession(data="test")
         x.save()
@@ -770,7 +797,7 @@ class TestORM(unittest.TestCase):
         class RomTestCompositeUnique(Model):
             col1 = Integer()
             col2 = Integer()
-            col3 = String() if six.PY2 else Text()
+            col3 = string()
 
             unique_together = [
                 ('col1', 'col2', 'col3'),
@@ -854,8 +881,8 @@ class TestORM(unittest.TestCase):
 
         class RomTestCleanOld(Model):
             col1 = Integer(index=True)
-            col2 = String(index=True) if six.PY2 else Text(index=True)
-            col3 = String(unique=True) if six.PY2 else Text(unique=True)
+            col2 = string(index=True)
+            col3 = string(unique=True)
 
         now = str(time.time())
 
@@ -916,6 +943,49 @@ class TestORM(unittest.TestCase):
         # available. :/
         self.assertTrue(all(c.hexists('RomTestCleanOld:col3:uidx', i) for i in to_delete))
 
+    def test_mutli_query(self):
+        class RomTestIndexMultiCol(Model):
+            attr1 = string(required=True, index=True)
+            attr2 = string(required=True, index=True)
+
+        a = RomTestIndexMultiCol(attr1='548ef7ee7b77b93ab41ksjh3', attr2='2')
+        a.save()
+
+        self.assertEqual(len(RomTestIndexMultiCol.query.filter(attr1='548ef7ee7b77b93ab41ksjh3').execute()), 1)
+        self.assertEqual(len(RomTestIndexMultiCol.query.filter(attr2=['1', '2']).execute()), 1)
+        self.assertEqual(len(RomTestIndexMultiCol.query.filter(attr1='548ef7ee7b77b93ab41ksjh3', attr2='2').execute()), 1)
+        self.assertEqual(len(RomTestIndexMultiCol.query.filter(attr1='548ef7ee7b77b93ab41ksjh3', attr2=['2', '1']).execute()), 1)
+        self.assertEqual(len(RomTestIndexMultiCol.query.filter(attr1='548ef7ee7b77b93ab41ksjh3', attr2=['1']).execute()), 0)
+
+    def test_namespace(self):
+        _ex = {'prefix':True, 'suffix':True} if util.USE_LUA else {}
+        class TestNamespace(Model):
+            _namespace = 'RomTestNamespace'
+            test_i = Integer(index=True)
+            test_s = string(unique=True, **_ex)
+            test_t = string(index=True)
+
+        a = TestNamespace(test_i=4, test_s='hello', test_t='this is a test')
+        a.save()
+
+        # make sure no strange keys make it through
+        self.assertEqual(util.CONNECTION.keys('TestNamespace*'), [])
+        # make sure that there are keys named as we wanted them named
+        self.assertTrue(len(util.CONNECTION.keys('RomTestNamespace*')) > 0)
+
+        # verify that our indexes work the way we want them to...
+        self.assertEqual(a.get_by(test_i=4), [a])
+        self.assertEqual(a.get_by(test_i=(3, 5)), [a])
+        self.assertEqual(a.get_by(test_i=6), [])
+        self.assertEqual(a.get_by(test_s='hello'), a)
+        if util.USE_LUA:
+            self.assertEqual(a.query.startswith(test_s='hel').all(), [a])
+            self.assertEqual(a.query.startswith(test_s='hel0').all(), [])
+            self.assertEqual(a.query.endswith(test_s='lo').all(), [a])
+            self.assertEqual(a.query.endswith(test_s='llo').all(), [a])
+            self.assertEqual(a.query.endswith(test_s='elo').all(), [])
+        self.assertEqual(a.get_by(test_t='this'), [a])
+        self.assertEqual(a.get_by(test_t=['test', 'blah']), [a])
 
 def main():
     testsFailed = False

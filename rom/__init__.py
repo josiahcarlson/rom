@@ -145,7 +145,7 @@ from .index import GeneralIndex, Pattern, Prefix, Suffix
 from .util import (ClassProperty, _connect, session, dt2ts, t2ts,
     _prefix_score, _script_load, _encode_unique_constraint)
 
-VERSION = '0.29.3'
+VERSION = '0.29.4'
 
 COLUMN_TYPES = [Column, Integer, Boolean, Float, Decimal, DateTime, Date,
 Time, Text, Json, PrimaryKey, ManyToOne, ForeignModel, OneToMany]
@@ -178,8 +178,12 @@ if six.PY2:
 
 class _ModelMetaclass(type):
     def __new__(cls, name, bases, dict):
-        if name in MODELS:
-            raise ORMError("Cannot have two models with the same name %s"%name)
+        ns = dict.pop('_namespace', None)
+        if ns and not isinstance(ns, six.string_types):
+            raise ORMError("The _namespace attribute must be a string, not %s"%type(ns))
+        dict['_namespace'] = ns or name
+        if name in MODELS or dict['_namespace'] in MODELS:
+            raise ORMError("Cannot have two models with the same name (%s) or namespace (%s)"%(name, dict['_namespace']))
         dict['_required'] = required = set()
         dict['_index'] = index = set()
         dict['_unique'] = unique = set()
@@ -289,9 +293,9 @@ class _ModelMetaclass(type):
             cunique.add(key)
 
         dict['_pkey'] = pkey
-        dict['_gindex'] = GeneralIndex(name)
+        dict['_gindex'] = GeneralIndex(dict['_namespace'])
 
-        MODELS[name] = model = type.__new__(cls, name, bases, dict)
+        MODELS[dict['_namespace']] = MODELS[name] = model = type.__new__(cls, name, bases, dict)
         return model
 
 class Model(six.with_metaclass(_ModelMetaclass, object)):
@@ -353,7 +357,7 @@ class Model(six.with_metaclass(_ModelMetaclass, object)):
     '''
     def __init__(self, **kwargs):
         self._new = not kwargs.pop('_loading', False)
-        model = self.__class__.__name__
+        model = self._namespace
         self._data = {}
         self._last = {}
         self._modified = False
@@ -388,7 +392,7 @@ class Model(six.with_metaclass(_ModelMetaclass, object)):
 
     @property
     def _pk(self):
-        return '%s:%s'%(self.__class__.__name__, getattr(self, self._pkey))
+        return '%s:%s'%(self._namespace, getattr(self, self._pkey))
 
     @classmethod
     def _apply_changes(cls, old, new, full=False, delete=False):
@@ -398,7 +402,7 @@ class Model(six.with_metaclass(_ModelMetaclass, object)):
         if not pk:
             raise ColumnError("Missing primary key value")
 
-        model = cls.__name__
+        model = cls._namespace
         key = '%s:%s'%(model, pk)
         pipe = conn.pipeline(True)
 
@@ -624,7 +628,7 @@ class Model(six.with_metaclass(_ModelMetaclass, object)):
         single = not isinstance(ids, (list, tuple))
         if single:
             ids = [ids]
-        pks = ['%s:%s'%(cls.__name__, id) for id in map(int, ids)]
+        pks = ['%s:%s'%(cls._namespace, id) for id in map(int, ids)]
         # get from the session, if possible
         out = list(map(session.get, pks))
         # if we couldn't get an instance from the session, load from Redis
@@ -670,7 +674,7 @@ class Model(six.with_metaclass(_ModelMetaclass, object)):
             with columns that use a numeric index.
         '''
         conn = _connect(cls)
-        model = cls.__name__
+        model = cls._namespace
         # handle limits and query requirements
         _limit = kwargs.pop('_limit', ())
         if _limit and len(_limit) != 2:

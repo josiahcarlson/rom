@@ -215,6 +215,8 @@ class Column(object):
             self._init_(obj, *value)
             return
         try:
+            if value is None:
+                return self.__delete__(obj)
             if not isinstance(value, self._allowed):
                 value = self._from_redis(value)
         except (ValueError, TypeError):
