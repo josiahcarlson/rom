@@ -77,9 +77,9 @@ class Column(object):
           creation
         * *default* - a default value (either a callable or a simple value)
           when this column is not provided
-        * *unique* - can only be enabled on ``String`` columns, allows for
-          required distinct column values (like an email address on a User
-          model)
+        * *unique* - can be enabled on string, unicode, and integer columns, and
+          allows for required distinct column values (like an email address on
+          a User model)
         * *index* - can be enabled on numeric, string, and unicode columns.
           Will create a ZSET-based numeric index for numeric columns and a
           "full word"-based search for string/unicode columns. If enabled
@@ -102,7 +102,6 @@ class Column(object):
 
     Notes:
 
-        * Columns with *unique* set to True can only be string columns
         * If you have disabled Lua support, you can only have at most one
           unique column on each model
         * *Unique* and *index* are not mutually exclusive
@@ -150,9 +149,10 @@ class Column(object):
 
         allowed = (self._allowed,) if isinstance(self._allowed, type) else self._allowed
         is_string = all(issubclass(x, six.string_types) for x in allowed)
+        is_integer = all(issubclass(x, six.integer_types) for x in allowed)
         if unique:
-            if not is_string:
-                raise ColumnError("Unique columns can only be strings")
+            if not (is_string or is_integer):
+                raise ColumnError("Unique columns can only be strings or integers")
 
         numeric = True
         if index and not isinstance(self, ManyToOne):

@@ -145,7 +145,7 @@ from .index import GeneralIndex, Pattern, Prefix, Suffix
 from .util import (ClassProperty, _connect, session, dt2ts, t2ts,
     _prefix_score, _script_load, _encode_unique_constraint)
 
-VERSION = '0.29.4'
+VERSION = '0.29.5'
 
 COLUMN_TYPES = [Column, Integer, Boolean, Float, Decimal, DateTime, Date,
 Time, Text, Json, PrimaryKey, ManyToOne, ForeignModel, OneToMany]
@@ -525,7 +525,8 @@ class Model(six.with_metaclass(_ModelMetaclass, object)):
                     if use_lua:
                         if oval is not None and roval != rnval:
                             udeleted[attr] = oval
-                        unique[attr] = rnval
+                        if rnval is not None:
+                            unique[attr] = rnval
                     else:
                         if oval is not None:
                             pipe.hdel(ikey, roval)

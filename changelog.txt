@@ -1,3 +1,7 @@
+#---------------------------------- 0.29.5 -----------------------------------
+[added] Integer columns can now be unique. Thanks to Github user
+    https://github.com/egalitarian for the feature request for this obviously
+    missing feature.
 #---------------------------------- 0.29.4 -----------------------------------
 [added] the ability to explicitly set the namespace all of your data will live
     inside. Feature request and first pass at a patch thanks to github user

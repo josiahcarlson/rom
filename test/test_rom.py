@@ -100,11 +100,6 @@ class TestORM(unittest.TestCase):
         ## self.assertTrue(abs(cay-caz) < .005, cay-caz)
 
     def test_unique_index(self):
-        def foo2():
-            class RomTestBadIndexModel2(Model):
-                bad = Integer(unique=True)
-        self.assertRaises(ColumnError, foo2)
-
         class RomTestIndexModel(Model):
             key = Text(required=True, unique=True)
 
@@ -113,6 +108,21 @@ class TestORM(unittest.TestCase):
         item.save()
 
         m = RomTestIndexModel.get_by(key="hello")
+        self.assertTrue(m)
+        self.assertEqual(m.id, item.id)
+        self.assertTrue(m is item)
+
+    def test_unique_integer_index(self):
+        class RomTestIndexModel2(Model):
+            key = Integer(unique=True)
+
+        item = RomTestIndexModel2(key=5)
+        item.save()
+        # verify this works when there is no data
+        RomTestIndexModel2().save()
+        RomTestIndexModel2().save()
+
+        m = RomTestIndexModel2.get_by(key=5)
         self.assertTrue(m)
         self.assertEqual(m.id, item.id)
         self.assertTrue(m is item)
