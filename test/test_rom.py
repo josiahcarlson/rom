@@ -1,6 +1,7 @@
 from __future__ import print_function
 from datetime import datetime, timedelta
 from decimal import Decimal as _Decimal
+import sys
 import time
 import unittest
 import warnings
@@ -1009,13 +1010,20 @@ class TestORM(unittest.TestCase):
         RomTestOrderString(test_s='hello', test_c='world 1').save()
         # test case-sensitive ordering
         r1 = RomTestOrderString.query.order_by('test_s').all()
-        self.assertEquals(len(r1), 2)
-        self.assertLess(r1[0].id, r1[1].id)
+        self.assertEqual(len(r1), 2)
+
+        if sys.version < '2.7':
+            self.assertTrue(r1[0].id < r1[1].id)
+        else:
+            self.assertLess(r1[0].id, r1[1].id)
 
         # test case-insensitive ordering
         r2 = RomTestOrderString.query.order_by('test_c').all()
-        self.assertEquals(len(r2), 2)
-        self.assertGreater(r2[0].id, r2[1].id)
+        self.assertEqual(len(r2), 2)
+        if sys.version < '2.7':
+            self.assertTrue(r2[0].id > r2[1].id)
+        else:
+            self.assertGreater(r2[0].id, r2[1].id)
 
 def main():
     testsFailed = False

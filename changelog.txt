@@ -1,3 +1,6 @@
+[updated] Copyright year, development status, Python version compatability,
+    and stopped installing the test package as part of installation.
+[fixed] Tests for Python 2.6 .
 #---------------------------------- 0.30.0 -----------------------------------
 [fixed] a double-delete issue with setting a column/attribute to None when the
     column/attribute was already empty/None. Thanks to Github user
