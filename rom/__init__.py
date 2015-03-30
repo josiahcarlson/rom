@@ -143,9 +143,10 @@ from .exceptions import (ORMError, UniqueKeyViolation, InvalidOperation,
     QueryError, ColumnError, MissingColumn, InvalidColumnValue, RestrictError)
 from .index import GeneralIndex, Pattern, Prefix, Suffix
 from .util import (ClassProperty, _connect, session, dt2ts, t2ts,
-    _prefix_score, _script_load, _encode_unique_constraint)
+    _prefix_score, _script_load, _encode_unique_constraint,
+    FULL_TEXT, CASE_INSENSITIVE, SIMPLE)
 
-VERSION = '0.29.5'
+VERSION = '0.30.0'
 
 COLUMN_TYPES = [Column, Integer, Boolean, Float, Decimal, DateTime, Date,
 Time, Text, Json, PrimaryKey, ManyToOne, ForeignModel, OneToMany]
@@ -169,7 +170,8 @@ def _disable_lua_writes():
 
 __all__ = '''
     Model Column Integer Float Decimal Text Json PrimaryKey ManyToOne
-    ForeignModel OneToMany Query session Boolean DateTime Date Time'''.split()
+    ForeignModel OneToMany Query session Boolean DateTime Date Time
+    FULL_TEXT CASE_INSENSITIVE SIMPLE'''.split()
 
 if six.PY2:
     from .columns import String
@@ -668,9 +670,21 @@ class Model(six.with_metaclass(_ModelMetaclass, object)):
                 created_at=(time.time()-86400, time.time()),
                 _limit=(0, 25))
 
+        Optional keyword-only arguments:
+
+            * *_limit* - A 2-tuple of (offset, count) that can be used to
+              paginate or otherwise limit results returned by a numeric range
+              query
+            * *_numeric* - An optional boolean defaulting to False that forces
+              the use of a numeric index for ``.get_by(col=val)`` queries even
+              when ``col`` has an existing unique index
+
         If you would like to make queries against multiple columns or with
         multiple criteria, look into the Model.query class property.
 
+        .. note: rom will attempt to use a unique index first, then a numeric
+            index if there was no unique index. You can explicitly tell rom to
+            only use the numeric index by using ``.get_by(..., _numeric=True)``.
         .. note: Ranged queries with `get_by(col=(start, end))` will only work
             with columns that use a numeric index.
         '''
@@ -685,13 +699,15 @@ class Model(six.with_metaclass(_ModelMetaclass, object)):
         if len(kwargs) != 1:
             raise QueryError("We can only fetch object(s) by exactly one attribute, you provided %s"%(len(kwargs),))
 
+        _numeric = bool(kwargs.pop('_numeric', None))
+
         for attr, value in kwargs.items():
             plain_attr = attr.partition(':')[0]
             if isinstance(value, tuple) and len(value) != 2:
                 raise QueryError("Range queries must include exactly two endpoints")
 
             # handle unique index lookups
-            if attr in cls._unique:
+            if attr in cls._unique and (plain_attr not in cls._index or not _numeric):
                 if isinstance(value, tuple):
                     raise QueryError("Cannot query a unique index with a range of values")
                 single = not isinstance(value, list)
@@ -901,6 +917,12 @@ class Query(object):
 
     def filter(self, **kwargs):
         '''
+        Only columns/attributes that have been specified as having an index with
+        the ``index=True`` option on the column definition can be filtered with
+        this method. Prefix, suffix, and pattern match filters must be provided
+        using the ``.startswith()``, ``.endswith()``, and the ``.like()``
+        methods on the query object, respectively.
+
         Filters should be of the form::
 
             # for numeric ranges, use None for open-ended ranges
@@ -936,8 +958,10 @@ class Query(object):
                 .filter(ncol=5) \\
                 .execute()
 
-        .. note: Trying to use a range query `attribute=(min, max)` on string
-            columns won't return any results.
+        .. note: Trying to use a range query `attribute=(min, max)` on indexed
+            string columns won't return any results.
+        .. note: This method only filters columns that have been defined with
+            ``index=True``.
 
         '''
         cur_filters = list(self._filters)
@@ -1058,10 +1082,11 @@ class Query(object):
         '''
         cname = column.lstrip('-')
         col = self._check(cname)
-        if type(col).__name__ in ('String', 'Text', 'Json'):
+        if type(col).__name__ in ('String', 'Text', 'Json') and col._keygen not in (SIMPLE, CASE_INSENSITIVE):
             warnings.warn("You are trying to order by a non-numeric column %r. "
-                          "Unless you have provided your own keygen, this probably "
-                          "won't work the way you expect it."%(cname,), stacklevel=2)
+                          "Unless you have provided your own keygen or are using "
+                          "rom.SIMPLE or rom.CASE_INSENSITIVE, this probably won't "
+                          "work the way you expect it."%(cname,), stacklevel=2)
 
         return self.replace(order_by=column)
 

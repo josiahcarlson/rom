@@ -1,3 +1,21 @@
+#---------------------------------- 0.30.0 -----------------------------------
+[fixed] a double-delete issue with setting a column/attribute to None when the
+    column/attribute was already empty/None. Thanks to Github user
+    https://github.com/hakib for the bug report.
+[added] keyword-only argument to .get_by() for explicitly fetching numeric
+    ranges when both a numeric and unique index are specified on a column.
+    Thanks to Github user https://github.com/hakib for the use-case where the
+    ambiguity was discovered.
+[added] more documentation for optional arguments passed to .get_by()
+[changed] Indexes on String/Text columns will start to warn about a
+    non-specified keygen function in 0.30.0, and will raise an exception in
+    0.31.0 and later when one isn't specified. This is to ensure that users
+    are getting the index on their data that is expected. The existing
+    full-text indexing keygen for string/text will get aliases of
+    rom.FULL_TEXT, rom.columns.FULL_TEXT, and rom.util.FULL_TEXT .
+[added] rom.SIMPLE and rom.CASE_INSENSITIVE basic order keygens for String and
+    Text column indexes, as well as similarly named aliases in rom.columns and
+    rom.util, like rom.FULL_TEXT has.
 #---------------------------------- 0.29.5 -----------------------------------
 [added] Integer columns can now be unique. Thanks to Github user
     https://github.com/egalitarian for the feature request for this obviously

@@ -9,7 +9,8 @@ import six
 from .exceptions import (ORMError, InvalidOperation, ColumnError,
     MissingColumn, InvalidColumnValue, RestrictError)
 from .util import (_numeric_keygen, _string_keygen, _many_to_one_keygen,
-    _boolean_keygen, dt2ts, ts2dt, t2ts, ts2t, session, _connect)
+    _boolean_keygen, dt2ts, ts2dt, t2ts, ts2t, session, _connect,
+    FULL_TEXT, CASE_INSENSITIVE, SIMPLE)
 
 NULL = object()
 MODELS = {}
@@ -61,6 +62,14 @@ def _on_delete(ent):
     for self in to_delete:
         self.delete(skip_on_delete_i_really_mean_it=SKIP_ON_DELETE)
 
+_missing_keygen_warning = '''You have not specified a keygen for generating keys
+to index your String() or Text() column. By default, rom has been using its
+FULL_TEXT index on these columns in the past, but now requests/requires the
+specification of a keygen function. Provide an explicit keygen argument of
+rom.FULL_TEXT, rom.SIMPLE, rom.CASE_INSENSITIVE or some other keygen that
+matches the rom index API to remove this warning. This warning will become an
+exception in rom >= 0.31.0.'''.replace('\n', ' ')
+
 class Column(object):
     '''
     Column objects handle data conversion to/from strings, store metadata
@@ -106,18 +115,18 @@ class Column(object):
           unique column on each model
         * *Unique* and *index* are not mutually exclusive
         * The *keygen* argument determines how index values are generated
-          from column data (with reasonably sensible defaults for numeric
-          and string columns)
+          from column data (with a reasonably sensible default for numeric
+          columns, and 2 convenient options for string/text columns)
         * If you set *required* to True, then you must have the column set
           during object construction: ``MyModel(col=val)``
         * If *index* and *prefix*, or *index* and *suffix* are set, the same
           keygen will be used for both the regular *index* as well as the
           *prefix* and/or *suffix* searches
         * If *prefix* is set, you can perform pattern matches over your data.
-          See documention for ``Query.like()`` for details.
+          See documention on ``Query.like()`` for details.
         * Pattern matching over data is only guaranteed to be valid or correct
           for ANSI strings that do not include nulls, though we make an effort
-          to support unicode strings and strings with nulls
+          to support unicode strings and strings with embedded nulls
         * Prefix, suffix, and pattern matching are performed within a Lua
           script, so may have substantial execution time if there are a large
           number of matching prefix or suffix entries
@@ -162,6 +171,13 @@ class Column(object):
                     keygen = keygen or _boolean_keygen
                 if not is_string and not keygen:
                     raise ColumnError("Non-numeric/string indexed columns must provide keygen argument on creation")
+
+        if (index or prefix or suffix) and is_string and keygen is None:
+            import sys
+            if sys.modules[__name__.rpartition('.')[0]].VERSION >= '0.31.0':
+                raise ColumnError("Indexed string column missing explicit keygen argument, try rom.FULL_TEXT, rom.SIMPLE, or rom.CASE_INSENSITIVE")
+
+            warnings.warn(_missing_keygen_warning, FutureWarning, stacklevel=2)
 
         if index:
             self._keygen = keygen if keygen else (
@@ -216,7 +232,12 @@ class Column(object):
             return
         try:
             if value is None:
-                return self.__delete__(obj)
+                try:
+                    return self.__delete__(obj)
+                except AttributeError:
+                    # We can safely suppress this, the column was already set
+                    # to None or deleted
+                    return
             if not isinstance(value, self._allowed):
                 value = self._from_redis(value)
         except (ValueError, TypeError):

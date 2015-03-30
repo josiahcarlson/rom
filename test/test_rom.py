@@ -181,6 +181,9 @@ class TestORM(unittest.TestCase):
         ys[1].save()
         self.assertEqual(ys[1].ref, None)
         self.assertEqual(len(x.lst), 4)
+        # Test for double-delete
+        ys[1].ref = None
+        ys[1].save()
         ys[1].ref = x
         ys[1].save()
         self.assertEqual(ys[1].ref, x)
@@ -217,8 +220,8 @@ class TestORM(unittest.TestCase):
 
     def test_index(self):
         class RomTestIndexedModel(Model):
-            attr = Text(index=True)
-            attr2 = Text(index=True)
+            attr = Text(index=True, keygen=FULL_TEXT)
+            attr2 = Text(index=True, keygen=FULL_TEXT)
             attr3 = Integer(index=True)
             attr4 = Float(index=True)
             attr5 = Decimal(index=True)
@@ -412,7 +415,7 @@ class TestORM(unittest.TestCase):
 
     def test_deletion(self):
         class RomTestDeletionTest(Model):
-            col1 = Text(index=True)
+            col1 = Text(index=True, keygen=FULL_TEXT)
 
         x = RomTestDeletionTest(col1="this is a test string that should be indexed")
         session.commit()
@@ -471,7 +474,7 @@ class TestORM(unittest.TestCase):
             return
 
         class RomTestPSP(Model):
-            col = Text(prefix=True, suffix=True)
+            col = Text(prefix=True, suffix=True, keygen=FULL_TEXT)
 
         x = RomTestPSP(col="hello world how are you doing, join us today")
         x.save()
@@ -492,7 +495,7 @@ class TestORM(unittest.TestCase):
         suf = 'hello' + ch
 
         class RomTestUnicode1(Model):
-            col = Text(index=True, unique=True)
+            col = Text(index=True, unique=True, keygen=FULL_TEXT)
 
         RomTestUnicode1(col=pre).save()
         RomTestUnicode1(col=suf).save()
@@ -505,7 +508,7 @@ class TestORM(unittest.TestCase):
         import rom
         if rom.USE_LUA:
             class RomTestUnicode2(Model):
-                col = Text(prefix=True, suffix=True)
+                col = Text(prefix=True, suffix=True, keygen=FULL_TEXT)
 
             RomTestUnicode2(col=pre).save()
             RomTestUnicode2(col=suf).save()
@@ -706,7 +709,7 @@ class TestORM(unittest.TestCase):
         if not columns.USE_LUA:
             return
         class RomTestPerson(Model):
-            name = Text(prefix=True, suffix=True, index=True)
+            name = Text(prefix=True, suffix=True, index=True, keygen=FULL_TEXT)
 
         names = ['Acasaoi', 'Maria Williamson IV', 'Rodrigo Howe',
             'Mr. Willow Goldner', 'Melody Prohaska', 'Hulda Botsford',
@@ -734,8 +737,8 @@ class TestORM(unittest.TestCase):
         if not columns.USE_LUA:
             return
         class RomTestPerson2(Model):
-            idPerson = string(prefix=True, suffix=True, index=True)
-            description = string(prefix=True, suffix=True, index=True)
+            idPerson = string(prefix=True, suffix=True, index=True, keygen=FULL_TEXT)
+            description = string(prefix=True, suffix=True, index=True, keygen=FULL_TEXT)
         data = [
             ["8947589545872", "ayuntamientodeciudad"],
             ["8947589545872", "ayuntamientodeguipuzcoa"],
@@ -891,7 +894,7 @@ class TestORM(unittest.TestCase):
 
         class RomTestCleanOld(Model):
             col1 = Integer(index=True)
-            col2 = string(index=True)
+            col2 = string(index=True, keygen=FULL_TEXT)
             col3 = string(unique=True)
 
         now = str(time.time())
@@ -955,8 +958,8 @@ class TestORM(unittest.TestCase):
 
     def test_mutli_query(self):
         class RomTestIndexMultiCol(Model):
-            attr1 = string(required=True, index=True)
-            attr2 = string(required=True, index=True)
+            attr1 = string(required=True, index=True, keygen=FULL_TEXT)
+            attr2 = string(required=True, index=True, keygen=FULL_TEXT)
 
         a = RomTestIndexMultiCol(attr1='548ef7ee7b77b93ab41ksjh3', attr2='2')
         a.save()
@@ -968,12 +971,12 @@ class TestORM(unittest.TestCase):
         self.assertEqual(len(RomTestIndexMultiCol.query.filter(attr1='548ef7ee7b77b93ab41ksjh3', attr2=['1']).execute()), 0)
 
     def test_namespace(self):
-        _ex = {'prefix':True, 'suffix':True} if util.USE_LUA else {}
+        _ex = {'prefix':True, 'suffix':True, 'keygen':FULL_TEXT} if util.USE_LUA else {}
         class TestNamespace(Model):
             _namespace = 'RomTestNamespace'
             test_i = Integer(index=True)
             test_s = string(unique=True, **_ex)
-            test_t = string(index=True)
+            test_t = string(index=True, keygen=FULL_TEXT)
 
         a = TestNamespace(test_i=4, test_s='hello', test_t='this is a test')
         a.save()
@@ -996,6 +999,23 @@ class TestORM(unittest.TestCase):
             self.assertEqual(a.query.endswith(test_s='elo').all(), [])
         self.assertEqual(a.get_by(test_t='this'), [a])
         self.assertEqual(a.get_by(test_t=['test', 'blah']), [a])
+
+    def test_order_string_index(self):
+        class RomTestOrderString(Model):
+            test_s = string(index=True, keygen=SIMPLE)
+            test_c = string(index=True, keygen=CASE_INSENSITIVE)
+
+        RomTestOrderString(test_s='Hello', test_c='World 2').save()
+        RomTestOrderString(test_s='hello', test_c='world 1').save()
+        # test case-sensitive ordering
+        r1 = RomTestOrderString.query.order_by('test_s').all()
+        self.assertEquals(len(r1), 2)
+        self.assertLess(r1[0].id, r1[1].id)
+
+        # test case-insensitive ordering
+        r2 = RomTestOrderString.query.order_by('test_c').all()
+        self.assertEquals(len(r2), 2)
+        self.assertGreater(r2[0].id, r2[1].id)
 
 def main():
     testsFailed = False
