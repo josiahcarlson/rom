@@ -146,7 +146,7 @@ from .util import (ClassProperty, _connect, session, dt2ts, t2ts,
     _prefix_score, _script_load, _encode_unique_constraint,
     FULL_TEXT, CASE_INSENSITIVE, SIMPLE)
 
-VERSION = '0.30.0'
+VERSION = '0.30.1'
 
 COLUMN_TYPES = [Column, Integer, Boolean, Float, Decimal, DateTime, Date,
 Time, Text, Json, PrimaryKey, ManyToOne, ForeignModel, OneToMany]
@@ -479,7 +479,7 @@ class Model(six.with_metaclass(_ModelMetaclass, object)):
                                 prefix.append([attr, k])
                         if ca._suffix:
                             for k in generated:
-                                if six.PY2 and isinstance(k, str) and isinstance(cls._columns[attr], Text):
+                                if six.PY2 and isinstance(k, str) and isinstance(ca, Text):
                                     try:
                                         suffix.append([attr, k.decode('utf-8')[::-1].encode('utf-8')])
                                     except UnicodeDecodeError:
@@ -492,6 +492,23 @@ class Model(six.with_metaclass(_ModelMetaclass, object)):
                                 scores[attr] = v
                             else:
                                 scores['%s:%s'%(attr, k)] = v
+                        if ca._prefix:
+                            if ca._keygen not in (SIMPLE, CASE_INSENSITIVE):
+                                warnings.warn("Prefix indexes are currently not enabled for non-standard keygen functions", stacklevel=2)
+                            else:
+                                prefix.append([attr, nval if ca._keygen is SIMPLE else nval.lower()])
+                        if ca._suffix:
+                            if ca._keygen not in (SIMPLE, CASE_INSENSITIVE):
+                                warnings.warn("Prefix indexes are currently not enabled for non-standard keygen functions", stacklevel=2)
+                            else:
+                                ex = (lambda x:x) if ca._keygen is SIMPLE else (lambda x:x.lower())
+                                if six.PY2 and isinstance(nval, str) and isinstance(ca, Text):
+                                    try:
+                                        suffix.append([attr, ex(nval.decode('utf-8')[::-1]).encode('utf-8')])
+                                    except UnicodeDecodeError:
+                                        suffix.append([attr, ex(nval[::-1])])
+                                else:
+                                    suffix.append([attr, ex(nval[::-1])])
                     elif not generated:
                         pass
                     else:
@@ -894,11 +911,15 @@ class Query(object):
         self._order_by = order_by
         self._limit = limit
 
-    def _check(self, column):
+    def _check(self, column, value=None):
         column = column.strip('-')
         col = self._model._columns.get(column)
         if not col:
             raise QueryError("Cannot order by a non-existent column %r"%(column,))
+        if value is not None:
+            if col._keygen is CASE_INSENSITIVE:
+                value = value.lower()
+            return value
         return col
 
     def replace(self, **kwargs):
@@ -1015,7 +1036,7 @@ class Query(object):
         '''
         new = []
         for k, v in kwargs.items():
-            self._check(k)
+            v = self._check(k, v)
             new.append(Prefix(k, v))
         return self.replace(filters=self._filters+tuple(new))
 
@@ -1033,7 +1054,7 @@ class Query(object):
         '''
         new = []
         for k, v in kwargs.items():
-            self._check(k)
+            v = self._check(k, v)
             new.append(Suffix(k, v[::-1]))
         return self.replace(filters=self._filters+tuple(new))
 
@@ -1068,7 +1089,7 @@ class Query(object):
         '''
         new = []
         for k, v in kwargs.items():
-            self._check(k)
+            v = self._check(k, v)
             new.append(Pattern(k, v))
         return self.replace(filters=self._filters+tuple(new))
 

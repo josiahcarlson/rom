@@ -476,8 +476,12 @@ class TestORM(unittest.TestCase):
 
         class RomTestPSP(Model):
             col = Text(prefix=True, suffix=True, keygen=FULL_TEXT)
+            col2 = Text(prefix=True, suffix=True, keygen=SIMPLE)
+            col3 = Text(prefix=True, suffix=True, keygen=CASE_INSENSITIVE)
 
-        x = RomTestPSP(col="hello world how are you doing, join us today")
+        x = RomTestPSP(col="hello world how are you doing, join us today",
+                       col2="This is just another Test",
+                       col3="And This is yet Another")
         x.save()
 
         self.assertEqual(RomTestPSP.query.startswith(col='he').count(), 1)
@@ -488,6 +492,24 @@ class TestORM(unittest.TestCase):
         self.assertEqual(RomTestPSP.query.like(col='*oin+').count(), 1)
         self.assertEqual(RomTestPSP.query.like(col='oin').count(), 0)
         self.assertEqual(RomTestPSP.query.like(col='+oin').like(col='wor!d').count(), 1)
+
+        self.assertEqual(RomTestPSP.query.startswith(col2="This is just").count(), 1)
+        self.assertEqual(RomTestPSP.query.startswith(col2="this is just").count(), 0)
+        self.assertEqual(RomTestPSP.query.endswith(col2="another Test").count(), 1)
+        self.assertEqual(RomTestPSP.query.endswith(col2="another test").count(), 0)
+        self.assertEqual(RomTestPSP.query.like(col2="This?is").count(), 1)
+        self.assertEqual(RomTestPSP.query.like(col2="this?is").count(), 0)
+
+        self.assertEqual(RomTestPSP.query.startswith(col3="and this is").count(), 1)
+        self.assertEqual(RomTestPSP.query.startswith(col3="And This Is").count(), 1)
+        self.assertEqual(RomTestPSP.query.startswith(col3="And This isn't").count(), 0)
+        self.assertEqual(RomTestPSP.query.endswith(col3="yet another").count(), 1)
+        self.assertEqual(RomTestPSP.query.endswith(col3="Yet another").count(), 1)
+        self.assertEqual(RomTestPSP.query.endswith(col3="and another").count(), 0)
+        self.assertEqual(RomTestPSP.query.like(col3="And?This").count(), 1)
+        self.assertEqual(RomTestPSP.query.like(col3="and?this").count(), 1)
+        self.assertEqual(RomTestPSP.query.like(col3="*this is*").count(), 1)
+        self.assertEqual(RomTestPSP.query.like(col3="nope").count(), 0)
 
     def test_unicode_text(self):
         import rom
