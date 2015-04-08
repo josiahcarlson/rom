@@ -215,7 +215,7 @@ def SIMPLE(val):
     1.75-7 characters from a unicode string, depending on character -> encoding
     length).
 
-    .. warning: Case sensitivity is based on the (encoded) byte prefixes of the
+    .. warning:: Case sensitivity is based on the (encoded) byte prefixes of the
         strings/text being indexed, so ordering *may be different* than a native
         comparison ordering (especially if an order is different based on
         characters past the 7th encoded byte).
@@ -316,7 +316,7 @@ class Session(threading.local):
     This is exposed via the ``session`` global variable, which is available
     when you ``import rom`` as ``rom.session``.
 
-    .. note: calling ``.flush()`` or ``.commit()`` doesn't cause all objects
+    .. note:: calling ``.flush()`` or ``.commit()`` doesn't cause all objects
         to be written simultanously. They are written one-by-one, with any
         error causing the call to fail.
     '''
@@ -526,7 +526,7 @@ def refresh_indices(model, block_size=100):
         for progress, total in refresh_indices(MyModel, block_size=200):
             print "%s of %s"%(progress, total)
 
-    .. note: This uses the session object to handle index refresh via calls to
+    .. note:: This uses the session object to handle index refresh via calls to
       ``.commit()``. If you have any outstanding entities known in the
       session, they will be committed.
     '''

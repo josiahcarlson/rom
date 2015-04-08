@@ -106,7 +106,7 @@ class Column(object):
           returned data will be reversed (you need to make sure this makes
           conceptual sense with your data) before being stored or used.
 
-    .. warning: Enabling prefix or suffix matching on a column only makes
+    .. warning:: Enabling prefix or suffix matching on a column only makes
        sense for columns defining a non-numeric *keygen* function.
 
     Notes:
@@ -296,7 +296,7 @@ class Boolean(Column):
     Queries via ``MyModel.get_by(...)`` and ``MyModel.query.filter(...)`` work
     as expected when passed ``True`` or ``False``.
 
-    .. note: these columns are not sortable by default.
+    .. note:: these columns are not sortable by default.
     '''
     _allowed = bool
     def _to_redis(self, obj):
@@ -508,7 +508,7 @@ class ManyToOne(Column):
         class MyModel(Model):
             col = ManyToOne('OtherModelName')
 
-    .. note: Technically, all ``ManyToOne`` columns are indexed numerically,
+    .. note:: Technically, all ``ManyToOne`` columns are indexed numerically,
       which means that you can find entities with specific id ranges or even
       sort by the ids referenced.
 
@@ -554,7 +554,7 @@ class ForeignModel(Column):
     This column allows for ``rom`` models to reference an instance of another
     model from an unrelated ORM or otherwise.
 
-    .. note: In order for this mechanism to work, the foreign model *must*
+    .. note:: In order for this mechanism to work, the foreign model *must*
       have an ``id`` attribute or property represents its primary key, and
       *must* have a classmethod or staticmethod named ``get()`` that returns
       the proper database entity.

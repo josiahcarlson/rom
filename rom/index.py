@@ -48,7 +48,7 @@ class GeneralIndex(object):
     '''
     This class implements general indexing and search for the ``rom`` package.
 
-    .. warning: You probably don't want to be calling this directly. Instead,
+    .. warning:: You probably don't want to be calling this directly. Instead,
       you should rely on the ``Query`` object returned from ``Model.query`` to
       handle all of your query pre-processing.
 
@@ -241,13 +241,13 @@ class GeneralIndex(object):
                 1. ``'column:string'`` - a plain string will match a word in a
                    text search on the column
 
-                .. note: Read the documentation about the ``Query`` object
+                .. note:: Read the documentation about the ``Query`` object
                   for what is actually passed during text search
 
                 2. ``('column', min, max)`` - a numeric column range search,
                    between min and max (inclusive by default)
 
-                .. note: Read the documentation about the ``Query`` object
+                .. note:: Read the documentation about the ``Query`` object
                   for information about open-ended ranges
 
                 3. ``['column:string1', 'column:string2']`` - will match any
@@ -266,11 +266,11 @@ class GeneralIndex(object):
               sort the results by. Prefixing with '-' will return results in
               descending order
 
-            .. note: While you can technically pass a non-numeric index as an
+            .. note:: While you can technically pass a non-numeric index as an
               *order_by* clause, the results will basically be to order the
               results by string comparison of the ids (10 will come before 2).
 
-            .. note: If you omit the ``order_by`` argument, results will be
+            .. note:: If you omit the ``order_by`` argument, results will be
               ordered by the last filter. If the last filter was a text
               filter, see the previous note. If the last filter was numeric,
               then results will be ordered by that result.

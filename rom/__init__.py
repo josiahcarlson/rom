@@ -327,7 +327,7 @@ class Model(six.with_metaclass(_ModelMetaclass, object)):
         query = query.filter(created_at=(time.time()-86400, time.time()))
         users = query.execute()
 
-    .. note: You can perform single or chained queries against any/all columns
+    .. note:: You can perform single or chained queries against any/all columns
       that were defined with ``index=True``.
 
     **Composite/multi-column unique constraints**
@@ -352,7 +352,7 @@ class Model(six.with_metaclass(_ModelMetaclass, object)):
                 ('x', 'y'),
             ]
 
-    .. note: If one or more of the column values on an entity that is part of a
+    .. note:: If one or more of the column values on an entity that is part of a
         unique constrant is None in Python, the unique constraint won't apply.
         This is the typical behavior of nulls in unique constraints inside both
         MySQL and Postgres.
@@ -699,10 +699,10 @@ class Model(six.with_metaclass(_ModelMetaclass, object)):
         If you would like to make queries against multiple columns or with
         multiple criteria, look into the Model.query class property.
 
-        .. note: rom will attempt to use a unique index first, then a numeric
+        .. note:: rom will attempt to use a unique index first, then a numeric
             index if there was no unique index. You can explicitly tell rom to
             only use the numeric index by using ``.get_by(..., _numeric=True)``.
-        .. note: Ranged queries with `get_by(col=(start, end))` will only work
+        .. note:: Ranged queries with `get_by(col=(start, end))` will only work
             with columns that use a numeric index.
         '''
         conn = _connect(cls)
@@ -979,9 +979,9 @@ class Query(object):
                 .filter(ncol=5) \\
                 .execute()
 
-        .. note: Trying to use a range query `attribute=(min, max)` on indexed
+        .. note:: Trying to use a range query `attribute=(min, max)` on indexed
             string columns won't return any results.
-        .. note: This method only filters columns that have been defined with
+        .. note:: This method only filters columns that have been defined with
             ``index=True``.
 
         '''
@@ -1082,7 +1082,7 @@ class Query(object):
             * *\*frank\*@*
             * *\*frank\*@
 
-        .. note: Like queries implicitly start at the beginning of strings
+        .. note:: Like queries implicitly start at the beginning of strings
           checked, so if you want to match a pattern that doesn't start at
           the beginning of a string, you should prefix it with one of the
           wildcard characters (like ``*`` as we did with the 'frank' pattern).
@@ -1150,7 +1150,7 @@ class Query(object):
         should pass `timeout` and `pagesize` to reflect an appropriate timeout
         and page size to fetch at once.
 
-        .. note: Limit clauses are ignored and not passed.
+        .. note:: Limit clauses are ignored and not passed.
 
         Usage::
 
@@ -1181,7 +1181,7 @@ class Query(object):
         query results are eventually deleted, unless you make the explicit
         step to use the PERSIST command).
 
-        .. note: Limit clauses are ignored and not passed.
+        .. note:: Limit clauses are ignored and not passed.
 
         Usage::
 
