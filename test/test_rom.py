@@ -131,20 +131,20 @@ class TestORM(unittest.TestCase):
     def test_foreign_key(self):
         def foo():
             class RomTestBFkey1(Model):
-                bad = ManyToOne("RomTestBad")
+                bad = ManyToOne("RomTestBad", 'no action')
             RomTestBFkey1()
         self.assertRaises(ORMError, foo)
 
         def foo2():
             class RomTestBFkey2(Model):
-                bad = OneToMany("RomTestBad", 'no action')
+                bad = OneToMany("RomTestBad")
             RomTestBFkey2()
         self.assertRaises(ORMError, foo2)
 
         class RomTestFkey1(Model):
-            fkey2 = ManyToOne("RomTestFkey2")
+            fkey2 = ManyToOne("RomTestFkey2", 'no action')
         class RomTestFkey2(Model):
-            fkey1 = OneToMany("RomTestFkey1", 'no action')
+            fkey1 = OneToMany("RomTestFkey1")
 
         x = RomTestFkey2()
         y = RomTestFkey1(fkey2=x) # implicitly saves x
@@ -162,9 +162,9 @@ class TestORM(unittest.TestCase):
 
     def test_foreign_key_delete(self):
         class RomTestM2Ofk(Model):
-            ref = ManyToOne("RomTestO2Mfk")
+            ref = ManyToOne("RomTestO2Mfk", 'no action')
         class RomTestO2Mfk(Model):
-            lst = OneToMany("RomTestM2Ofk", 'no action')
+            lst = OneToMany("RomTestM2Ofk")
 
         x = RomTestO2Mfk()
         x.save()
@@ -631,11 +631,11 @@ class TestORM(unittest.TestCase):
 
         class RomTestCleanupA(Model):
             foo = Text()
-            blist = OneToMany('RomTestCleanupB', 'no action')
+            blist = OneToMany('RomTestCleanupB')
 
         class RomTestCleanupB(Model):
             bar = Text()
-            a = ManyToOne('RomTestCleanupA')
+            a = ManyToOne('RomTestCleanupA', 'no action')
 
         a = RomTestCleanupA(foo='foo')
         a.save()
@@ -703,16 +703,16 @@ class TestORM(unittest.TestCase):
             the deleted object."""
 
         class RomTestCascadeRestrict(Model):
-            alist = OneToMany('RomTestRestrictA', 'cascade')
+            alist = OneToMany('RomTestRestrictA')
 
         class RomTestRestrictA(Model):
             foo = Text()
-            cref = ManyToOne('RomTestCascadeRestrict')
-            blist = OneToMany('RomTestRestrictB', 'restrict')
+            cref = ManyToOne('RomTestCascadeRestrict', 'cascade')
+            blist = OneToMany('RomTestRestrictB')
 
         class RomTestRestrictB(Model):
             bar = Text()
-            a = ManyToOne('RomTestRestrictA')
+            a = ManyToOne('RomTestRestrictA', 'restrict')
 
         c = RomTestCascadeRestrict()
         c.save()
@@ -726,6 +726,117 @@ class TestORM(unittest.TestCase):
         a.save()
         c.delete()
         self.assertRaises(RestrictError, a.delete)
+
+    def test_restrict_on_delete_121(self):
+        """ Verify that Restrict is thrown when there is a foreign object referencing
+            the deleted object."""
+
+        class RomTestCascadeRestrictOne(Model):
+            pass
+
+        class RomTestRestrictAOne(Model):
+            foo = Text()
+            c = OneToOne('RomTestCascadeRestrictOne', 'cascade')
+
+        class RomTestRestrictBOne(Model):
+            a = OneToOne('RomTestRestrictAOne', 'restrict')
+            bar = Text()
+
+        c = RomTestCascadeRestrictOne()
+        c.save()
+        a = RomTestRestrictAOne(foo='foo', c=c)
+        a.save()
+        b = RomTestRestrictBOne(bar='foo', a=a)
+        b.save()
+
+        self.assertRaises(RestrictError, c.delete)
+        self.assertRaises(RestrictError, a.delete)
+        del b.a
+        b.save()
+        c.delete()
+
+    def _test_restrict_skip_on_delete(self):
+        # Functionality currently disabled, might be useful in the future, but
+        # currently differs from existing Postgres/MySQL/Oracle/MSSql behavior
+        class RomTestRoot(Model):
+            leaf = OneToMany('RomTestLeaf')
+        class RomTestNode(Model):
+            root = OneToOne('RomTestRoot', 'cascade')
+            node = OneToOne('RomTestNode', 'cascade')
+            leaf = OneToMany('RomTestLeaf')
+        class RomTestLeaf(Model):
+            node = ManyToOne('RomTestNode', 'restrict')
+            root = ManyToOne('RomTestRoot', 'cascade')
+
+        root = RomTestRoot()
+        root.save()
+        node1 = RomTestNode(root=root)
+        node1.save()
+        node2 = RomTestNode(node=node1) # assignment to an attribute auto-saves
+        node2.save()
+
+        l1 = RomTestLeaf(root=root, node=node2)
+        l2 = RomTestLeaf(root=root, node=node2)
+        l1.save()
+        l2.save()
+
+        ids = [
+            (RomTestRoot, root.id),
+            (RomTestNode, node1.id),
+            (RomTestNode, node2.id),
+            (RomTestLeaf, l1.id),
+            (RomTestLeaf, l2.id),
+        ]
+
+        # resulting structure:
+        #    root.node -> node1;.node -> node2;.leaf -> [l1, l2]
+        #    root.leaf -> [l1, l2]
+        # Cascading deletes use a breadth-first traversal of references, so the
+        # queue of deletes when starting from the root will look like:
+        #    [root, node1, l1, l2, node2]
+        # Because l1 and l2 are deleted as part of the cascading delete from
+        # the root, and *not* from the restricted delete from node2 (or node1),
+        # a delete of the root should cascade fully (node1 is not necessary for
+        # this to work; it's there for other tests).
+        # Given the above, a delete from node1 or node2 should cause a
+        # RestrictError.
+        del root, node1, node2, l1, l2
+        session.rollback()
+        # from node1 gets a queue of:
+        # [node1, node2] -restrict-> [l1, l2]
+        self.assertRaises(RestrictError, RomTestNode.get(ids[2][1]).delete)
+        session.rollback()
+        # from node2 gets a queue of:
+        # [node2] -restrict-> [l1, l2]
+        self.assertRaises(RestrictError, RomTestNode.get(ids[1][1]).delete)
+
+        session.rollback()
+        RomTestRoot.get(ids[0][1]).delete()
+
+        # make sure the deletions happened
+        for mdl, id in ids:
+            self.assertEqual(mdl.get(id), None)
+
+    def test_on_delete_extra(self):
+        def fail1():
+            class RomTestFail(Model):
+                col = OneToOne('OtherModel', 'set default', required=True)
+        def fail2():
+            class RomTestFail(Model):
+                col = OneToOne('OtherModel', 'set null', required=True)
+        self.assertRaises(ColumnError, fail1)
+        self.assertRaises(ColumnError, fail2)
+
+        class RomTestSetNull(Model):
+            col = OneToOne('RomTestSetNull', 'set null')
+
+        a = RomTestSetNull()
+        b = RomTestSetNull(col=a)
+        b.save()
+        ia = a.id
+        self.assertEqual(len(b.get_by(col=ia)), 1)
+        a.delete()
+        self.assertEqual(len(b.get_by(col=ia)), 0)
 
     def test_prefix_suffix1(self):
         from rom import columns
@@ -879,36 +990,36 @@ class TestORM(unittest.TestCase):
 
     def test_foreign_model_references(self):
         class RomTestM2O(Model):
-            col1 = ManyToOne('RomTestO2M')
-            col2 = ManyToOne('RomTestO2M')
+            col1 = ManyToOne('RomTestO2M', 'no action')
+            col2 = ManyToOne('RomTestO2M', 'no action')
 
         def r():
             class RomTestO2M(Model):
-                col1 = OneToMany('RomTestM2O', 'no action')
+                col1 = OneToMany('RomTestM2O')
 
         def ok():
             class RomTestO2M(Model):
-                col1 = OneToMany('RomTestM2O', 'no action', 'col2')
+                col1 = OneToMany('RomTestM2O', 'col2')
 
         self.assertRaises(ColumnError, r)
         ok()
 
         class RomTestO2M_(Model):
-            col1 = OneToMany('RomTestM2O_', 'no action')
+            col1 = OneToMany('RomTestM2O_')
 
         def r():
             class RomTestM2O_(Model):
-                col1 = ManyToOne('RomTestO2M_')
-                col2 = ManyToOne('RomTestO2M_')
+                col1 = ManyToOne('RomTestO2M_', 'no action')
+                col2 = ManyToOne('RomTestO2M_', 'no action')
 
         self.assertRaises(ColumnError, r)
 
         class RomTestO2M__(Model):
-            col1 = OneToMany('RomTestM2O__', 'no action', 'col2')
+            col1 = OneToMany('RomTestM2O__', 'col2')
 
         class RomTestM2O__(Model):
-            col1 = ManyToOne('RomTestO2M__')
-            col2 = ManyToOne('RomTestO2M__')
+            col1 = ManyToOne('RomTestO2M__', 'no action')
+            col2 = ManyToOne('RomTestO2M__', 'no action')
 
     def test_clean_old_index(self):
         from rom import util

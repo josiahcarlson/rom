@@ -137,8 +137,9 @@ import redis
 import six
 
 from .columns import (Column, Integer, Boolean, Float, Decimal, DateTime,
-    Date, Time, Text, Json, PrimaryKey, ManyToOne, ForeignModel, OneToMany,
-    MODELS, _on_delete, SKIP_ON_DELETE)
+    Date, Time, String, Text, Json, PrimaryKey, ManyToOne, OneToOne,
+    ForeignModel, OneToMany, MODELS, MODELS_REFERENCED, _on_delete,
+    SKIP_ON_DELETE)
 from .exceptions import (ORMError, UniqueKeyViolation, InvalidOperation,
     QueryError, ColumnError, MissingColumn, InvalidColumnValue, RestrictError)
 from .index import GeneralIndex, Pattern, Prefix, Suffix
@@ -146,10 +147,10 @@ from .util import (ClassProperty, _connect, session, dt2ts, t2ts,
     _prefix_score, _script_load, _encode_unique_constraint,
     FULL_TEXT, CASE_INSENSITIVE, SIMPLE)
 
-VERSION = '0.30.1'
+VERSION = '0.31.0'
 
 COLUMN_TYPES = [Column, Integer, Boolean, Float, Decimal, DateTime, Date,
-Time, Text, Json, PrimaryKey, ManyToOne, ForeignModel, OneToMany]
+Time, String, Text, Json, PrimaryKey, ManyToOne, ForeignModel, OneToMany]
 
 NUMERIC_TYPES = six.integer_types + (float, _Decimal, datetime, date, dtime)
 
@@ -169,14 +170,9 @@ def _disable_lua_writes():
     util.USE_LUA = columns.USE_LUA = USE_LUA = False
 
 __all__ = '''
-    Model Column Integer Float Decimal Text Json PrimaryKey ManyToOne
-    ForeignModel OneToMany Query session Boolean DateTime Date Time
+    Model Column Integer Float Decimal String Text Json PrimaryKey ManyToOne
+    OneToOne ForeignModel OneToMany Query session Boolean DateTime Date Time
     FULL_TEXT CASE_INSENSITIVE SIMPLE'''.split()
-
-if six.PY2:
-    from .columns import String
-    COLUMN_TYPES.append(String)
-    __all__.append('String')
 
 class _ModelMetaclass(type):
     def __new__(cls, name, bases, dict):
@@ -237,6 +233,7 @@ class _ModelMetaclass(type):
                             attr, unique)
                         )
                     unique.add(attr)
+
             if isinstance(col, PrimaryKey):
                 if pkey:
                     raise ColumnError("Only one primary key column allowed, you have: %s %s"%(
@@ -245,26 +242,27 @@ class _ModelMetaclass(type):
                 pkey = attr
 
             if isinstance(col, OneToMany) and not col._column and col._ftable in MODELS:
-                # Check to make sure that the foreign ManyToOne table doesn't
-                # have multiple references to this table to require an explicit
-                # foreign column.
+                # Check to make sure that the foreign ManyToOne/OneToMany table
+                # doesn't have multiple references to this table to require an
+                # explicit foreign column.
                 refs = []
                 for _a, _c in MODELS[col._ftable]._columns.items():
-                    if isinstance(_c, ManyToOne) and _c._ftable == name:
+                    if isinstance(_c, (ManyToOne, OneToOne)) and _c._ftable == name:
                         refs.append(_a)
                 if len(refs) > 1:
                     raise ColumnError("Missing required column argument to OneToMany definition on column %s"%(attr,))
 
-            if isinstance(col, ManyToOne):
+            if isinstance(col, (ManyToOne, OneToOne)):
                 many_to_one[col._ftable].append((attr, col))
+                MODELS_REFERENCED.setdefault(col._ftable, []).append((dict['_namespace'], attr, col._on_delete))
 
             if attr == 'unique_together':
                 if not USE_LUA:
                     raise ColumnError("Lua scripting must be enabled to support multi-column uniqueness constraints")
                 composite_unique = col
 
-        # verify reverse OneToMany attributes for these ManyToOne attributes if
-        # created after referenced models
+        # verify reverse OneToMany attributes for these ManyToOne/OneToOne
+        # attributes if created after referenced models
         for t, cols in many_to_one.items():
             if len(cols) == 1:
                 continue
