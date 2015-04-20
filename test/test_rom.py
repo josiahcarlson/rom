@@ -1158,6 +1158,17 @@ class TestORM(unittest.TestCase):
         else:
             self.assertGreater(r2[0].id, r2[1].id)
 
+    def test_string_in_3x(self):
+        if six.PY2:
+            return
+        by = 'hello'.encode('utf-8')
+        class RomTestByteString(Model):
+            scol = String(unique=True, index=True, keygen=lambda x:set([x.decode('latin-1')]))
+
+        RomTestByteString(scol=by).save()
+        self.assertTrue(RomTestByteString.get_by(scol=by))
+        self.assertTrue(RomTestByteString.query.filter(scol=by).count())
+
 def main():
     testsFailed = False
     _disable_lua_writes()

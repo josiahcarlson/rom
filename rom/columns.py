@@ -20,6 +20,9 @@ USE_LUA = True
 NO_ACTION_DEFAULT = object()
 SKIP_ON_DELETE = object()
 ON_DELETE = ('no action', 'restrict', 'cascade', 'set null', 'set default')
+six.string_types_ex = six.string_types
+if six.PY3:
+    six.string_types_ex += (bytes,)
 
 def _restrict(entity, attr, refs):
     name = entity._namespace
@@ -205,7 +208,7 @@ class Column(object):
             raise ColumnError("Missing valid _allowed attribute")
 
         allowed = (self._allowed,) if isinstance(self._allowed, type) else self._allowed
-        is_string = all(issubclass(x, six.string_types) for x in allowed)
+        is_string = all(issubclass(x, six.string_types_ex) for x in allowed)
         is_integer = all(issubclass(x, six.integer_types) for x in allowed)
         if unique:
             if not (is_string or is_integer):
@@ -694,7 +697,7 @@ class ForeignModel(Column):
     def _from_redis(self, value):
         if isinstance(value, self._fmodel):
             return value
-        if isinstance(value, six.string_types) and value.isdigit():
+        if isinstance(value, six.string_types_ex) and value.isdigit():
             value = int(value, 10)
         return self._fmodel.get(value)
 

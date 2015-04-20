@@ -147,7 +147,7 @@ from .util import (ClassProperty, _connect, session, dt2ts, t2ts,
     _prefix_score, _script_load, _encode_unique_constraint,
     FULL_TEXT, CASE_INSENSITIVE, SIMPLE)
 
-VERSION = '0.31.0'
+VERSION = '0.31.1'
 
 COLUMN_TYPES = [Column, Integer, Boolean, Float, Decimal, DateTime, Date,
 Time, String, Text, Json, PrimaryKey, ManyToOne, ForeignModel, OneToMany]
@@ -879,6 +879,13 @@ end
 return #nkeys + #nscored + #nprefix + #nsuffix
 ''')
 
+def _fix_bytes(d):
+    if six.PY2:
+        raise TypeError
+    if isinstance(d, bytes):
+        return d.decode('latin-1')
+    raise TypeError
+
 def redis_writer_lua(conn, namespace, id, unique, udelete, delete, data, keys,
                      scored, prefix, suffix, is_delete):
     ldata = []
@@ -890,8 +897,8 @@ def redis_writer_lua(conn, namespace, id, unique, udelete, delete, data, keys,
     for item in suffix:
         item.append(_prefix_score(item[-1]))
 
-    result = _redis_writer_lua(conn, [], [namespace, id] + list(map(json.dumps, [
-        unique, udelete, delete, ldata, keys, scored, prefix, suffix, is_delete])))
+    result = _redis_writer_lua(conn, [], [namespace, id] + [json.dumps(x, default=_fix_bytes)
+        for x in [unique, udelete, delete, ldata, keys, scored, prefix, suffix, is_delete]])
     if isinstance(result, six.binary_type):
         result = result.decode()
         raise UniqueKeyViolation("Value %r for %s:%s:uidx not distinct"%(unique[result], namespace, result))
@@ -995,6 +1002,9 @@ class Query(object):
 
             if isinstance(value, six.string_types):
                 cur_filters.append('%s:%s'%(attr, value))
+
+            elif six.PY3 and isinstance(value, bytes):
+                cur_filters.append('%s:%s'%(attr, value.decode('latin-1')))
 
             elif isinstance(value, tuple):
                 if len(value) != 2:
