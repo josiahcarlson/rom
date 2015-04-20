@@ -1,5 +1,7 @@
+#---------------------------------- 0.31.2 -----------------------------------
+[fixed] more bugs with String (bytes) columns in rom for Python 3.x
 #---------------------------------- 0.31.1 -----------------------------------
-[fixed] bug with String (bytes) column in rom for Python 3.x
+[fixed] bug with String (bytes) columns in rom for Python 3.x
 #---------------------------------- 0.31.0 -----------------------------------
 [fixed] an issue with the docs not generating 20+ notes and warnings from the
     source code

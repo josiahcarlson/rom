@@ -377,7 +377,8 @@ for i=start_index,end_index,100 do
         last = v
     end
     -- bail early if we've passed all of the shared prefixes
-    if has_prefix and string.sub(last, 1, psize) > prefix then
+    if not last then
+    elseif has_prefix and string.sub(last, 1, psize) > prefix then
         break
     end
 end

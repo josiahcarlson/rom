@@ -202,7 +202,7 @@ def FULL_TEXT(val):
         else:
             val = str(val)
     r = sorted(set([x for x in [s.lower().strip(string.punctuation) for s in val.split()] if x]))
-    if isinstance(val, six.string_types) and not isinstance(val, str):  # unicode on py2k
+    if not isinstance(val, str):  # unicode on py2k
         return [s.encode('utf-8') for s in r]
     return r
 
@@ -228,7 +228,10 @@ def SIMPLE(val):
     elif val in (None, ''):
         return None
     elif not isinstance(val, six.string_types):
-        val = str(val)
+        if six.PY3 and isinstance(val, bytes):
+            val = val.decode('latin-1')
+        else:
+            val = str(val)
     return {'': _prefix_score(val)}
 
 def CASE_INSENSITIVE(val):

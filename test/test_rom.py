@@ -1163,11 +1163,12 @@ class TestORM(unittest.TestCase):
             return
         by = 'hello'.encode('utf-8')
         class RomTestByteString(Model):
-            scol = String(unique=True, index=True, keygen=lambda x:set([x.decode('latin-1')]))
+            scol = String(unique=True, index=True, suffix=True, keygen=FULL_TEXT)
 
         RomTestByteString(scol=by).save()
         self.assertTrue(RomTestByteString.get_by(scol=by))
-        self.assertTrue(RomTestByteString.query.filter(scol=by).count())
+        self.assertEqual(RomTestByteString.query.filter(scol=by).count(), 1)
+        self.assertEqual(RomTestByteString.query.endswith(scol=by[1:]).count(), 1)
 
 def main():
     testsFailed = False
