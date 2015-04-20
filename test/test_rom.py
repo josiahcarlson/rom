@@ -1161,6 +1161,8 @@ class TestORM(unittest.TestCase):
     def test_string_in_3x(self):
         if six.PY2:
             return
+        if not util.USE_LUA:
+            return
         by = 'hello'.encode('utf-8')
         class RomTestByteString(Model):
             scol = String(unique=True, index=True, suffix=True, keygen=FULL_TEXT)
