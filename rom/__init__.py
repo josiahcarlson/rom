@@ -147,7 +147,7 @@ from .util import (ClassProperty, _connect, session, dt2ts, t2ts,
     _prefix_score, _script_load, _encode_unique_constraint,
     FULL_TEXT, CASE_INSENSITIVE, SIMPLE)
 
-VERSION = '0.31.2'
+VERSION = '0.31.3'
 
 COLUMN_TYPES = [Column, Integer, Boolean, Float, Decimal, DateTime, Date,
 Time, String, Text, Json, PrimaryKey, ManyToOne, ForeignModel, OneToMany]
@@ -375,6 +375,10 @@ class Model(six.with_metaclass(_ModelMetaclass, object)):
                 self._last[attr] = cval
         self._init = True
         session.add(self)
+
+    @ClassProperty
+    def _connection(cls):
+        return _connect(cls)
 
     def refresh(self, force=False):
         if self._deleted:

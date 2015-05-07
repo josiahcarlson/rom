@@ -317,8 +317,14 @@ class TestORM(unittest.TestCase):
 
         RomTestBar._conn.delete('RomTestBar:id:')
 
-        RomTestFoo().save()
-        RomTestBar().save()
+        x = RomTestFoo()
+        x.save()
+        y = RomTestBar()
+        y.save()
+        self.assertEqual(RomTestFoo._connection, util.CONNECTION)
+        self.assertEqual(x._connection, util.CONNECTION)
+        self.assertNotEqual(RomTestBar._connection, util.CONNECTION)
+        self.assertNotEqual(y._connection, util.CONNECTION)
 
         self.assertEqual(RomTestBar._conn.get('RomTestBar:id:').decode(), '1')
         self.assertEqual(util.CONNECTION.get('RomTestBar:id:'), None)
