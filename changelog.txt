@@ -1,3 +1,67 @@
+#---------------------------------- 0.31.3 -----------------------------------
+[added] a _connection property to all Models to be able to fetch the
+    connection that would be used to read or write data for the model. Thanks
+    to https://github.com/jmmills for the feature request
+#---------------------------------- 0.31.2 -----------------------------------
+[fixed] more bugs with String (bytes) columns in rom for Python 3.x
+#---------------------------------- 0.31.1 -----------------------------------
+[fixed] bug with String (bytes) columns in rom for Python 3.x
+#---------------------------------- 0.31.0 -----------------------------------
+[fixed] an issue with the docs not generating 20+ notes and warnings from the
+    source code
+[changed] moved on_delete action from OneToMany to ManyToOne, where it belongs
+[added] OneToOne column with on_delete functionality, thanks to github user
+    https://github.com/jmmills for the feature request
+[changed] on_delete reference scanning now based ManyToOne/OneToOne
+    relationships, ensuring that references are now always handled as part of
+    on_delete processing
+[added] missing 'String' column for Python 3.x, which is really just a bytes
+    column that shares its name with the 2.x String column
+[updated] and clarified documentation relating to column arguments and for
+    String, Text, ManyToOne, OneToMany, and OneToOne columns
+[added] on_delete 'set null' and 'set default' options for ManyToOne and
+    OneToOne columns
+[added] OneToMany columns can be used to reference the reverse of a OneToOne
+    relationship column
+#---------------------------------- 0.30.1 -----------------------------------
+[updated] Copyright year, development status, Python version compatability,
+    and stopped installing the test package as part of installation.
+[fixed] Tests for Python 2.6 .
+[fixed] Issue with prefix/suffix indexes on string columns using the new
+    SIMPLE and CASE_INSENSITIVE keygen functions
+#---------------------------------- 0.30.0 -----------------------------------
+[fixed] a double-delete issue with setting a column/attribute to None when the
+    column/attribute was already empty/None. Thanks to Github user
+    https://github.com/hakib for the bug report.
+[added] keyword-only argument to .get_by() for explicitly fetching numeric
+    ranges when both a numeric and unique index are specified on a column.
+    Thanks to Github user https://github.com/hakib for the use-case where the
+    ambiguity was discovered.
+[added] more documentation for optional arguments passed to .get_by()
+[changed] Indexes on String/Text columns will start to warn about a
+    non-specified keygen function in 0.30.0, and will raise an exception in
+    0.31.0 and later when one isn't specified. This is to ensure that users
+    are getting the index on their data that is expected. The existing
+    full-text indexing keygen for string/text will get aliases of
+    rom.FULL_TEXT, rom.columns.FULL_TEXT, and rom.util.FULL_TEXT .
+[added] rom.SIMPLE and rom.CASE_INSENSITIVE basic order keygens for String and
+    Text column indexes, as well as similarly named aliases in rom.columns and
+    rom.util, like rom.FULL_TEXT has.
+#---------------------------------- 0.29.5 -----------------------------------
+[added] Integer columns can now be unique. Thanks to Github user
+    https://github.com/egalitarian for the feature request for this obviously
+    missing feature.
+#---------------------------------- 0.29.4 -----------------------------------
+[added] the ability to explicitly set the namespace all of your data will live
+    inside. Feature request and first pass at a patch thanks to github user
+    https://github.com/cabowabo-de
+[fixed] bug #56, allowing to set a ManyToOne() column to None as being the
+    same as deleting the attribute. Thanks to Github user
+    https://github.com/hakib for the feature request/bug report.
+[fixed] bug #57, in which an exception could be raised when making composite
+    string queries like:
+    Model.query.filter(a='this', b=['other', 'thing']).execute()
+    Thanks to github user https://github.com/liorchen for the bug report.
 #---------------------------------- 0.29.3 -----------------------------------
 [fixed] index cleanup will now also clean any unique indexes that had not
     previously been cleaned out when using Redis 2.8+. Note that data deleted

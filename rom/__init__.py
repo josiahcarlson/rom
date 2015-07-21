@@ -4,7 +4,7 @@
 
 Rom - the Redis object mapper for Python
 
-Copyright 2013-2014 Josiah Carlson
+Copyright 2013-2015 Josiah Carlson
 
 Released under the LGPL license version 2.1 and version 3 (you can choose
 which you'd like to be bound under).
@@ -137,18 +137,20 @@ import redis
 import six
 
 from .columns import (Column, Integer, Boolean, Float, Decimal, DateTime,
-    Date, Time, Text, Json, PrimaryKey, ManyToOne, ForeignModel, OneToMany,
-    MODELS, _on_delete, SKIP_ON_DELETE)
+    Date, Time, String, Text, Json, PrimaryKey, ManyToOne, OneToOne,
+    ForeignModel, OneToMany, MODELS, MODELS_REFERENCED, _on_delete,
+    SKIP_ON_DELETE)
 from .exceptions import (ORMError, UniqueKeyViolation, InvalidOperation,
     QueryError, ColumnError, MissingColumn, InvalidColumnValue, RestrictError)
 from .index import GeneralIndex, Pattern, Prefix, Suffix
 from .util import (ClassProperty, _connect, session, dt2ts, t2ts,
-    _prefix_score, _script_load, _encode_unique_constraint)
+    _prefix_score, _script_load, _encode_unique_constraint,
+    FULL_TEXT, CASE_INSENSITIVE, SIMPLE)
 
-VERSION = '0.29.3'
+VERSION = '0.31.3'
 
 COLUMN_TYPES = [Column, Integer, Boolean, Float, Decimal, DateTime, Date,
-Time, Text, Json, PrimaryKey, ManyToOne, ForeignModel, OneToMany]
+Time, String, Text, Json, PrimaryKey, ManyToOne, ForeignModel, OneToMany]
 
 NUMERIC_TYPES = six.integer_types + (float, _Decimal, datetime, date, dtime)
 
@@ -168,18 +170,18 @@ def _disable_lua_writes():
     util.USE_LUA = columns.USE_LUA = USE_LUA = False
 
 __all__ = '''
-    Model Column Integer Float Decimal Text Json PrimaryKey ManyToOne
-    ForeignModel OneToMany Query session Boolean DateTime Date Time'''.split()
-
-if six.PY2:
-    from .columns import String
-    COLUMN_TYPES.append(String)
-    __all__.append('String')
+    Model Column Integer Float Decimal String Text Json PrimaryKey ManyToOne
+    OneToOne ForeignModel OneToMany Query session Boolean DateTime Date Time
+    FULL_TEXT CASE_INSENSITIVE SIMPLE'''.split()
 
 class _ModelMetaclass(type):
     def __new__(cls, name, bases, dict):
-        if name in MODELS:
-            raise ORMError("Cannot have two models with the same name %s"%name)
+        ns = dict.pop('_namespace', None)
+        if ns and not isinstance(ns, six.string_types):
+            raise ORMError("The _namespace attribute must be a string, not %s"%type(ns))
+        dict['_namespace'] = ns or name
+        if name in MODELS or dict['_namespace'] in MODELS:
+            raise ORMError("Cannot have two models with the same name (%s) or namespace (%s)"%(name, dict['_namespace']))
         dict['_required'] = required = set()
         dict['_index'] = index = set()
         dict['_unique'] = unique = set()
@@ -231,6 +233,7 @@ class _ModelMetaclass(type):
                             attr, unique)
                         )
                     unique.add(attr)
+
             if isinstance(col, PrimaryKey):
                 if pkey:
                     raise ColumnError("Only one primary key column allowed, you have: %s %s"%(
@@ -239,26 +242,27 @@ class _ModelMetaclass(type):
                 pkey = attr
 
             if isinstance(col, OneToMany) and not col._column and col._ftable in MODELS:
-                # Check to make sure that the foreign ManyToOne table doesn't
-                # have multiple references to this table to require an explicit
-                # foreign column.
+                # Check to make sure that the foreign ManyToOne/OneToMany table
+                # doesn't have multiple references to this table to require an
+                # explicit foreign column.
                 refs = []
                 for _a, _c in MODELS[col._ftable]._columns.items():
-                    if isinstance(_c, ManyToOne) and _c._ftable == name:
+                    if isinstance(_c, (ManyToOne, OneToOne)) and _c._ftable == name:
                         refs.append(_a)
                 if len(refs) > 1:
                     raise ColumnError("Missing required column argument to OneToMany definition on column %s"%(attr,))
 
-            if isinstance(col, ManyToOne):
+            if isinstance(col, (ManyToOne, OneToOne)):
                 many_to_one[col._ftable].append((attr, col))
+                MODELS_REFERENCED.setdefault(col._ftable, []).append((dict['_namespace'], attr, col._on_delete))
 
             if attr == 'unique_together':
                 if not USE_LUA:
                     raise ColumnError("Lua scripting must be enabled to support multi-column uniqueness constraints")
                 composite_unique = col
 
-        # verify reverse OneToMany attributes for these ManyToOne attributes if
-        # created after referenced models
+        # verify reverse OneToMany attributes for these ManyToOne/OneToOne
+        # attributes if created after referenced models
         for t, cols in many_to_one.items():
             if len(cols) == 1:
                 continue
@@ -289,9 +293,9 @@ class _ModelMetaclass(type):
             cunique.add(key)
 
         dict['_pkey'] = pkey
-        dict['_gindex'] = GeneralIndex(name)
+        dict['_gindex'] = GeneralIndex(dict['_namespace'])
 
-        MODELS[name] = model = type.__new__(cls, name, bases, dict)
+        MODELS[dict['_namespace']] = MODELS[name] = model = type.__new__(cls, name, bases, dict)
         return model
 
 class Model(six.with_metaclass(_ModelMetaclass, object)):
@@ -321,7 +325,7 @@ class Model(six.with_metaclass(_ModelMetaclass, object)):
         query = query.filter(created_at=(time.time()-86400, time.time()))
         users = query.execute()
 
-    .. note: You can perform single or chained queries against any/all columns
+    .. note:: You can perform single or chained queries against any/all columns
       that were defined with ``index=True``.
 
     **Composite/multi-column unique constraints**
@@ -346,14 +350,14 @@ class Model(six.with_metaclass(_ModelMetaclass, object)):
                 ('x', 'y'),
             ]
 
-    .. note: If one or more of the column values on an entity that is part of a
+    .. note:: If one or more of the column values on an entity that is part of a
         unique constrant is None in Python, the unique constraint won't apply.
         This is the typical behavior of nulls in unique constraints inside both
         MySQL and Postgres.
     '''
     def __init__(self, **kwargs):
         self._new = not kwargs.pop('_loading', False)
-        model = self.__class__.__name__
+        model = self._namespace
         self._data = {}
         self._last = {}
         self._modified = False
@@ -372,6 +376,10 @@ class Model(six.with_metaclass(_ModelMetaclass, object)):
         self._init = True
         session.add(self)
 
+    @ClassProperty
+    def _connection(cls):
+        return _connect(cls)
+
     def refresh(self, force=False):
         if self._deleted:
             return
@@ -388,7 +396,7 @@ class Model(six.with_metaclass(_ModelMetaclass, object)):
 
     @property
     def _pk(self):
-        return '%s:%s'%(self.__class__.__name__, getattr(self, self._pkey))
+        return '%s:%s'%(self._namespace, getattr(self, self._pkey))
 
     @classmethod
     def _apply_changes(cls, old, new, full=False, delete=False):
@@ -398,7 +406,7 @@ class Model(six.with_metaclass(_ModelMetaclass, object)):
         if not pk:
             raise ColumnError("Missing primary key value")
 
-        model = cls.__name__
+        model = cls._namespace
         key = '%s:%s'%(model, pk)
         pipe = conn.pipeline(True)
 
@@ -473,7 +481,7 @@ class Model(six.with_metaclass(_ModelMetaclass, object)):
                                 prefix.append([attr, k])
                         if ca._suffix:
                             for k in generated:
-                                if six.PY2 and isinstance(k, str) and isinstance(cls._columns[attr], Text):
+                                if six.PY2 and isinstance(k, str) and isinstance(ca, Text):
                                     try:
                                         suffix.append([attr, k.decode('utf-8')[::-1].encode('utf-8')])
                                     except UnicodeDecodeError:
@@ -486,6 +494,23 @@ class Model(six.with_metaclass(_ModelMetaclass, object)):
                                 scores[attr] = v
                             else:
                                 scores['%s:%s'%(attr, k)] = v
+                        if ca._prefix:
+                            if ca._keygen not in (SIMPLE, CASE_INSENSITIVE):
+                                warnings.warn("Prefix indexes are currently not enabled for non-standard keygen functions", stacklevel=2)
+                            else:
+                                prefix.append([attr, nval if ca._keygen is SIMPLE else nval.lower()])
+                        if ca._suffix:
+                            if ca._keygen not in (SIMPLE, CASE_INSENSITIVE):
+                                warnings.warn("Prefix indexes are currently not enabled for non-standard keygen functions", stacklevel=2)
+                            else:
+                                ex = (lambda x:x) if ca._keygen is SIMPLE else (lambda x:x.lower())
+                                if six.PY2 and isinstance(nval, str) and isinstance(ca, Text):
+                                    try:
+                                        suffix.append([attr, ex(nval.decode('utf-8')[::-1]).encode('utf-8')])
+                                    except UnicodeDecodeError:
+                                        suffix.append([attr, ex(nval[::-1])])
+                                else:
+                                    suffix.append([attr, ex(nval[::-1])])
                     elif not generated:
                         pass
                     else:
@@ -521,7 +546,8 @@ class Model(six.with_metaclass(_ModelMetaclass, object)):
                     if use_lua:
                         if oval is not None and roval != rnval:
                             udeleted[attr] = oval
-                        unique[attr] = rnval
+                        if rnval is not None:
+                            unique[attr] = rnval
                     else:
                         if oval is not None:
                             pipe.hdel(ikey, roval)
@@ -624,7 +650,7 @@ class Model(six.with_metaclass(_ModelMetaclass, object)):
         single = not isinstance(ids, (list, tuple))
         if single:
             ids = [ids]
-        pks = ['%s:%s'%(cls.__name__, id) for id in map(int, ids)]
+        pks = ['%s:%s'%(cls._namespace, id) for id in map(int, ids)]
         # get from the session, if possible
         out = list(map(session.get, pks))
         # if we couldn't get an instance from the session, load from Redis
@@ -663,14 +689,26 @@ class Model(six.with_metaclass(_ModelMetaclass, object)):
                 created_at=(time.time()-86400, time.time()),
                 _limit=(0, 25))
 
+        Optional keyword-only arguments:
+
+            * *_limit* - A 2-tuple of (offset, count) that can be used to
+              paginate or otherwise limit results returned by a numeric range
+              query
+            * *_numeric* - An optional boolean defaulting to False that forces
+              the use of a numeric index for ``.get_by(col=val)`` queries even
+              when ``col`` has an existing unique index
+
         If you would like to make queries against multiple columns or with
         multiple criteria, look into the Model.query class property.
 
-        .. note: Ranged queries with `get_by(col=(start, end))` will only work
+        .. note:: rom will attempt to use a unique index first, then a numeric
+            index if there was no unique index. You can explicitly tell rom to
+            only use the numeric index by using ``.get_by(..., _numeric=True)``.
+        .. note:: Ranged queries with `get_by(col=(start, end))` will only work
             with columns that use a numeric index.
         '''
         conn = _connect(cls)
-        model = cls.__name__
+        model = cls._namespace
         # handle limits and query requirements
         _limit = kwargs.pop('_limit', ())
         if _limit and len(_limit) != 2:
@@ -680,13 +718,15 @@ class Model(six.with_metaclass(_ModelMetaclass, object)):
         if len(kwargs) != 1:
             raise QueryError("We can only fetch object(s) by exactly one attribute, you provided %s"%(len(kwargs),))
 
+        _numeric = bool(kwargs.pop('_numeric', None))
+
         for attr, value in kwargs.items():
             plain_attr = attr.partition(':')[0]
             if isinstance(value, tuple) and len(value) != 2:
                 raise QueryError("Range queries must include exactly two endpoints")
 
             # handle unique index lookups
-            if attr in cls._unique:
+            if attr in cls._unique and (plain_attr not in cls._index or not _numeric):
                 if isinstance(value, tuple):
                     raise QueryError("Cannot query a unique index with a range of values")
                 single = not isinstance(value, list)
@@ -843,6 +883,13 @@ end
 return #nkeys + #nscored + #nprefix + #nsuffix
 ''')
 
+def _fix_bytes(d):
+    if six.PY2:
+        raise TypeError
+    if isinstance(d, bytes):
+        return d.decode('latin-1')
+    raise TypeError
+
 def redis_writer_lua(conn, namespace, id, unique, udelete, delete, data, keys,
                      scored, prefix, suffix, is_delete):
     ldata = []
@@ -854,8 +901,8 @@ def redis_writer_lua(conn, namespace, id, unique, udelete, delete, data, keys,
     for item in suffix:
         item.append(_prefix_score(item[-1]))
 
-    result = _redis_writer_lua(conn, [], [namespace, id] + list(map(json.dumps, [
-        unique, udelete, delete, ldata, keys, scored, prefix, suffix, is_delete])))
+    result = _redis_writer_lua(conn, [], [namespace, id] + [json.dumps(x, default=_fix_bytes)
+        for x in [unique, udelete, delete, ldata, keys, scored, prefix, suffix, is_delete]])
     if isinstance(result, six.binary_type):
         result = result.decode()
         raise UniqueKeyViolation("Value %r for %s:%s:uidx not distinct"%(unique[result], namespace, result))
@@ -873,11 +920,15 @@ class Query(object):
         self._order_by = order_by
         self._limit = limit
 
-    def _check(self, column):
+    def _check(self, column, value=None):
         column = column.strip('-')
         col = self._model._columns.get(column)
         if not col:
             raise QueryError("Cannot order by a non-existent column %r"%(column,))
+        if value is not None:
+            if col._keygen is CASE_INSENSITIVE:
+                value = value.lower()
+            return value
         return col
 
     def replace(self, **kwargs):
@@ -896,6 +947,12 @@ class Query(object):
 
     def filter(self, **kwargs):
         '''
+        Only columns/attributes that have been specified as having an index with
+        the ``index=True`` option on the column definition can be filtered with
+        this method. Prefix, suffix, and pattern match filters must be provided
+        using the ``.startswith()``, ``.endswith()``, and the ``.like()``
+        methods on the query object, respectively.
+
         Filters should be of the form::
 
             # for numeric ranges, use None for open-ended ranges
@@ -931,8 +988,10 @@ class Query(object):
                 .filter(ncol=5) \\
                 .execute()
 
-        .. note: Trying to use a range query `attribute=(min, max)` on string
-            columns won't return any results.
+        .. note:: Trying to use a range query `attribute=(min, max)` on indexed
+            string columns won't return any results.
+        .. note:: This method only filters columns that have been defined with
+            ``index=True``.
 
         '''
         cur_filters = list(self._filters)
@@ -947,6 +1006,9 @@ class Query(object):
 
             if isinstance(value, six.string_types):
                 cur_filters.append('%s:%s'%(attr, value))
+
+            elif six.PY3 and isinstance(value, bytes):
+                cur_filters.append('%s:%s'%(attr, value.decode('latin-1')))
 
             elif isinstance(value, tuple):
                 if len(value) != 2:
@@ -986,7 +1048,7 @@ class Query(object):
         '''
         new = []
         for k, v in kwargs.items():
-            self._check(k)
+            v = self._check(k, v)
             new.append(Prefix(k, v))
         return self.replace(filters=self._filters+tuple(new))
 
@@ -1004,7 +1066,7 @@ class Query(object):
         '''
         new = []
         for k, v in kwargs.items():
-            self._check(k)
+            v = self._check(k, v)
             new.append(Suffix(k, v[::-1]))
         return self.replace(filters=self._filters+tuple(new))
 
@@ -1032,14 +1094,14 @@ class Query(object):
             * *\*frank\*@*
             * *\*frank\*@
 
-        .. note: Like queries implicitly start at the beginning of strings
+        .. note:: Like queries implicitly start at the beginning of strings
           checked, so if you want to match a pattern that doesn't start at
           the beginning of a string, you should prefix it with one of the
           wildcard characters (like ``*`` as we did with the 'frank' pattern).
         '''
         new = []
         for k, v in kwargs.items():
-            self._check(k)
+            v = self._check(k, v)
             new.append(Pattern(k, v))
         return self.replace(filters=self._filters+tuple(new))
 
@@ -1053,10 +1115,11 @@ class Query(object):
         '''
         cname = column.lstrip('-')
         col = self._check(cname)
-        if type(col).__name__ in ('String', 'Text', 'Json'):
+        if type(col).__name__ in ('String', 'Text', 'Json') and col._keygen not in (SIMPLE, CASE_INSENSITIVE):
             warnings.warn("You are trying to order by a non-numeric column %r. "
-                          "Unless you have provided your own keygen, this probably "
-                          "won't work the way you expect it."%(cname,), stacklevel=2)
+                          "Unless you have provided your own keygen or are using "
+                          "rom.SIMPLE or rom.CASE_INSENSITIVE, this probably won't "
+                          "work the way you expect it."%(cname,), stacklevel=2)
 
         return self.replace(order_by=column)
 
@@ -1099,7 +1162,7 @@ class Query(object):
         should pass `timeout` and `pagesize` to reflect an appropriate timeout
         and page size to fetch at once.
 
-        .. note: Limit clauses are ignored and not passed.
+        .. note:: Limit clauses are ignored and not passed.
 
         Usage::
 
@@ -1130,7 +1193,7 @@ class Query(object):
         query results are eventually deleted, unless you make the explicit
         step to use the PERSIST command).
 
-        .. note: Limit clauses are ignored and not passed.
+        .. note:: Limit clauses are ignored and not passed.
 
         Usage::
 

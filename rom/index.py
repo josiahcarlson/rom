@@ -48,7 +48,7 @@ class GeneralIndex(object):
     '''
     This class implements general indexing and search for the ``rom`` package.
 
-    .. warning: You probably don't want to be calling this directly. Instead,
+    .. warning:: You probably don't want to be calling this directly. Instead,
       you should rely on the ``Query`` object returned from ``Model.query`` to
       handle all of your query pre-processing.
 
@@ -170,7 +170,7 @@ class GeneralIndex(object):
             # reorder filters based on the size of the underlying set/zset
             for fltr in filters:
                 if isinstance(fltr, six.string_types):
-                    pipe.scard('%s:%s:idx'%(self.namespace, fltr))
+                    estimate_work_lua(pipe, '%s:%s:idx'%(self.namespace, fltr), None)
                 elif isinstance(fltr, Prefix):
                     estimate_work_lua(pipe, '%s:%s:pre'%(self.namespace, fltr.attr), fltr.prefix)
                 elif isinstance(fltr, Suffix):
@@ -178,7 +178,7 @@ class GeneralIndex(object):
                 elif isinstance(fltr, Pattern):
                     estimate_work_lua(pipe, '%s:%s:pre'%(self.namespace, fltr.attr), _find_prefix(fltr.pattern))
                 elif isinstance(fltr, (tuple, list)):
-                    pipe.zcard('%s:%s:idx'%(self.namespace, fltr[0]))
+                    estimate_work_lua(pipe, '%s:%s:idx'%(self.namespace, fltr[0]), None)
                 else:
                     raise QueryError("Don't know how to handle a filter of: %r"%(fltr,))
             sizes = list(enumerate(pipe.execute()))
@@ -241,13 +241,13 @@ class GeneralIndex(object):
                 1. ``'column:string'`` - a plain string will match a word in a
                    text search on the column
 
-                .. note: Read the documentation about the ``Query`` object
+                .. note:: Read the documentation about the ``Query`` object
                   for what is actually passed during text search
 
                 2. ``('column', min, max)`` - a numeric column range search,
                    between min and max (inclusive by default)
 
-                .. note: Read the documentation about the ``Query`` object
+                .. note:: Read the documentation about the ``Query`` object
                   for information about open-ended ranges
 
                 3. ``['column:string1', 'column:string2']`` - will match any
@@ -266,11 +266,11 @@ class GeneralIndex(object):
               sort the results by. Prefixing with '-' will return results in
               descending order
 
-            .. note: While you can technically pass a non-numeric index as an
+            .. note:: While you can technically pass a non-numeric index as an
               *order_by* clause, the results will basically be to order the
               results by string comparison of the ids (10 will come before 2).
 
-            .. note: If you omit the ``order_by`` argument, results will be
+            .. note:: If you omit the ``order_by`` argument, results will be
               ordered by the last filter. If the last filter was a text
               filter, see the previous note. If the last filter was numeric,
               then results will be ordered by that result.
@@ -377,7 +377,8 @@ for i=start_index,end_index,100 do
         last = v
     end
     -- bail early if we've passed all of the shared prefixes
-    if has_prefix and string.sub(last, 1, psize) > prefix then
+    if not last then
+    elseif has_prefix and string.sub(last, 1, psize) > prefix then
         break
     end
 end
@@ -429,10 +430,25 @@ end
 return math.max(0, end_index - start_index + 1)
 ''')
 
+_estimate_work_lua2 = _script_load('''
+-- These indexes will be on numbers or strings, which requires us to check both
+-- sorted set cardinality and set cardinality - depending on type.
+local idx = KEYS[1]
+local typ = redis.call('TYPE', idx)
+if typ == 'set' then
+    return tonumber(redis.call('scard', idx))
+elseif typ == 'zset' then
+    return tonumber(redis.call('zcard', idx))
+end
+return 0
+''')
+
 def estimate_work_lua(conn, index, prefix):
     '''
     Estimates the total work necessary to calculate the prefix match over the
     given index with the provided prefix.
     '''
+    if index.endswith(':idx'):
+        return _estimate_work_lua2(conn, [index], [], force_eval=True)
     start, end = _start_end(prefix)
     return _estimate_work_lua(conn, [index], [start, end], force_eval=True)

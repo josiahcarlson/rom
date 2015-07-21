@@ -9,21 +9,27 @@ import six
 from .exceptions import (ORMError, InvalidOperation, ColumnError,
     MissingColumn, InvalidColumnValue, RestrictError)
 from .util import (_numeric_keygen, _string_keygen, _many_to_one_keygen,
-    _boolean_keygen, dt2ts, ts2dt, t2ts, ts2t, session, _connect)
+    _boolean_keygen, dt2ts, ts2dt, t2ts, ts2t, session, _connect,
+    FULL_TEXT, CASE_INSENSITIVE, SIMPLE)
 
 NULL = object()
 MODELS = {}
+MODELS_REFERENCED = {}
 _NUMERIC = (0, 0.0, _Decimal('0'), datetime(1970, 1, 1), date(1970, 1, 1), dtime(0, 0, 0))
 USE_LUA = True
 NO_ACTION_DEFAULT = object()
 SKIP_ON_DELETE = object()
-ON_DELETE = ('no action', 'restrict', 'cascade')
+ON_DELETE = ('no action', 'restrict', 'cascade', 'set null', 'set default')
+six.string_types_ex = six.string_types
+if six.PY3:
+    six.string_types_ex += (bytes,)
 
 def _restrict(entity, attr, refs):
-    name = entity.__class__.__name__
-    raise RestrictError(
+    name = entity._namespace
+    name2 = refs[0]._namespace
+    return RestrictError(
         "Cannot delete entity %s with pk %s, %i foreign references from %s.%s exist"%(
-            name, getattr(entity, entity._pkey), len(refs), name, attr))
+            name, getattr(entity, entity._pkey), len(refs), name2, attr))
 
 def _on_delete(ent):
     '''
@@ -31,35 +37,85 @@ def _on_delete(ent):
 
     This function only exists because 'cascade' is *very* hard to get right.
     '''
-    seen = set([ent._pk])
+    seen_d = set([ent._pk])
     to_delete = [ent]
+    seen_s = set()
+    to_save = []
+
+    def _set_default(ent, attr, de=NULL):
+        pk = ent._pk
+        if pk in seen_d:
+            # going to be deleted, don't need to modify
+            return
+
+        col = ent.__class__._columns[attr]
+        de = de if de is not NULL else col._default
+        if de in (None, NULL):
+            setattr(ent, attr, None)
+        elif callable(col._default):
+            setattr(ent, attr, col._default())
+        else:
+            setattr(ent, attr, col._default)
+
+        if pk not in seen_s:
+            seen_s.add(pk)
+            to_save.append(ent)
+
     for self in to_delete:
-        for attr, col in self._columns.items():
-            if not isinstance(col, OneToMany):
+        for tbl, attr, action in MODELS_REFERENCED.get(self._namespace, ()):
+            if action == 'no action':
                 continue
 
-            if col._on_delete == 'no action':
-                continue
-
-            # get the references
-            refs = getattr(self, attr)
+            refs = MODELS[tbl].get_by(**{attr: self.id})
             if not refs:
                 continue
 
-            if col._on_delete == 'restrict':
-                # restrict will raise an exception
-                _restrict(self, attr, refs)
+            if action == 'restrict':
+                # raise the exception here for a better traceback
+                raise _restrict(self, attr, refs)
+            elif action == 'set null':
+                for ref in refs:
+                    _set_default(ref, attr, None)
+                continue
+            elif action == 'set default':
+                for ref in refs:
+                    _set_default(ref, attr)
+                continue
 
             # otherwise col._on_delete == 'cascade'
-            for ent in refs:
-                if ent._pk not in seen:
-                    seen.add(ent._pk)
+            for ent in (refs if isinstance(refs, list) else [refs]):
+                if ent._pk not in seen_d:
+                    seen_d.add(ent._pk)
                     to_delete.append(ent)
 
     # If we got here, then to_delete includes all items to delete. Let's delete
     # them!
     for self in to_delete:
         self.delete(skip_on_delete_i_really_mean_it=SKIP_ON_DELETE)
+    for self in to_save:
+        # Careful not to resurrect deleted entities
+        if self._pk not in seen_d:
+            self.save()
+
+def _check_on_delete(on_delete, required, default):
+    if on_delete is NO_ACTION_DEFAULT:
+        return ColumnError("No on_delete action specified")
+    elif on_delete not in ON_DELETE:
+        return ColumnError("on_delete argument must be one of %r, you provided %r"%(
+            list(ON_DELETE), on_delete))
+    elif required:
+        if on_delete == 'set null':
+            return ColumnError("on_delete action is 'set null', but this column is required")
+        elif on_delete == 'set default' and default in (NULL, None):
+            return ColumnError("on_delete action is 'set default', but this required column has no default")
+
+_missing_keygen_warning = '''You have not specified a keygen for generating keys
+to index your String() or Text() column. By default, rom has been using its
+FULL_TEXT index on these columns in the past, but now requests/requires the
+specification of a keygen function. Provide an explicit keygen argument of
+rom.FULL_TEXT, rom.SIMPLE, rom.CASE_INSENSITIVE or some other keygen that
+matches the rom index API to remove this warning. This warning will become an
+exception in rom >= 0.31.0.'''.replace('\n', ' ')
 
 class Column(object):
     '''
@@ -77,9 +133,9 @@ class Column(object):
           creation
         * *default* - a default value (either a callable or a simple value)
           when this column is not provided
-        * *unique* - can only be enabled on ``String`` columns, allows for
-          required distinct column values (like an email address on a User
-          model)
+        * *unique* - can be enabled on string, unicode, and integer columns, and
+          allows for required distinct column values (like an email address on
+          a User model)
         * *index* - can be enabled on numeric, string, and unicode columns.
           Will create a ZSET-based numeric index for numeric columns and a
           "full word"-based search for string/unicode columns. If enabled
@@ -88,37 +144,40 @@ class Column(object):
         * *keygen* - pass a function that takes your column's value and
           returns the data that you want to index (see the keygen docs for
           what kinds of data to return)
+
+    String/Text arguments:
+
         * *prefix* - can be enabled on any column that generates a list of
           strings as a result of the default or passed *keygen* function, and
           will allow the searching of prefix matches (autocomplete) over your
-          data
+          data. See ``Query.startswith()`` for details.
         * *suffix* - can be enabled in the same contexts as *prefix* and
           enables suffix matching over your data. Any individual string in the
           returned data will be reversed (you need to make sure this makes
-          conceptual sense with your data) before being stored or used.
+          conceptual sense with your data) before being stored or used. See
+          ``Query.endswith()`` for details.
 
-    .. warning: Enabling prefix or suffix matching on a column only makes
+    .. warning:: Enabling prefix or suffix matching on a column only makes
        sense for columns defining a non-numeric *keygen* function.
 
     Notes:
 
-        * Columns with *unique* set to True can only be string columns
         * If you have disabled Lua support, you can only have at most one
           unique column on each model
         * *Unique* and *index* are not mutually exclusive
         * The *keygen* argument determines how index values are generated
-          from column data (with reasonably sensible defaults for numeric
-          and string columns)
+          from column data (with a reasonably sensible default for numeric
+          columns, and 2 convenient options for string/text columns)
         * If you set *required* to True, then you must have the column set
           during object construction: ``MyModel(col=val)``
         * If *index* and *prefix*, or *index* and *suffix* are set, the same
           keygen will be used for both the regular *index* as well as the
           *prefix* and/or *suffix* searches
         * If *prefix* is set, you can perform pattern matches over your data.
-          See documention for ``Query.like()`` for details.
+          See documention on ``Query.like()`` for details.
         * Pattern matching over data is only guaranteed to be valid or correct
           for ANSI strings that do not include nulls, though we make an effort
-          to support unicode strings and strings with nulls
+          to support unicode strings and strings with embedded nulls
         * Prefix, suffix, and pattern matching are performed within a Lua
           script, so may have substantial execution time if there are a large
           number of matching prefix or suffix entries
@@ -149,19 +208,23 @@ class Column(object):
             raise ColumnError("Missing valid _allowed attribute")
 
         allowed = (self._allowed,) if isinstance(self._allowed, type) else self._allowed
-        is_string = all(issubclass(x, six.string_types) for x in allowed)
+        is_string = all(issubclass(x, six.string_types_ex) for x in allowed)
+        is_integer = all(issubclass(x, six.integer_types) for x in allowed)
         if unique:
-            if not is_string:
-                raise ColumnError("Unique columns can only be strings")
+            if not (is_string or is_integer):
+                raise ColumnError("Unique columns can only be strings or integers")
 
         numeric = True
-        if index and not isinstance(self, ManyToOne):
+        if index and not isinstance(self, (ManyToOne, OneToOne)):
             if not any(isinstance(i, allowed) for i in _NUMERIC):
                 numeric = False
                 if issubclass(bool, allowed):
                     keygen = keygen or _boolean_keygen
                 if not is_string and not keygen:
                     raise ColumnError("Non-numeric/string indexed columns must provide keygen argument on creation")
+
+        if (index or prefix or suffix) and is_string and keygen is None:
+            raise ColumnError("Indexed string column missing explicit keygen argument, try rom.FULL_TEXT, rom.SIMPLE, or rom.CASE_INSENSITIVE")
 
         if index:
             self._keygen = keygen if keygen else (
@@ -193,7 +256,7 @@ class Column(object):
         self._attr = attr
 
         if value is None:
-            if self._default is NULL:
+            if self._default in (NULL, None):
                 if self._required:
                     raise MissingColumn("%s.%s cannot be missing"%(self._model, self._attr))
             elif callable(self._default):
@@ -215,6 +278,13 @@ class Column(object):
             self._init_(obj, *value)
             return
         try:
+            if value is None:
+                try:
+                    return self.__delete__(obj)
+                except AttributeError:
+                    # We can safely suppress this, the column was already set
+                    # to None or deleted
+                    return
             if not isinstance(value, self._allowed):
                 value = self._from_redis(value)
         except (ValueError, TypeError):
@@ -244,7 +314,8 @@ class Integer(Column):
     '''
     Used for integer numeric columns.
 
-    All standard arguments supported.
+    All standard arguments supported. See ``Column`` for details on supported
+    arguments.
 
     Used via::
 
@@ -259,7 +330,8 @@ class Boolean(Column):
     '''
     Used for boolean columns.
 
-    All standard arguments supported.
+    All standard arguments supported. See ``Column`` for details on supported
+    arguments.
 
     All values passed in on creation are casted via bool(), with the exception
     of None (which behaves as though the value was missing), and any existing
@@ -273,7 +345,7 @@ class Boolean(Column):
     Queries via ``MyModel.get_by(...)`` and ``MyModel.query.filter(...)`` work
     as expected when passed ``True`` or ``False``.
 
-    .. note: these columns are not sortable by default.
+    .. note:: these columns are not sortable by default.
     '''
     _allowed = bool
     def _to_redis(self, obj):
@@ -286,7 +358,8 @@ class Float(Column):
     Numeric column that supports integers and floats (values are turned into
     floats on load from Redis).
 
-    All standard arguments supported.
+    All standard arguments supported. See ``Column`` for details on supported
+    arguments.
 
     Used via::
 
@@ -300,7 +373,8 @@ class Decimal(Column):
     A Decimal-only numeric column (converts ints/longs into Decimals
     automatically). Attempts to assign Python float will fail.
 
-    All standard arguments supported.
+    All standard arguments supported. See ``Column`` for details on supported
+    arguments.
 
     Used via::
 
@@ -317,7 +391,8 @@ class DateTime(Column):
     '''
     A datetime column.
 
-    All standard arguments supported.
+    All standard arguments supported. See ``Column`` for details on supported
+    arguments.
 
     Used via::
 
@@ -336,7 +411,8 @@ class Date(Column):
     '''
     A date column.
 
-    All standard arguments supported.
+    All standard arguments supported. See ``Column`` for details on supported
+    arguments.
 
     Used via::
 
@@ -353,7 +429,8 @@ class Time(Column):
     '''
     A time column. Timezones are ignored.
 
-    All standard arguments supported.
+    All standard arguments supported. See ``Column`` for details on supported
+    arguments.
 
     Used via::
 
@@ -368,36 +445,46 @@ class Time(Column):
     def _to_redis(self, value):
         return repr(t2ts(value))
 
-if six.PY2:
-    class String(Column):
-        '''
-        .. note:: this column type is only available in Python 2.x
+class String(Column):
+    '''
+    A plain string column (str in 2.x, bytes in 3.x). Trying to save unicode
+    strings will probably result in an error, if not corrupted data.
 
-        A plain string column. Trying to save unicode strings will probably result
-        in an error, if not bad data.
+    All standard arguments and String/Text arguments supported. See ``Column``
+    for details on supported arguments.
 
-        All standard arguments supported.
+    This column can be indexed in one of three ways - a sorted index on a 7
+    byte prefix of the value (``keygen=rom.SIMPLE``), a sorted index on a
+    lowercased 7 byte prefix of the value (``keygen=rom.CASE_INSENSITIVE``),
+    or a case-insensitive full-text index (``keygen=rom.FULL_TEXT``).
 
-        This column can be indexed, which will allow for searching for words
-        contained in the column, extracted via::
+    Used via::
 
-            filter(None, [s.lower().strip(string.punctuation) for s in val.split()])
-
-        Used via::
-
-            class MyModel(Model):
-                col = String()
-        '''
-        _allowed = str
-        def _to_redis(self, value):
-            return value
+        class MyModel(Model):
+            col = String()
+    '''
+    _allowed = str if six.PY2 else bytes
+    def _to_redis(self, value):
+        return value
 
 class Text(Column):
     '''
-    A unicode string column. All standard arguments supported. Behavior is
-    more or less identical to the String column type, except that unicode is
-    supported (unicode in 2.x, str in 3.x). UTF-8 is used by default as the
-    encoding to bytes on the wire.
+    A unicode string column. Behavior is more or less identical to the String
+    column type, except that unicode is supported (unicode in 2.x, str in 3.x).
+    UTF-8 is used by default as the encoding to bytes on the wire, which *will*
+    affect ``rom.SIMPLE`` and ``rom.CASE_INSENSITIVE`` indexes.
+
+    All standard arguments supported. See ``Column`` for details on supported
+    arguments.
+
+    This column can be indexed in one of three ways - a sorted index on a 7
+    byte prefix of the value (``keygen=rom.SIMPLE``), a sorted index on a
+    lowercased 7 byte prefix of the value (``keygen=rom.CASE_INSENSITIVE``),
+    or a case-insensitive full-text index (``keygen=rom.FULL_TEXT``).
+
+    For the 7 byte prefix/suffixes on indexes using the ``rom.SIMPLE`` and
+    ``rom.CASE_INSENSITIVE`` keygen, because we use UTF-8 to encode text, a
+    single character can turn into 1-3 bytes.
 
     Used via::
 
@@ -480,19 +567,35 @@ class ManyToOne(Column):
     Aside from the name of the other model, only the ``required`` and
     ``default`` arguments are accepted.
 
+    Four arguments are supported:
+
+        * *ftable* - the name of the other model (required argument)
+        * *on_delete* - how to handle foreign key references on delete,
+            supported options include: 'no action', 'restrict', 'cascade'
+            'set default', and 'set null' (required argument)
+        * *required* - determines whether this column is required on
+          creation
+        * *default* - a default value (either a callable or a simple value)
+          when this column is not provided
+
     Used via::
 
         class MyModel(Model):
             col = ManyToOne('OtherModelName')
 
-    .. note: Technically, all ``ManyToOne`` columns are indexed numerically,
-      which means that you can find entities with specific id ranges or even
-      sort by the ids referenced.
+    .. note:: All ``ManyToOne`` columns are indexed numerically, which means
+      that you can find entities referencing specific id ranges or even sort by
+      referenced ids.
 
     '''
-    __slots__ = Column.__slots__ + ['_ftable']
-    def __init__(self, ftable, required=False, default=NULL):
+    __slots__ = Column.__slots__ + ['_ftable', '_on_delete']
+    def __init__(self, ftable, on_delete=NO_ACTION_DEFAULT, required=False, default=NULL):
+        exc = _check_on_delete(on_delete, required, default)
+        if exc:
+            raise exc
+
         self._ftable = ftable
+        self._on_delete = on_delete
         Column.__init__(self, required, default, index=True, keygen=_many_to_one_keygen)
 
     def _from_redis(self, value):
@@ -526,12 +629,51 @@ class ManyToOne(Column):
         v = str(getattr(value, value._pkey))
         return v
 
+class OneToOne(ManyToOne):
+    '''
+    This OneToOne column allows for one model to reference another model.
+    A OneToOne column does not require a reverse OneToOne column, and provides
+    ``on_delete`` behavior.
+
+    Five arguments are supported:
+
+        * *ftable* - the name of the other model (required argument)
+        * *on_delete* - how to handle foreign key references on delete,
+            supported options include: 'no action', 'restrict', 'cascade'
+            'set default', and 'set null' (required argument)
+        * *required* - determines whether this column is required on
+          creation
+        * *default* - a default value (either a callable or a simple value)
+          when this column is not provided
+        * *unique* - whether or not the referenced entity must be a unique
+            reference
+
+    Used via::
+
+        class MyModel(Model):
+            col = OneToOne('OtherModelName', 'no action')
+
+    .. note:: All ``OneToOne`` columns are indexed numerically, which means
+      that you can find entities referencing specific id ranges or even sort by
+      referenced ids.
+
+    '''
+    __slots__ = Column.__slots__ + ['_ftable', '_on_delete']
+    def __init__(self, ftable, on_delete=NO_ACTION_DEFAULT, required=False, default=NULL, unique=False):
+        exc = _check_on_delete(on_delete, required, default)
+        if exc:
+            raise exc
+
+        self._on_delete = on_delete
+        self._ftable = ftable
+        Column.__init__(self, required, default, unique, index=True, keygen=_many_to_one_keygen)
+
 class ForeignModel(Column):
     '''
     This column allows for ``rom`` models to reference an instance of another
     model from an unrelated ORM or otherwise.
 
-    .. note: In order for this mechanism to work, the foreign model *must*
+    .. note:: In order for this mechanism to work, the foreign model *must*
       have an ``id`` attribute or property represents its primary key, and
       *must* have a classmethod or staticmethod named ``get()`` that returns
       the proper database entity.
@@ -555,7 +697,7 @@ class ForeignModel(Column):
     def _from_redis(self, value):
         if isinstance(value, self._fmodel):
             return value
-        if isinstance(value, six.string_types) and value.isdigit():
+        if isinstance(value, six.string_types_ex) and value.isdigit():
             value = int(value, 10)
         return self._fmodel.get(value)
 
@@ -573,56 +715,32 @@ class ForeignModel(Column):
             return str(value)
         return str(value.id)
 
-_on_delete_warning = '''You have not specified an on_delete behavior. Rom will
-default to 'no action' to be consistent with behavior prior to 0.27.0. Provide
-an explicit behavior to remove this warning. This will become an exception in
-rom >= 0.28.0.'''.replace('\n', ' ')
-
 class OneToMany(Column):
     '''
     OneToMany columns do not actually store any information. They rely on a
     properly defined reverse ManyToOne column on the referenced model in order
     to be able to fetch a list of referring entities.
 
-    Only three arguments are supported:
+    Two arguments are supported:
 
         * *ftable* - the name of the other model
-        * *on_delete* - how to handle foreign key references on delete,
-            supported options include: 'no action', 'restrict', and 'cascade'
         * *column* - the attribute on the other model with the reference to
             this column, required if the foreign model has multiple columns
-            referencing this model
+            referencing this model with OneToOne or ManyToOne columns
 
     Used via::
 
         class MyModel(Model):
-            col = OneToMany('OtherModelName', on_delete='restrict')
-            ocol = OneToMany('ModelName', on_delete='no action')
-
-    As of rom 0.27.0, OneToMany columns have an optional ``on_delete``
-    argument(which will become required in 0.28.0) , which defines how
-    referring entities should be handled. The two available options are
-    ``'no action'``, which is the only behavior available for rom versions
-    prior to 0.27.0, and ``'restrict'``, which aborts the delete if there
-    there are any entities with a reference to the entity being deleted.
-
+            col = OneToMany('OtherModelName')
+            ocol = OneToMany('ModelName')
     '''
-    __slots__ = '_model _attr _ftable _required _unique _index _prefix _suffix _keygen _on_delete _column'.split()
-    def __init__(self, ftable, on_delete=NO_ACTION_DEFAULT, column=None):
-        if on_delete is NO_ACTION_DEFAULT:
-            import sys
-            if sys.modules[__name__.rpartition('.')[0]].VERSION >= '0.28.0':
-                raise ColumnError("No on_delete action specified")
-
-            warnings.warn(_on_delete_warning, FutureWarning, stacklevel=2)
-            on_delete = 'no action'
-        if on_delete not in ON_DELETE:
-            raise ColumnError("on_delete argument must be one of %r, you provided %r"%(
-                list(ON_DELETE), on_delete))
+    __slots__ = '_model _attr _ftable _required _unique _index _prefix _suffix _keygen _column'.split()
+    def __init__(self, ftable, column=None):
+        if column in ON_DELETE or column is NO_ACTION_DEFAULT:
+            raise ColumnError("OneToMany lost its on_delete argument - pass it to the ManyToOne instead")
         self._ftable = ftable
         self._required = self._unique = self._index = self._prefix = self._suffix = False
         self._model = self._attr = self._keygen = None
-        self._on_delete = on_delete
         self._column = column
 
     def _to_redis(self, value):
@@ -648,10 +766,10 @@ class OneToMany(Column):
             return model.get_by(**{self._column: getattr(obj, obj._pkey)})
 
         for attr, col in model._columns.items():
-            if isinstance(col, ManyToOne) and col._ftable == self._model:
+            if isinstance(col, (ManyToOne, OneToOne)) and col._ftable == self._model:
                 return model.get_by(**{attr: getattr(obj, obj._pkey)})
 
-        raise ORMError("Reverse ManyToOne relationship not found for %s.%s -> %s"%(self._model, self._attr, self._ftable))
+        raise ORMError("Reverse ManyToOne or OneToOne relationship not found for %s.%s -> %s"%(self._model, self._attr, self._ftable))
 
     def __delete__(self, obj):
         raise InvalidOperation("Cannot delete OneToMany relationships")

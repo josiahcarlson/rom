@@ -93,7 +93,8 @@ from .exceptions import ORMError
 
 __all__ = '''
     get_connection Session refresh_indices set_connection_settings
-    clean_old_index show_progress use_null_session use_rom_session'''.split()
+    clean_old_index show_progress use_null_session use_rom_session
+    CASE_INSENSITIVE FULL_TEXT SIMPLE'''.split()
 
 CONNECTION = redis.Redis()
 USE_LUA = True
@@ -185,17 +186,59 @@ def _numeric_keygen(val):
 def _boolean_keygen(val):
     return [str(bool(val))]
 
-def _string_keygen(val):
+def FULL_TEXT(val):
+    '''
+    This is a basic full-text index keygen function. Words are lowercased, split
+    by whitespace, and stripped of punctuation from both ends before an inverted
+    index is created for term searching.
+    '''
     if isinstance(val, float):
         val = repr(val)
     elif val in (None, ''):
         return None
     elif not isinstance(val, six.string_types):
-        val = str(val)
+        if six.PY3 and isinstance(val, bytes):
+            val = val.decode('latin-1')
+        else:
+            val = str(val)
     r = sorted(set([x for x in [s.lower().strip(string.punctuation) for s in val.split()] if x]))
-    if isinstance(val, six.string_types) and not isinstance(val, str):  # unicode on py2k
+    if not isinstance(val, str):  # unicode on py2k
         return [s.encode('utf-8') for s in r]
     return r
+
+# For compatability with the rest of the package, as well as those who are
+# explicitly using this keygen as part of query calculation.
+_string_keygen = FULL_TEXT
+
+def SIMPLE(val):
+    '''
+    This is a basic case-sensitive "sorted order" index keygen function for
+    strings. This will return a value that is suitable to be used for ordering
+    by a 7-byte prefix of a string (that is 7 characters from a byte-string, and
+    1.75-7 characters from a unicode string, depending on character -> encoding
+    length).
+
+    .. warning:: Case sensitivity is based on the (encoded) byte prefixes of the
+        strings/text being indexed, so ordering *may be different* than a native
+        comparison ordering (especially if an order is different based on
+        characters past the 7th encoded byte).
+    '''
+    if isinstance(val, float):
+        val = repr(val)
+    elif val in (None, ''):
+        return None
+    elif not isinstance(val, six.string_types):
+        if six.PY3 and isinstance(val, bytes):
+            val = val.decode('latin-1')
+        else:
+            val = str(val)
+    return {'': _prefix_score(val)}
+
+def CASE_INSENSITIVE(val):
+    '''
+    The same as SIMPLE, only case-insensitive.
+    '''
+    return SIMPLE(val.lower())
 
 def _many_to_one_keygen(val):
     if val is None:
@@ -279,7 +322,7 @@ class Session(threading.local):
     This is exposed via the ``session`` global variable, which is available
     when you ``import rom`` as ``rom.session``.
 
-    .. note: calling ``.flush()`` or ``.commit()`` doesn't cause all objects
+    .. note:: calling ``.flush()`` or ``.commit()`` doesn't cause all objects
         to be written simultanously. They are written one-by-one, with any
         error causing the call to fail.
     '''
@@ -489,7 +532,7 @@ def refresh_indices(model, block_size=100):
         for progress, total in refresh_indices(MyModel, block_size=200):
             print "%s of %s"%(progress, total)
 
-    .. note: This uses the session object to handle index refresh via calls to
+    .. note:: This uses the session object to handle index refresh via calls to
       ``.commit()``. If you have any outstanding entities known in the
       session, they will be committed.
     '''

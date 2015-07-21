@@ -1,6 +1,7 @@
 from __future__ import print_function
 from datetime import datetime, timedelta
 from decimal import Decimal as _Decimal
+import sys
 import time
 import unittest
 import warnings
@@ -16,6 +17,8 @@ connect = util._connect
 from rom import *
 from rom import _disable_lua_writes, _enable_lua_writes
 from rom.exceptions import *
+
+string = String if six.PY2 else Text
 
 def global_setup():
     c = connect(None)
@@ -98,11 +101,6 @@ class TestORM(unittest.TestCase):
         ## self.assertTrue(abs(cay-caz) < .005, cay-caz)
 
     def test_unique_index(self):
-        def foo2():
-            class RomTestBadIndexModel2(Model):
-                bad = Integer(unique=True)
-        self.assertRaises(ColumnError, foo2)
-
         class RomTestIndexModel(Model):
             key = Text(required=True, unique=True)
 
@@ -115,23 +113,38 @@ class TestORM(unittest.TestCase):
         self.assertEqual(m.id, item.id)
         self.assertTrue(m is item)
 
+    def test_unique_integer_index(self):
+        class RomTestIndexModel2(Model):
+            key = Integer(unique=True)
+
+        item = RomTestIndexModel2(key=5)
+        item.save()
+        # verify this works when there is no data
+        RomTestIndexModel2().save()
+        RomTestIndexModel2().save()
+
+        m = RomTestIndexModel2.get_by(key=5)
+        self.assertTrue(m)
+        self.assertEqual(m.id, item.id)
+        self.assertTrue(m is item)
+
     def test_foreign_key(self):
         def foo():
             class RomTestBFkey1(Model):
-                bad = ManyToOne("RomTestBad")
+                bad = ManyToOne("RomTestBad", 'no action')
             RomTestBFkey1()
         self.assertRaises(ORMError, foo)
 
         def foo2():
             class RomTestBFkey2(Model):
-                bad = OneToMany("RomTestBad", 'no action')
+                bad = OneToMany("RomTestBad")
             RomTestBFkey2()
         self.assertRaises(ORMError, foo2)
 
         class RomTestFkey1(Model):
-            fkey2 = ManyToOne("RomTestFkey2")
+            fkey2 = ManyToOne("RomTestFkey2", 'no action')
         class RomTestFkey2(Model):
-            fkey1 = OneToMany("RomTestFkey1", 'no action')
+            fkey1 = OneToMany("RomTestFkey1")
 
         x = RomTestFkey2()
         y = RomTestFkey1(fkey2=x) # implicitly saves x
@@ -146,6 +159,35 @@ class TestORM(unittest.TestCase):
 
         self.assertEqual(len(fk1), 1)
         self.assertEqual(fk1[0].id, y.id)
+
+    def test_foreign_key_delete(self):
+        class RomTestM2Ofk(Model):
+            ref = ManyToOne("RomTestO2Mfk", 'no action')
+        class RomTestO2Mfk(Model):
+            lst = OneToMany("RomTestM2Ofk")
+
+        x = RomTestO2Mfk()
+        x.save()
+        ys = [RomTestM2Ofk(ref=x) for z in range(5)]
+        [y.save() for y in ys]
+
+        del ys[0].ref
+        ys[0].save()
+        self.assertEqual(ys[0].ref, None)
+        ys[0].ref = x
+        ys[0].save()
+        self.assertEqual(ys[1].ref, x)
+
+        ys[1].ref = None
+        ys[1].save()
+        self.assertEqual(ys[1].ref, None)
+        self.assertEqual(len(x.lst), 4)
+        # Test for double-delete
+        ys[1].ref = None
+        ys[1].save()
+        ys[1].ref = x
+        ys[1].save()
+        self.assertEqual(ys[1].ref, x)
 
     def test_unique(self):
         class RomTestUnique(Model):
@@ -179,8 +221,8 @@ class TestORM(unittest.TestCase):
 
     def test_index(self):
         class RomTestIndexedModel(Model):
-            attr = Text(index=True)
-            attr2 = Text(index=True)
+            attr = Text(index=True, keygen=FULL_TEXT)
+            attr2 = Text(index=True, keygen=FULL_TEXT)
             attr3 = Integer(index=True)
             attr4 = Float(index=True)
             attr5 = Decimal(index=True)
@@ -275,8 +317,14 @@ class TestORM(unittest.TestCase):
 
         RomTestBar._conn.delete('RomTestBar:id:')
 
-        RomTestFoo().save()
-        RomTestBar().save()
+        x = RomTestFoo()
+        x.save()
+        y = RomTestBar()
+        y.save()
+        self.assertEqual(RomTestFoo._connection, util.CONNECTION)
+        self.assertEqual(x._connection, util.CONNECTION)
+        self.assertNotEqual(RomTestBar._connection, util.CONNECTION)
+        self.assertNotEqual(y._connection, util.CONNECTION)
 
         self.assertEqual(RomTestBar._conn.get('RomTestBar:id:').decode(), '1')
         self.assertEqual(util.CONNECTION.get('RomTestBar:id:'), None)
@@ -374,7 +422,7 @@ class TestORM(unittest.TestCase):
 
     def test_deletion(self):
         class RomTestDeletionTest(Model):
-            col1 = Text(index=True)
+            col1 = Text(index=True, keygen=FULL_TEXT)
 
         x = RomTestDeletionTest(col1="this is a test string that should be indexed")
         session.commit()
@@ -433,9 +481,13 @@ class TestORM(unittest.TestCase):
             return
 
         class RomTestPSP(Model):
-            col = Text(prefix=True, suffix=True)
+            col = Text(prefix=True, suffix=True, keygen=FULL_TEXT)
+            col2 = Text(prefix=True, suffix=True, keygen=SIMPLE)
+            col3 = Text(prefix=True, suffix=True, keygen=CASE_INSENSITIVE)
 
-        x = RomTestPSP(col="hello world how are you doing, join us today")
+        x = RomTestPSP(col="hello world how are you doing, join us today",
+                       col2="This is just another Test",
+                       col3="And This is yet Another")
         x.save()
 
         self.assertEqual(RomTestPSP.query.startswith(col='he').count(), 1)
@@ -447,6 +499,24 @@ class TestORM(unittest.TestCase):
         self.assertEqual(RomTestPSP.query.like(col='oin').count(), 0)
         self.assertEqual(RomTestPSP.query.like(col='+oin').like(col='wor!d').count(), 1)
 
+        self.assertEqual(RomTestPSP.query.startswith(col2="This is just").count(), 1)
+        self.assertEqual(RomTestPSP.query.startswith(col2="this is just").count(), 0)
+        self.assertEqual(RomTestPSP.query.endswith(col2="another Test").count(), 1)
+        self.assertEqual(RomTestPSP.query.endswith(col2="another test").count(), 0)
+        self.assertEqual(RomTestPSP.query.like(col2="This?is").count(), 1)
+        self.assertEqual(RomTestPSP.query.like(col2="this?is").count(), 0)
+
+        self.assertEqual(RomTestPSP.query.startswith(col3="and this is").count(), 1)
+        self.assertEqual(RomTestPSP.query.startswith(col3="And This Is").count(), 1)
+        self.assertEqual(RomTestPSP.query.startswith(col3="And This isn't").count(), 0)
+        self.assertEqual(RomTestPSP.query.endswith(col3="yet another").count(), 1)
+        self.assertEqual(RomTestPSP.query.endswith(col3="Yet another").count(), 1)
+        self.assertEqual(RomTestPSP.query.endswith(col3="and another").count(), 0)
+        self.assertEqual(RomTestPSP.query.like(col3="And?This").count(), 1)
+        self.assertEqual(RomTestPSP.query.like(col3="and?this").count(), 1)
+        self.assertEqual(RomTestPSP.query.like(col3="*this is*").count(), 1)
+        self.assertEqual(RomTestPSP.query.like(col3="nope").count(), 0)
+
     def test_unicode_text(self):
         import rom
         ch = unichr(0xfeff) if six.PY2 else chr(0xfeff)
@@ -454,7 +524,7 @@ class TestORM(unittest.TestCase):
         suf = 'hello' + ch
 
         class RomTestUnicode1(Model):
-            col = Text(index=True, unique=True)
+            col = Text(index=True, unique=True, keygen=FULL_TEXT)
 
         RomTestUnicode1(col=pre).save()
         RomTestUnicode1(col=suf).save()
@@ -467,7 +537,7 @@ class TestORM(unittest.TestCase):
         import rom
         if rom.USE_LUA:
             class RomTestUnicode2(Model):
-                col = Text(prefix=True, suffix=True)
+                col = Text(prefix=True, suffix=True, keygen=FULL_TEXT)
 
             RomTestUnicode2(col=pre).save()
             RomTestUnicode2(col=suf).save()
@@ -567,11 +637,11 @@ class TestORM(unittest.TestCase):
 
         class RomTestCleanupA(Model):
             foo = Text()
-            blist = OneToMany('RomTestCleanupB', 'no action')
+            blist = OneToMany('RomTestCleanupB')
 
         class RomTestCleanupB(Model):
             bar = Text()
-            a = ManyToOne('RomTestCleanupA')
+            a = ManyToOne('RomTestCleanupA', 'no action')
 
         a = RomTestCleanupA(foo='foo')
         a.save()
@@ -639,16 +709,16 @@ class TestORM(unittest.TestCase):
             the deleted object."""
 
         class RomTestCascadeRestrict(Model):
-            alist = OneToMany('RomTestRestrictA', 'cascade')
+            alist = OneToMany('RomTestRestrictA')
 
         class RomTestRestrictA(Model):
             foo = Text()
-            cref = ManyToOne('RomTestCascadeRestrict')
-            blist = OneToMany('RomTestRestrictB', 'restrict')
+            cref = ManyToOne('RomTestCascadeRestrict', 'cascade')
+            blist = OneToMany('RomTestRestrictB')
 
         class RomTestRestrictB(Model):
             bar = Text()
-            a = ManyToOne('RomTestRestrictA')
+            a = ManyToOne('RomTestRestrictA', 'restrict')
 
         c = RomTestCascadeRestrict()
         c.save()
@@ -663,12 +733,123 @@ class TestORM(unittest.TestCase):
         c.delete()
         self.assertRaises(RestrictError, a.delete)
 
+    def test_restrict_on_delete_121(self):
+        """ Verify that Restrict is thrown when there is a foreign object referencing
+            the deleted object."""
+
+        class RomTestCascadeRestrictOne(Model):
+            pass
+
+        class RomTestRestrictAOne(Model):
+            foo = Text()
+            c = OneToOne('RomTestCascadeRestrictOne', 'cascade')
+
+        class RomTestRestrictBOne(Model):
+            a = OneToOne('RomTestRestrictAOne', 'restrict')
+            bar = Text()
+
+        c = RomTestCascadeRestrictOne()
+        c.save()
+        a = RomTestRestrictAOne(foo='foo', c=c)
+        a.save()
+        b = RomTestRestrictBOne(bar='foo', a=a)
+        b.save()
+
+        self.assertRaises(RestrictError, c.delete)
+        self.assertRaises(RestrictError, a.delete)
+        del b.a
+        b.save()
+        c.delete()
+
+    def _test_restrict_skip_on_delete(self):
+        # Functionality currently disabled, might be useful in the future, but
+        # currently differs from existing Postgres/MySQL/Oracle/MSSql behavior
+        class RomTestRoot(Model):
+            leaf = OneToMany('RomTestLeaf')
+        class RomTestNode(Model):
+            root = OneToOne('RomTestRoot', 'cascade')
+            node = OneToOne('RomTestNode', 'cascade')
+            leaf = OneToMany('RomTestLeaf')
+        class RomTestLeaf(Model):
+            node = ManyToOne('RomTestNode', 'restrict')
+            root = ManyToOne('RomTestRoot', 'cascade')
+
+        root = RomTestRoot()
+        root.save()
+        node1 = RomTestNode(root=root)
+        node1.save()
+        node2 = RomTestNode(node=node1) # assignment to an attribute auto-saves
+        node2.save()
+
+        l1 = RomTestLeaf(root=root, node=node2)
+        l2 = RomTestLeaf(root=root, node=node2)
+        l1.save()
+        l2.save()
+
+        ids = [
+            (RomTestRoot, root.id),
+            (RomTestNode, node1.id),
+            (RomTestNode, node2.id),
+            (RomTestLeaf, l1.id),
+            (RomTestLeaf, l2.id),
+        ]
+
+        # resulting structure:
+        #    root.node -> node1;.node -> node2;.leaf -> [l1, l2]
+        #    root.leaf -> [l1, l2]
+        # Cascading deletes use a breadth-first traversal of references, so the
+        # queue of deletes when starting from the root will look like:
+        #    [root, node1, l1, l2, node2]
+        # Because l1 and l2 are deleted as part of the cascading delete from
+        # the root, and *not* from the restricted delete from node2 (or node1),
+        # a delete of the root should cascade fully (node1 is not necessary for
+        # this to work; it's there for other tests).
+        # Given the above, a delete from node1 or node2 should cause a
+        # RestrictError.
+        del root, node1, node2, l1, l2
+        session.rollback()
+        # from node1 gets a queue of:
+        # [node1, node2] -restrict-> [l1, l2]
+        self.assertRaises(RestrictError, RomTestNode.get(ids[2][1]).delete)
+        session.rollback()
+        # from node2 gets a queue of:
+        # [node2] -restrict-> [l1, l2]
+        self.assertRaises(RestrictError, RomTestNode.get(ids[1][1]).delete)
+
+        session.rollback()
+        RomTestRoot.get(ids[0][1]).delete()
+
+        # make sure the deletions happened
+        for mdl, id in ids:
+            self.assertEqual(mdl.get(id), None)
+
+    def test_on_delete_extra(self):
+        def fail1():
+            class RomTestFail(Model):
+                col = OneToOne('OtherModel', 'set default', required=True)
+        def fail2():
+            class RomTestFail(Model):
+                col = OneToOne('OtherModel', 'set null', required=True)
+        self.assertRaises(ColumnError, fail1)
+        self.assertRaises(ColumnError, fail2)
+
+        class RomTestSetNull(Model):
+            col = OneToOne('RomTestSetNull', 'set null')
+
+        a = RomTestSetNull()
+        b = RomTestSetNull(col=a)
+        b.save()
+        ia = a.id
+        self.assertEqual(len(b.get_by(col=ia)), 1)
+        a.delete()
+        self.assertEqual(len(b.get_by(col=ia)), 0)
+
     def test_prefix_suffix1(self):
         from rom import columns
         if not columns.USE_LUA:
             return
         class RomTestPerson(Model):
-            name = Text(prefix=True, suffix=True, index=True)
+            name = Text(prefix=True, suffix=True, index=True, keygen=FULL_TEXT)
 
         names = ['Acasaoi', 'Maria Williamson IV', 'Rodrigo Howe',
             'Mr. Willow Goldner', 'Melody Prohaska', 'Hulda Botsford',
@@ -695,10 +876,9 @@ class TestORM(unittest.TestCase):
         from rom import columns
         if not columns.USE_LUA:
             return
-        string = String if six.PY2 else Text
         class RomTestPerson2(Model):
-            idPerson = string(prefix=True, suffix=True, index=True)
-            description = string(prefix=True, suffix=True, index=True)
+            idPerson = string(prefix=True, suffix=True, index=True, keygen=FULL_TEXT)
+            description = string(prefix=True, suffix=True, index=True, keygen=FULL_TEXT)
         data = [
             ["8947589545872", "ayuntamientodeciudad"],
             ["8947589545872", "ayuntamientodeguipuzcoa"],
@@ -719,7 +899,7 @@ class TestORM(unittest.TestCase):
 
     def test_null_session(self):
         class RomTestNullSession(Model):
-            data = String() if six.PY2 else Text()
+            data = string()
 
         x = RomTestNullSession(data="test")
         x.save()
@@ -770,7 +950,7 @@ class TestORM(unittest.TestCase):
         class RomTestCompositeUnique(Model):
             col1 = Integer()
             col2 = Integer()
-            col3 = String() if six.PY2 else Text()
+            col3 = string()
 
             unique_together = [
                 ('col1', 'col2', 'col3'),
@@ -816,36 +996,36 @@ class TestORM(unittest.TestCase):
 
     def test_foreign_model_references(self):
         class RomTestM2O(Model):
-            col1 = ManyToOne('RomTestO2M')
-            col2 = ManyToOne('RomTestO2M')
+            col1 = ManyToOne('RomTestO2M', 'no action')
+            col2 = ManyToOne('RomTestO2M', 'no action')
 
         def r():
             class RomTestO2M(Model):
-                col1 = OneToMany('RomTestM2O', 'no action')
+                col1 = OneToMany('RomTestM2O')
 
         def ok():
             class RomTestO2M(Model):
-                col1 = OneToMany('RomTestM2O', 'no action', 'col2')
+                col1 = OneToMany('RomTestM2O', 'col2')
 
         self.assertRaises(ColumnError, r)
         ok()
 
         class RomTestO2M_(Model):
-            col1 = OneToMany('RomTestM2O_', 'no action')
+            col1 = OneToMany('RomTestM2O_')
 
         def r():
             class RomTestM2O_(Model):
-                col1 = ManyToOne('RomTestO2M_')
-                col2 = ManyToOne('RomTestO2M_')
+                col1 = ManyToOne('RomTestO2M_', 'no action')
+                col2 = ManyToOne('RomTestO2M_', 'no action')
 
         self.assertRaises(ColumnError, r)
 
         class RomTestO2M__(Model):
-            col1 = OneToMany('RomTestM2O__', 'no action', 'col2')
+            col1 = OneToMany('RomTestM2O__', 'col2')
 
         class RomTestM2O__(Model):
-            col1 = ManyToOne('RomTestO2M__')
-            col2 = ManyToOne('RomTestO2M__')
+            col1 = ManyToOne('RomTestO2M__', 'no action')
+            col2 = ManyToOne('RomTestO2M__', 'no action')
 
     def test_clean_old_index(self):
         from rom import util
@@ -854,8 +1034,8 @@ class TestORM(unittest.TestCase):
 
         class RomTestCleanOld(Model):
             col1 = Integer(index=True)
-            col2 = String(index=True) if six.PY2 else Text(index=True)
-            col3 = String(unique=True) if six.PY2 else Text(unique=True)
+            col2 = string(index=True, keygen=FULL_TEXT)
+            col3 = string(unique=True)
 
         now = str(time.time())
 
@@ -916,6 +1096,87 @@ class TestORM(unittest.TestCase):
         # available. :/
         self.assertTrue(all(c.hexists('RomTestCleanOld:col3:uidx', i) for i in to_delete))
 
+    def test_mutli_query(self):
+        class RomTestIndexMultiCol(Model):
+            attr1 = string(required=True, index=True, keygen=FULL_TEXT)
+            attr2 = string(required=True, index=True, keygen=FULL_TEXT)
+
+        a = RomTestIndexMultiCol(attr1='548ef7ee7b77b93ab41ksjh3', attr2='2')
+        a.save()
+
+        self.assertEqual(len(RomTestIndexMultiCol.query.filter(attr1='548ef7ee7b77b93ab41ksjh3').execute()), 1)
+        self.assertEqual(len(RomTestIndexMultiCol.query.filter(attr2=['1', '2']).execute()), 1)
+        self.assertEqual(len(RomTestIndexMultiCol.query.filter(attr1='548ef7ee7b77b93ab41ksjh3', attr2='2').execute()), 1)
+        self.assertEqual(len(RomTestIndexMultiCol.query.filter(attr1='548ef7ee7b77b93ab41ksjh3', attr2=['2', '1']).execute()), 1)
+        self.assertEqual(len(RomTestIndexMultiCol.query.filter(attr1='548ef7ee7b77b93ab41ksjh3', attr2=['1']).execute()), 0)
+
+    def test_namespace(self):
+        _ex = {'prefix':True, 'suffix':True, 'keygen':FULL_TEXT} if util.USE_LUA else {}
+        class TestNamespace(Model):
+            _namespace = 'RomTestNamespace'
+            test_i = Integer(index=True)
+            test_s = string(unique=True, **_ex)
+            test_t = string(index=True, keygen=FULL_TEXT)
+
+        a = TestNamespace(test_i=4, test_s='hello', test_t='this is a test')
+        a.save()
+
+        # make sure no strange keys make it through
+        self.assertEqual(util.CONNECTION.keys('TestNamespace*'), [])
+        # make sure that there are keys named as we wanted them named
+        self.assertTrue(len(util.CONNECTION.keys('RomTestNamespace*')) > 0)
+
+        # verify that our indexes work the way we want them to...
+        self.assertEqual(a.get_by(test_i=4), [a])
+        self.assertEqual(a.get_by(test_i=(3, 5)), [a])
+        self.assertEqual(a.get_by(test_i=6), [])
+        self.assertEqual(a.get_by(test_s='hello'), a)
+        if util.USE_LUA:
+            self.assertEqual(a.query.startswith(test_s='hel').all(), [a])
+            self.assertEqual(a.query.startswith(test_s='hel0').all(), [])
+            self.assertEqual(a.query.endswith(test_s='lo').all(), [a])
+            self.assertEqual(a.query.endswith(test_s='llo').all(), [a])
+            self.assertEqual(a.query.endswith(test_s='elo').all(), [])
+        self.assertEqual(a.get_by(test_t='this'), [a])
+        self.assertEqual(a.get_by(test_t=['test', 'blah']), [a])
+
+    def test_order_string_index(self):
+        class RomTestOrderString(Model):
+            test_s = string(index=True, keygen=SIMPLE)
+            test_c = string(index=True, keygen=CASE_INSENSITIVE)
+
+        RomTestOrderString(test_s='Hello', test_c='World 2').save()
+        RomTestOrderString(test_s='hello', test_c='world 1').save()
+        # test case-sensitive ordering
+        r1 = RomTestOrderString.query.order_by('test_s').all()
+        self.assertEqual(len(r1), 2)
+
+        if sys.version < '2.7':
+            self.assertTrue(r1[0].id < r1[1].id)
+        else:
+            self.assertLess(r1[0].id, r1[1].id)
+
+        # test case-insensitive ordering
+        r2 = RomTestOrderString.query.order_by('test_c').all()
+        self.assertEqual(len(r2), 2)
+        if sys.version < '2.7':
+            self.assertTrue(r2[0].id > r2[1].id)
+        else:
+            self.assertGreater(r2[0].id, r2[1].id)
+
+    def test_string_in_3x(self):
+        if six.PY2:
+            return
+        if not util.USE_LUA:
+            return
+        by = 'hello'.encode('utf-8')
+        class RomTestByteString(Model):
+            scol = String(unique=True, index=True, suffix=True, keygen=FULL_TEXT)
+
+        RomTestByteString(scol=by).save()
+        self.assertTrue(RomTestByteString.get_by(scol=by))
+        self.assertEqual(RomTestByteString.query.filter(scol=by).count(), 1)
+        self.assertEqual(RomTestByteString.query.endswith(scol=by[1:]).count(), 1)
 
 def main():
     testsFailed = False
