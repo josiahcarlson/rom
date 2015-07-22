@@ -543,6 +543,8 @@ class PrimaryKey(Column):
         self._model = model
         self._attr = attr
         if value is None:
+            if loading:
+                raise InvalidColumnValue("Cannot set none primary key on object loading")
             value = _connect(obj).incr('%s:%s:'%(model, attr))
             obj._modified = True
         else:

@@ -147,7 +147,7 @@ from .util import (ClassProperty, _connect, session, dt2ts, t2ts,
     _prefix_score, _script_load, _encode_unique_constraint,
     FULL_TEXT, CASE_INSENSITIVE, SIMPLE)
 
-VERSION = '0.31.3'
+VERSION = '0.31.4'
 
 COLUMN_TYPES = [Column, Integer, Boolean, Float, Decimal, DateTime, Date,
 Time, String, Text, Json, PrimaryKey, ManyToOne, ForeignModel, OneToMany]
@@ -920,11 +920,24 @@ class Query(object):
         self._order_by = order_by
         self._limit = limit
 
-    def _check(self, column, value=None):
+    def _check(self, column, value=None, which='order_by'):
         column = column.strip('-')
         col = self._model._columns.get(column)
         if not col:
-            raise QueryError("Cannot order by a non-existent column %r"%(column,))
+            raise QueryError("Cannot use '%s' clause on a non-existent column %r"%(which, column))
+
+        if which == 'filter' and column not in self._model._index:
+            raise QueryError("Cannot use 'filter' clause on a column defined with 'index=False'")
+
+        if which == 'startswith' and column not in self._model._prefix:
+            raise QueryError("Cannot use 'startswith' clause on a column defined with 'prefix=False'")
+
+        if which == 'like' and column not in self._model._prefix:
+            raise QueryError("Cannot use 'like' clause on a column defined with 'prefix=False'")
+
+        if which == 'endswith' and column not in self._model._suffix:
+            raise QueryError("Cannot use 'endswith' clause on a column defined with 'suffix=False'")
+
         if value is not None:
             if col._keygen is CASE_INSENSITIVE:
                 value = value.lower()
@@ -996,7 +1009,7 @@ class Query(object):
         '''
         cur_filters = list(self._filters)
         for attr, value in kwargs.items():
-            self._check(attr)
+            self._check(attr, which='filter')
             if isinstance(value, bool):
                 value = str(bool(value))
 
@@ -1048,7 +1061,7 @@ class Query(object):
         '''
         new = []
         for k, v in kwargs.items():
-            v = self._check(k, v)
+            v = self._check(k, v, 'startswith')
             new.append(Prefix(k, v))
         return self.replace(filters=self._filters+tuple(new))
 
@@ -1066,7 +1079,7 @@ class Query(object):
         '''
         new = []
         for k, v in kwargs.items():
-            v = self._check(k, v)
+            v = self._check(k, v, 'endswith')
             new.append(Suffix(k, v[::-1]))
         return self.replace(filters=self._filters+tuple(new))
 
@@ -1101,7 +1114,7 @@ class Query(object):
         '''
         new = []
         for k, v in kwargs.items():
-            v = self._check(k, v)
+            v = self._check(k, v, 'like')
             new.append(Pattern(k, v))
         return self.replace(filters=self._filters+tuple(new))
 
@@ -1119,7 +1132,7 @@ class Query(object):
             warnings.warn("You are trying to order by a non-numeric column %r. "
                           "Unless you have provided your own keygen or are using "
                           "rom.SIMPLE or rom.CASE_INSENSITIVE, this probably won't "
-                          "work the way you expect it."%(cname,), stacklevel=2)
+                          "work the way you expect it to."%(cname,), stacklevel=2)
 
         return self.replace(order_by=column)
 
