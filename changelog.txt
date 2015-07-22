@@ -1,3 +1,8 @@
+#---------------------------------- 0.31.4 -----------------------------------
+[fixed] an issue when attempting to fetch a broken entity. Bug report and
+    initial patch thanks to github user https://github.com/huangwei1024
+[added] QueryError exceptions when trying to use .filter(), .startswith(),
+    .endswith(), .like(), or .order_by() without the appropriate indexes.
 #---------------------------------- 0.31.3 -----------------------------------
 [added] a _connection property to all Models to be able to fetch the
     connection that would be used to read or write data for the model. Thanks
