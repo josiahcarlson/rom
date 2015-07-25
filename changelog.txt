@@ -1,3 +1,20 @@
+#---------------------------------- 0.32.0 -----------------------------------
+[fixed] index cleanup with custom namespaces have been broken since their
+    introduction in 0.29.4, now fixed.
+[added] the ability to get a total count of all entities with a bare
+    Model.query.count(), thanks to feature request by Github user
+    https://github.com/peter-conalgo
+[added] the ability to iterate over all entities without requiring an explicit
+    index or filtering with a query with Model.query.iter_results(), thanks to
+    feature request by Github user https://github.com/peter-conalgo
+[added] base iterator on Model.query so if you are happy with the defaults,
+    you can use `for i in Model.query:` instead of
+    `for i in Model.query.iter_results():`, thanks to feature request by
+    https://github.com/peter-conalgo
+[fixed] `Model.query.iter_results()` on non-empty queries with a limit clause
+    set could sometimes return more results than were requested. This is now
+    fixed.
+[fixed/changed] Model.query.count() will now honor limit clauses.
 #---------------------------------- 0.31.4 -----------------------------------
 [fixed] an issue when attempting to fetch a broken entity. Bug report and
     initial patch thanks to github user https://github.com/huangwei1024

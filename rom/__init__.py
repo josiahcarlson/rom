@@ -144,10 +144,10 @@ from .exceptions import (ORMError, UniqueKeyViolation, InvalidOperation,
     QueryError, ColumnError, MissingColumn, InvalidColumnValue, RestrictError)
 from .index import GeneralIndex, Pattern, Prefix, Suffix
 from .util import (ClassProperty, _connect, session, dt2ts, t2ts,
-    _prefix_score, _script_load, _encode_unique_constraint,
+    _prefix_score, _scan_index_lua, _script_load, _encode_unique_constraint,
     FULL_TEXT, CASE_INSENSITIVE, SIMPLE)
 
-VERSION = '0.31.4'
+VERSION = '0.32.0'
 
 COLUMN_TYPES = [Column, Integer, Boolean, Float, Decimal, DateTime, Date,
 Time, String, Text, Json, PrimaryKey, ManyToOne, ForeignModel, OneToMany]
@@ -647,7 +647,7 @@ class Model(six.with_metaclass(_ModelMetaclass, object)):
         '''
         conn = _connect(cls)
         # prepare the ids
-        single = not isinstance(ids, (list, tuple))
+        single = not isinstance(ids, (list, tuple, set, frozenset))
         if single:
             ids = [ids]
         pks = ['%s:%s'%(cls._namespace, id) for id in map(int, ids)]
@@ -1148,7 +1148,7 @@ class Query(object):
     def count(self):
         '''
         Will return the total count of the objects that match the specified
-        filters. If no filters are provided, will return 0::
+        filters.::
 
             # counts the number of users created in the last 24 hours
             User.query.filter(created_at=(time.time()-86400, time.time())).count()
@@ -1157,7 +1157,12 @@ class Query(object):
         if self._order_by:
             filters += (self._order_by.lstrip('-'),)
         if not filters:
-            raise QueryError("You are missing filter or order criteria")
+            # We can actually count entities here...
+            size = _connect(self._model).hlen(self._model._namespace + '::')
+            limit = self._limit or (0, 2**64)
+            size = max(size - max(limit[0], 0), 0)
+            return min(size, limit[1])
+
         return self._model._gindex.count(_connect(self._model), filters)
 
     def _search(self):
@@ -1175,19 +1180,32 @@ class Query(object):
         should pass `timeout` and `pagesize` to reflect an appropriate timeout
         and page size to fetch at once.
 
-        .. note:: Limit clauses are ignored and not passed.
-
         Usage::
 
             for user in User.query.endswith(email='@gmail.com').iter_result():
                 # do something with user
                 ...
+
         '''
-        key = self.cached_result(timeout)
+
+        if not self._filters and not self._order_by:
+            return self._iter_all()
+        return self._iter_results(timeout, pagesize)
+
+    def _iter_results(self, timeout=30, pagesize=100):
         conn = _connect(self._model)
-        for i in range(0, conn.zcard(key), pagesize):
+        limit = self._limit or (0, 2**64)
+        start = max(limit[0], 0)
+        key = self.cached_result(timeout)
+
+        remaining = limit[1]
+        ids = [None]
+        i = start
+        while ids and remaining > 0:
+            # refresh the key
             conn.expire(key, timeout)
-            ids = conn.zrange(key, i, i+pagesize-1)
+            ids = conn.zrange(key, i, i+min(remaining, pagesize)-1)
+            i += len(ids)
             # No need to fill up memory with paginated items hanging around the
             # session. Remove all entities from the session that are not
             # already modified (were already in the session and modified).
@@ -1195,6 +1213,36 @@ class Query(object):
                 if not ent._modified:
                     session.forget(ent)
                 yield ent
+                remaining -= 1
+
+    def _iter_all(self):
+        conn = _connect(self._model)
+        limit = self._limit or (0, 2**64)
+        start = max(limit[0], 0)
+        prefix = '%s:'%self._model._namespace
+        index = prefix + ':'
+        max_id = int(conn.get('%s%s:'%(prefix, self._model._pkey)) or '0')
+    
+        # We could use HSCAN here, except that we may get duplicates
+        # as we are iterating. That's not good or expected behavior :/
+        remaining = max(limit[1], 0)
+        ids = [None]
+        i = 1
+        while ids and i <= max_id and remaining > 0:
+            ids = list(range(i, i + 100))
+            i += 100
+            for ent in self._model.get(ids):
+                # Same session comment as from _iter_results()
+                if not ent._modified:
+                    session.forget(ent)
+                if start:
+                    start -= 1
+                elif remaining > 0:
+                    remaining -= 1
+                    yield ent
+
+    def __iter__(self):
+        return self.iter_result()
 
     def cached_result(self, timeout):
         '''

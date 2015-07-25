@@ -537,7 +537,7 @@ def refresh_indices(model, block_size=100):
       session, they will be committed.
     '''
     conn = _connect(model)
-    max_id = int(conn.get('%s:%s:'%(model.__name__, model._pkey)) or '0')
+    max_id = int(conn.get('%s:%s:'%(model._namespace, model._pkey)) or '0')
     block_size = max(block_size, 10)
     for i in range(1, max_id+1, block_size):
         # fetches entities, keeping a record in the session
@@ -575,7 +575,7 @@ def clean_old_index(model, block_size=100, **kwargs):
     version = list(map(int, conn.info('server')['redis_version'].split('.')[:2]))
     has_hscan = version >= [2, 8]
     pipe = conn.pipeline(True)
-    prefix = '%s:'%model.__name__
+    prefix = '%s:'%model._namespace
     index = prefix + ':'
     block_size = max(block_size, 10)
 
@@ -585,9 +585,9 @@ def clean_old_index(model, block_size=100, **kwargs):
         cursor = None
         scanned = 0
         while cursor != b'0':
-            cursor, remove = _scan_index_lua(conn, [index, prefix], [cursor or '0', block_size, 0])
+            cursor, remove = _scan_index_lua(conn, [index, prefix], [cursor or '0', block_size, 0, 0])
             if remove:
-                _clean_index_lua(conn, [model.__name__], remove)
+                _clean_index_lua(conn, [model._namespace], remove)
 
             scanned += block_size
             if scanned > max_id:
@@ -601,7 +601,7 @@ def clean_old_index(model, block_size=100, **kwargs):
 
             cursor = None
             while cursor != b'0':
-                cursor, remove = _scan_index_lua(conn, [idx, prefix], [cursor or '0', block_size, 1])
+                cursor, remove = _scan_index_lua(conn, [idx, prefix], [cursor or '0', block_size, 1, 0])
                 if remove:
                     conn.hdel(idx, *remove)
 
@@ -626,7 +626,7 @@ def clean_old_index(model, block_size=100, **kwargs):
             result = iter(pipe.execute())
             remove = [id for id, ent, ind in zip(ids, result, result) if ind and not ent]
             if remove:
-                _clean_index_lua(conn, [model.__name__], remove)
+                _clean_index_lua(conn, [model._namespace], remove)
 
             yield min(i+block_size, max_id-1), max_id
 
@@ -705,8 +705,9 @@ _scan_index_lua = _script_load('''
 local page = redis.call('HSCAN', KEYS[1], ARGV[1], 'COUNT', ARGV[2] or 100)
 local clear = {}
 local skip = tonumber(ARGV[3])
+local exists = tonumber(ARGV[4])
 for i=(1+skip), #page[2], 2 do
-    if redis.call('EXISTS', KEYS[2] .. page[2][i]) == 0 then
+    if redis.call('EXISTS', KEYS[2] .. page[2][i]) == exists then
         table.insert(clear, page[2][i - skip])
     end
 end

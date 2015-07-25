@@ -440,8 +440,9 @@ class TestORM(unittest.TestCase):
 
         RomTestEmptyQueryTest().save()
         self.assertRaises(QueryError, RomTestEmptyQueryTest.query.all)
-        self.assertRaises(QueryError, RomTestEmptyQueryTest.query.count)
-        self.assertRaises(QueryError, RomTestEmptyQueryTest.query.limit(0, 10).count)
+        self.assertEqual(RomTestEmptyQueryTest.query.count(), 1)
+        self.assertEqual(RomTestEmptyQueryTest.query.limit(0, 10).count(), 1)
+        self.assertEqual(RomTestEmptyQueryTest.query.limit(1, 10).count(), 0)
 
     def test_refresh(self):
         class RomTestRefresh(Model):
@@ -933,14 +934,20 @@ class TestORM(unittest.TestCase):
             col1 = Integer(index=True)
 
         for i in range(10):
-            RomTestIndexClear(col1=i)
+            a = RomTestIndexClear(col1=i)
+
         session.commit()
         session.rollback()
+        self.assertEqual(RomTestIndexClear.query.count(), 10)
+        self.assertEqual(len(list(RomTestIndexClear.query)), 10)
+        self.assertEqual(len(list(RomTestIndexClear.query.limit(4, 10))), 6)
+        self.assertEqual(len(list(RomTestIndexClear.query.limit(2, 4))), 4)
 
         for j in range(1, 11):
             RomTestIndexClear.get(j).delete()
         conn = connect(None)
         self.assertEqual(conn.hgetall('RomTestIndexClear::'), {})
+        self.assertEqual(RomTestIndexClear.query.count(), 0)
 
     def test_multi_col_unique_index(self):
         from rom import columns
@@ -1033,6 +1040,7 @@ class TestORM(unittest.TestCase):
             return
 
         class RomTestCleanOld(Model):
+            _namespace = 'RomTestNamespacedCleanup'
             col1 = Integer(index=True)
             col2 = string(index=True, keygen=FULL_TEXT)
             col3 = string(unique=True)
@@ -1049,26 +1057,28 @@ class TestORM(unittest.TestCase):
         session.rollback()
         del a
         c = connect(None)
-        self.assertEqual(c.hlen('RomTestCleanOld::'), 1)
-        self.assertEqual(c.scard('RomTestCleanOld:col2:content:idx'), 1)
-        self.assertEqual(c.zcard('RomTestCleanOld:col1:idx'), 1)
-        self.assertEqual(c.hlen('RomTestCleanOld:col3:uidx'), 1)
+        self.assertEqual(c.hlen('RomTestNamespacedCleanup::'), 1)
+        self.assertEqual(RomTestCleanOld.query.count(), 1)
+        self.assertEqual(c.scard('RomTestNamespacedCleanup:col2:content:idx'), 1)
+        self.assertEqual(c.zcard('RomTestNamespacedCleanup:col1:idx'), 1)
+        self.assertEqual(c.hlen('RomTestNamespacedCleanup:col3:uidx'), 1)
 
-        self.assertEqual(c.delete('RomTestCleanOld:%s'%id), 1)
+        self.assertEqual(c.delete('RomTestNamespacedCleanup:%s'%id), 1)
 
         with warnings.catch_warnings(record=True) as w:
             all(util.clean_old_index(RomTestCleanOld, force_hscan=None))
             self.assertEqual(len(w), 1)
 
-        self.assertEqual(c.hlen('RomTestCleanOld::'), 0)
-        self.assertEqual(c.scard('RomTestCleanOld:col2:content:idx'), 0)
-        self.assertEqual(c.zcard('RomTestCleanOld:col1:idx'), 0)
+        self.assertEqual(c.hlen('RomTestNamespacedCleanup::'), 0)
+        self.assertEqual(RomTestCleanOld.query.count(), 0)
+        self.assertEqual(c.scard('RomTestNamespacedCleanup:col2:content:idx'), 0)
+        self.assertEqual(c.zcard('RomTestNamespacedCleanup:col1:idx'), 0)
         # can't clean out unique index when force_hscan is None - aka HSCAN disabled
-        self.assertEqual(c.hlen('RomTestCleanOld:col3:uidx'), 1)
-        c.delete('RomTestCleanOld:col3:uidx')
+        self.assertEqual(c.hlen('RomTestNamespacedCleanup:col3:uidx'), 1)
+        c.delete('RomTestNamespacedCleanup:col3:uidx')
 
         # okay, now test for longer scan/clear.
-        minid = int(c.get('RomTestCleanOld:id:')) + 1
+        minid = int(c.get('RomTestNamespacedCleanup:id:')) + 1
         _count = 100
         for i in range(minid, minid+_count):
             RomTestCleanOld(col1=i, col3=str(i)).save()
@@ -1078,23 +1088,23 @@ class TestORM(unittest.TestCase):
         has_hscan = version >= [2, 8]
 
         to_delete = list(range(minid, minid + _count, 37))
-        c.delete(*['RomTestCleanOld:%i'%i for i in to_delete])
-        self.assertTrue(all(c.hexists('RomTestCleanOld::', i) for i in to_delete))
+        c.delete(*['RomTestNamespacedCleanup:%i'%i for i in to_delete])
+        self.assertTrue(all(c.hexists('RomTestNamespacedCleanup::', i) for i in to_delete))
         all(util.clean_old_index(RomTestCleanOld, 10, force_hscan=has_hscan))
-        self.assertTrue(all(not c.hexists('RomTestCleanOld::', i) for i in to_delete))
-        self.assertTrue(all(not c.hexists('RomTestCleanOld:col3:uidx', i) for i in to_delete))
+        self.assertTrue(all(not c.hexists('RomTestNamespacedCleanup::', i) for i in to_delete))
+        self.assertTrue(all(not c.hexists('RomTestNamespacedCleanup:col3:uidx', i) for i in to_delete))
 
         to_delete = list(range(minid+29, minid + _count, 29))
-        c.delete(*['RomTestCleanOld:%i'%i for i in to_delete])
-        self.assertTrue(all(c.hexists('RomTestCleanOld::', i) for i in to_delete))
+        c.delete(*['RomTestNamespacedCleanup:%i'%i for i in to_delete])
+        self.assertTrue(all(c.hexists('RomTestNamespacedCleanup::', i) for i in to_delete))
         # should cause a warning
         with warnings.catch_warnings(record=True) as w:
             all(util.clean_old_index(RomTestCleanOld, 10, force_hscan=None))
             self.assertEqual(len(w), 1)
-        self.assertTrue(all(not c.hexists('RomTestCleanOld::', i) for i in to_delete))
+        self.assertTrue(all(not c.hexists('RomTestNamespacedCleanup::', i) for i in to_delete))
         # We can't really clean out unique indexes when hscan is disabled or not
         # available. :/
-        self.assertTrue(all(c.hexists('RomTestCleanOld:col3:uidx', i) for i in to_delete))
+        self.assertTrue(all(c.hexists('RomTestNamespacedCleanup:col3:uidx', i) for i in to_delete))
 
     def test_mutli_query(self):
         class RomTestIndexMultiCol(Model):
@@ -1139,6 +1149,7 @@ class TestORM(unittest.TestCase):
             self.assertEqual(a.query.endswith(test_s='elo').all(), [])
         self.assertEqual(a.get_by(test_t='this'), [a])
         self.assertEqual(a.get_by(test_t=['test', 'blah']), [a])
+        self.assertEqual(a.query.count(), 1)
 
     def test_order_string_index(self):
         class RomTestOrderString(Model):
