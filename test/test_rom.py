@@ -1,3 +1,13 @@
+
+'''
+Rom - the Redis object mapper for Python
+
+Copyright 2013-2015 Josiah Carlson
+
+Released under the LGPL license version 2.1 and version 3 (you can choose
+which you'd like to be bound under).
+'''
+
 from __future__ import print_function
 from datetime import datetime, timedelta
 from decimal import Decimal as _Decimal
@@ -435,14 +445,17 @@ class TestORM(unittest.TestCase):
         self.assertEqual(len(RomTestDeletionTest.get_by(col1='this')), 0)
 
     def test_empty_query(self):
-        class RomTestEmptyQueryTest(Model):
+        class RomTestEmptyQuery(Model):
             col1 = Text()
 
-        RomTestEmptyQueryTest().save()
-        self.assertRaises(QueryError, RomTestEmptyQueryTest.query.all)
-        self.assertEqual(RomTestEmptyQueryTest.query.count(), 1)
-        self.assertEqual(RomTestEmptyQueryTest.query.limit(0, 10).count(), 1)
-        self.assertEqual(RomTestEmptyQueryTest.query.limit(1, 10).count(), 0)
+        x = RomTestEmptyQuery()
+        x.save()
+        session.forget(x)
+        self.assertEqual(len(RomTestEmptyQuery.query.all()), 1)
+        self.assertEqual(RomTestEmptyQuery.query.first().id, x.id)
+        self.assertEqual(RomTestEmptyQuery.query.count(), 1)
+        self.assertEqual(RomTestEmptyQuery.query.limit(0, 10).count(), 1)
+        self.assertEqual(RomTestEmptyQuery.query.limit(1, 10).count(), 0)
 
     def test_refresh(self):
         class RomTestRefresh(Model):
@@ -940,8 +953,11 @@ class TestORM(unittest.TestCase):
         session.rollback()
         self.assertEqual(RomTestIndexClear.query.count(), 10)
         self.assertEqual(len(list(RomTestIndexClear.query)), 10)
+        self.assertEqual(len(RomTestIndexClear.query.all()), 10)
+        self.assertEqual(len(list(RomTestIndexClear.query.iter_result(no_hscan=True))), 10)
         self.assertEqual(len(list(RomTestIndexClear.query.limit(4, 10))), 6)
         self.assertEqual(len(list(RomTestIndexClear.query.limit(2, 4))), 4)
+        self.assertEqual(len(RomTestIndexClear.query.limit(2, 4).all()), 4)
 
         for j in range(1, 11):
             RomTestIndexClear.get(j).delete()
@@ -1000,6 +1016,19 @@ class TestORM(unittest.TestCase):
         self.assertEqual(len(RomTestIterResult.get_by(_id=(None, None))), 50)
         # also test order-by on the indexed primary key
         self.assertEqual(len(RomTestIterResult.query.order_by('_id').all()), 50)
+
+        # Let's get all the entities
+        session.rollback()
+        self.assertEqual(len(RomTestIterResult.query.all()), 50)
+        # And let's verify that it used the primary key index to iterate...
+        c = connect(None)
+        c.delete('%s:%s:idx'%(RomTestIterResult._namespace, RomTestIterResult._pkey))
+        self.assertEqual(len(RomTestIterResult.query.all()), 0)
+        # hack the primary key column to force using HSCAN when available
+        RomTestIterResult._columns['_id']._index = False
+        self.assertEqual(len(RomTestIterResult.query.all()), 50)
+        # And now use the naive query
+        self.assertEqual(len(list(RomTestIterResult.query.iter_result(no_hscan=True))), 50)
 
     def test_foreign_model_references(self):
         class RomTestM2O(Model):
@@ -1079,13 +1108,15 @@ class TestORM(unittest.TestCase):
 
         # okay, now test for longer scan/clear.
         minid = int(c.get('RomTestNamespacedCleanup:id:')) + 1
-        _count = 100
+        _count = 200
         for i in range(minid, minid+_count):
             RomTestCleanOld(col1=i, col3=str(i)).save()
         session.rollback()
 
         version = list(map(int, c.info('server')['redis_version'].split('.')[:2]))
         has_hscan = version >= [2, 8]
+        if has_hscan:
+            self.assertEqual(len(RomTestCleanOld.query.all()), _count)
 
         to_delete = list(range(minid, minid + _count, 37))
         c.delete(*['RomTestNamespacedCleanup:%i'%i for i in to_delete])

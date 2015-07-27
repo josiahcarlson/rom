@@ -1,3 +1,17 @@
+#---------------------------------- 0.32.1 -----------------------------------
+[changed] made Model.query.all() (a bare query for all entities) behave like
+    list(Model.query), thanks to feature request by
+    https://github.com/peter-conalgo
+[changed] made Model.query.first() (a bare query for the 'first' entity)
+    behave like `for i in Model.query: return i`, thanks to feature request by
+    https://github.com/peter-conalgo
+[changed] made empty queries against the Model faster by using an index on the
+    the PrimaryKey() column if it is available, or HSCAN + a temporary set
+    when it is not available and you are using Redis 2.8+
+[changed] pulled the Query, Model, and _ModelMetaclass objects out of the
+    __init__.py file and moved them into their own modules - they were getting
+    too big
+[fixed] added missing OneToOne entry in the __all__ exports in __init__.py
 #---------------------------------- 0.32.0 -----------------------------------
 [fixed] index cleanup with custom namespaces have been broken since their
     introduction in 0.29.4, now fixed.
