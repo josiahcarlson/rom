@@ -771,6 +771,7 @@ class TestORM(unittest.TestCase):
 
         self.assertRaises(RestrictError, c.delete)
         self.assertRaises(RestrictError, a.delete)
+        self.assertEqual(RomTestRestrictBOne.query.filter(a=NOT_NULL).count(), 1)
         del b.a
         b.save()
         c.delete()
@@ -1219,6 +1220,78 @@ class TestORM(unittest.TestCase):
         self.assertTrue(RomTestByteString.get_by(scol=by))
         self.assertEqual(RomTestByteString.query.filter(scol=by).count(), 1)
         self.assertEqual(RomTestByteString.query.endswith(scol=by[1:]).count(), 1)
+
+    def test_hooks(self):
+        class RomTestHooks(Model):
+            a = Integer(default=0)
+            def _before_insert(self):
+                self.a += 1
+            def _after_insert(self):
+                self.a += 4
+            def _before_update(self):
+                self.a += 16
+            def _after_update(self):
+                self.a += 64
+            def _before_delete(self):
+                self.a += 256
+            def _after_delete(self):
+                self.a += 1024
+
+        d = RomTestHooks()
+        self.assertEqual(d.a, 0)
+        self.assertTrue(d._new)
+        d.save()
+        self.assertFalse(d._new)
+        self.assertEqual(d.a, 5)
+        d.save() # was modified, thanks to our hooks ;)
+        self.assertEqual(d.a, 85)
+        d.delete()
+        self.assertEqual(d.a, 1365)
+        self.assertTrue(d._deleted)
+
+        def raise_exception():
+            raise ValueError("What!")
+
+        # Make sure that exceptions in the methods cause the operation to fail
+        d = RomTestHooks()
+        del d.a
+        self.assertRaises(TypeError, d.save)
+        self.assertTrue(d._new)
+        d._before_insert = raise_exception
+        self.assertRaises(ValueError, d.save)
+        del d._before_insert
+        d.a = 0
+        d._after_insert = raise_exception
+        self.assertRaises(ValueError, d.save)
+        self.assertEqual(d.a, 1)
+        del d._after_insert
+        d.a = 0
+
+        # test for updates
+        self.assertFalse(d._new)
+        del d.a
+        self.assertRaises(TypeError, d.save)
+        d._before_update = raise_exception
+        self.assertRaises(ValueError, d.save)
+        del d._before_update
+        d.a = 0
+        d._after_update = raise_exception
+        self.assertRaises(ValueError, d.save)
+        self.assertEqual(d.a, 16)
+        del d._after_update
+        d.a = 0
+
+        # and again for deletes
+        del d.a
+        self.assertRaises(TypeError, d.delete)
+        d._before_delete = raise_exception
+        self.assertRaises(ValueError, d.delete)
+        del d._before_delete
+        d.a = 0
+        d._after_delete = raise_exception
+        self.assertRaises(ValueError, d.delete)
+        self.assertEqual(d.a, 256)
+
 
 def main():
     testsFailed = False

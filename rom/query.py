@@ -16,22 +16,13 @@ import uuid
 
 import six
 
-from .columns import (Column, Integer, Boolean, Float, Decimal, DateTime,
-    Date, Time, String, Text, Json, PrimaryKey, ManyToOne,
-    ForeignModel, OneToMany)
-from .exceptions import InvalidOperation, MissingColumn, QueryError
+from .exceptions import QueryError
 from .index import Pattern, Prefix, Suffix
 from .util import (_connect, session, dt2ts, t2ts, _script_load, CASE_INSENSITIVE, SIMPLE)
 
-VERSION = '0.32.1'
-
-COLUMN_TYPES = [Column, Integer, Boolean, Float, Decimal, DateTime, Date,
-Time, String, Text, Json, PrimaryKey, ManyToOne, ForeignModel, OneToMany]
-
 NUMERIC_TYPES = six.integer_types + (float, _Decimal, datetime, date, dtime)
 
-MissingColumn, InvalidOperation # silence pyflakes
-
+NOT_NULL = (None, None)
 
 class Query(object):
     '''
@@ -150,6 +141,13 @@ class Query(object):
                 cur_filters.append('%s:%s'%(attr, value.decode('latin-1')))
 
             elif isinstance(value, tuple):
+                if value is NOT_NULL:
+                    from .columns import OneToOne, ManyToOne
+                    ctype = type(self._model._columns[attr])
+                    if not issubclass(ctype, (OneToOne, ManyToOne)):
+                        raise QueryError("Can only query for non-null column values " \
+                            "on OneToOne or ManyToOne columns, %r is of type %r"%(attr, ctype))
+
                 if len(value) != 2:
                     raise QueryError("Numeric ranges require 2 endpoints, you provided %s with %r"%(len(value), value))
 
@@ -231,7 +229,7 @@ class Query(object):
         to discover those users.
 
             * *\*frank\*@*
-            * *\*frank\*@
+            * *\*frank\*@*
 
         .. note:: Like queries implicitly start at the beginning of strings
           checked, so if you want to match a pattern that doesn't start at

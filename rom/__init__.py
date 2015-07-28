@@ -140,12 +140,12 @@ from .exceptions import (ORMError, UniqueKeyViolation, InvalidOperation,
 from .index import GeneralIndex, Pattern, Prefix, Suffix
 from . import model
 from .model import _ModelMetaclass, Model
-from .query import Query
+from .query import NOT_NULL, Query
 from .util import (ClassProperty, _connect, session,
     _prefix_score, _script_load, _encode_unique_constraint,
     FULL_TEXT, CASE_INSENSITIVE, SIMPLE)
 
-VERSION = '0.32.1'
+VERSION = '0.32.2'
 
 COLUMN_TYPES = [Column, Integer, Boolean, Float, Decimal, DateTime, Date,
 Time, String, Text, Json, PrimaryKey, ManyToOne, ForeignModel, OneToMany,
@@ -178,5 +178,5 @@ def _disable_lua_writes():
 
 __all__ = '''
     Model Column Integer Float Decimal String Text Json PrimaryKey ManyToOne
-    OneToOne ForeignModel OneToOne OneToMany Query session Boolean DateTime Date Time
-    FULL_TEXT CASE_INSENSITIVE SIMPLE'''.split()
+    OneToOne OneToMany ForeignModel Query session Boolean DateTime Date Time
+    FULL_TEXT CASE_INSENSITIVE SIMPLE NOT_NULL'''.split()

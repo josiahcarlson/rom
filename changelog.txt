@@ -1,3 +1,15 @@
+#---------------------------------- 0.32.2 -----------------------------------
+[added] empty base methods for handling commit hooks:
+    _before_insert(), _after_insert(),
+    _before_update(), _after_update(),
+    _before_delete(), _after_delete() - you should override them in your Model
+    subclass to override their default (do nothing) behavior. Feature request
+    thanks to Github user https://github.com/peter-conalgo
+[added] when you need to query a ManyToOne or OneToOne column for references
+    that are not None/NULL, you can now use Model.query.filter(col=NOT_NULL)
+    and get the answer you are looking for. Feature request thanks to Github
+    user https://github.com/peter-conalgo
+[cleaned] the query.py module that I forgot to clean up for 0.32.1
 #---------------------------------- 0.32.1 -----------------------------------
 [changed] made Model.query.all() (a bare query for all entities) behave like
     list(Model.query), thanks to feature request by

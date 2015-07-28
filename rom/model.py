@@ -235,6 +235,24 @@ class Model(six.with_metaclass(_ModelMetaclass, object)):
         self._init = True
         session.add(self)
 
+    def _before_insert(self):
+        "Called before a new entity is saved to Redis"
+
+    def _before_update(self):
+        "Called before a previously-saved entity is saved to Redis"
+
+    def _before_delete(self):
+        "Called before a previously-saved entity is deleted"
+
+    def _after_insert(self):
+        "Called after a new entity has been saved to Redis"
+
+    def _after_update(self):
+        "Called after a previously-saved entity has been saved to Redis"
+
+    def _after_delete(self):
+        "Called after a previously-deleted entity has been deleted from Redis"
+
     @ClassProperty
     def _connection(cls):
         return _connect(cls)
@@ -460,12 +478,24 @@ class Model(six.with_metaclass(_ModelMetaclass, object)):
         Saves the current entity to Redis. Will only save changed data by
         default, but you can force a full save by passing ``full=True``.
         '''
+        # handle the pre-commit hooks
+        was_new = self._new
+        if was_new:
+            self._before_insert()
+        else:
+            self._before_update()
+
         new = self.to_dict()
         ret, data = self._apply_changes(self._last, new, full or self._new)
         self._last = data
         self._new = False
         self._modified = False
         self._deleted = False
+        # handle the post-commit hooks
+        if was_new:
+            self._after_insert()
+        else:
+            self._after_update()
         return ret
 
     def delete(self, **kwargs):
@@ -474,12 +504,18 @@ class Model(six.with_metaclass(_ModelMetaclass, object)):
         specified as part of column definitions.
         '''
         if kwargs.get('skip_on_delete_i_really_mean_it') is not SKIP_ON_DELETE:
+            # handle the pre-commit hook
+            self._before_delete()
+            # handle any foreign key references + cascade options
             _on_delete(self)
 
         session.forget(self)
         self._apply_changes(self._last, {}, delete=True)
         self._modified = True
         self._deleted = True
+        # handle the post-commit hooks
+        if kwargs.get('skip_on_delete_i_really_mean_it') is not SKIP_ON_DELETE:
+            self._after_delete()
 
     def copy(self):
         '''

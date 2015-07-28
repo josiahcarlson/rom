@@ -1,4 +1,4 @@
-# -*- coding: utf-8 -*-
+#
 #
 # rom documentation build configuration file, created by
 # sphinx-quickstart on Sun Apr 21 15:05:03 2013.
@@ -41,7 +41,7 @@ master_doc = 'index'
 
 # General information about the project.
 project = u'rom'
-copyright = u'2013, Josiah Carlson'
+copyright = u'2013-2015, Josiah Carlson'
 
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the
@@ -233,7 +233,7 @@ man_pages = [
 #  dir menu entry, description, category)
 texinfo_documents = [
   ('index', 'rom', u'rom Documentation',
-   u'Josiah Carlson', 'rom', 'One line description of project.',
+   u'Josiah Carlson', 'rom', 'A rich Redis object mapper for Python.',
    'Miscellaneous'),
 ]
 
