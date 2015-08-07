@@ -1,3 +1,22 @@
+#---------------------------------- 0.33.0 -----------------------------------
+[changed] Cleaned up imports and __all__ that was put off after the refactor
+[changed] Entities whose underlying data has changed will raise either the
+    DataRaceError or EntityDeletedError exception, depending on whether the
+    underlying data was changed, or the full entity was deleted. To force save
+    regardless of underlying changes, you can use entity.save(force=True), or
+    the various session methods that also take the force=True argument. Thanks
+    to Github user https://github.com/jmmills for the bug report. Note that
+    these exceptions will only be raised when Lua writes are enabled
+[added] Two new keygen functions for string indexes - IDENTITY and
+    IDENTITY_CI, that allow you to search for exact strings and
+    case-insensitive exact strings. Initial request for keygen thanks to
+    Github user https://github.com/peter-conalgo
+[changed] The CASE_INSENSITIVE keygen has been renamed to SIMPLE_CI to
+    match the naming of IDENTITY/IDENTITY_CI. The old name is still available,
+    but will be deprecated in the future
+[added] warning of future deprecation of disabled Lua writes - we're 3 years
+    into viable Lua support in Redis, and there is no good reason not to
+    enable it
 #---------------------------------- 0.32.2 -----------------------------------
 [added] empty base methods for handling commit hooks:
     _before_insert(), _after_insert(),

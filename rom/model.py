@@ -1,35 +1,37 @@
 
+
+'''
+Rom - the Redis object mapper for Python
+
+Copyright 2013-2015 Josiah Carlson
+
+Released under the LGPL license version 2.1 and version 3 (you can choose
+which you'd like to be bound under).
+'''
+
 from collections import defaultdict
-from datetime import datetime, date, time as dtime
-from decimal import Decimal as _Decimal
-import json
+try:
+    import simplejson as json
+except ImportError:
+    import json
 import warnings
 
 import redis
 import six
 
-from .columns import (Column, Integer, Boolean, Float, Decimal, DateTime,
-    Date, Time, String, Text, Json, PrimaryKey, ManyToOne, OneToOne,
-    ForeignModel, OneToMany, MODELS, MODELS_REFERENCED, _on_delete,
-    SKIP_ON_DELETE)
+from .columns import (Column, Text, PrimaryKey, ManyToOne, OneToOne,
+    OneToMany, MODELS, MODELS_REFERENCED, _on_delete, SKIP_ON_DELETE)
 from .exceptions import (ORMError, UniqueKeyViolation, InvalidOperation,
-    QueryError, ColumnError, MissingColumn, InvalidColumnValue, RestrictError)
-from .index import GeneralIndex, Pattern, Prefix, Suffix
-from .query import Query
+    QueryError, ColumnError, InvalidColumnValue, DataRaceError,
+    EntityDeletedError)
+from .index import GeneralIndex
+from .query import Query, NUMERIC_TYPES
 from .util import (ClassProperty, _connect, session,
     _prefix_score, _script_load, _encode_unique_constraint,
-    FULL_TEXT, CASE_INSENSITIVE, SIMPLE)
+    SIMPLE, IDENTITY, STRING_SORT_KEYGENS)
 
-VERSION = '0.32.1'
-
-COLUMN_TYPES = [Column, Integer, Boolean, Float, Decimal, DateTime, Date,
-Time, String, Text, Json, PrimaryKey, ManyToOne, ForeignModel, OneToMany]
-
-NUMERIC_TYPES = six.integer_types + (float, _Decimal, datetime, date, dtime)
-
-# silence pyflakes
-InvalidOperation, MissingColumn, RestrictError
-Pattern, Suffix, Prefix, FULL_TEXT
+_skip = None
+_skip = set(globals()) - set(['__doc__'])
 
 USE_LUA = True
 
@@ -276,7 +278,7 @@ class Model(six.with_metaclass(_ModelMetaclass, object)):
         return '%s:%s'%(self._namespace, getattr(self, self._pkey))
 
     @classmethod
-    def _apply_changes(cls, old, new, full=False, delete=False):
+    def _apply_changes(cls, old, new, full=False, delete=False, is_new=False):
         use_lua = USE_LUA
         conn = _connect(cls)
         pk = old.get(cls._pkey) or new.get(cls._pkey)
@@ -372,15 +374,15 @@ class Model(six.with_metaclass(_ModelMetaclass, object)):
                             else:
                                 scores['%s:%s'%(attr, k)] = v
                         if ca._prefix:
-                            if ca._keygen not in (SIMPLE, CASE_INSENSITIVE):
+                            if ca._keygen not in STRING_SORT_KEYGENS:
                                 warnings.warn("Prefix indexes are currently not enabled for non-standard keygen functions", stacklevel=2)
                             else:
-                                prefix.append([attr, nval if ca._keygen is SIMPLE else nval.lower()])
+                                prefix.append([attr, nval if ca._keygen in (SIMPLE, IDENTITY) else nval.lower()])
                         if ca._suffix:
-                            if ca._keygen not in (SIMPLE, CASE_INSENSITIVE):
+                            if ca._keygen not in STRING_SORT_KEYGENS:
                                 warnings.warn("Prefix indexes are currently not enabled for non-standard keygen functions", stacklevel=2)
                             else:
-                                ex = (lambda x:x) if ca._keygen is SIMPLE else (lambda x:x.lower())
+                                ex = (lambda x:x) if ca._keygen in (SIMPLE, IDENTITY) else (lambda x:x.lower())
                                 if six.PY2 and isinstance(nval, str) and isinstance(ca, Text):
                                     try:
                                         suffix.append([attr, ex(nval.decode('utf-8')[::-1]).encode('utf-8')])
@@ -446,8 +448,10 @@ class Model(six.with_metaclass(_ModelMetaclass, object)):
 
             id_only = str(pk)
             if use_lua:
-                redis_writer_lua(conn, model, id_only, unique, udeleted,
-                    deleted, data, list(keys), scores, prefix, suffix, delete)
+                old_data = [] if is_new else ([(cls._pkey, str(pk))] + [(k, old.get(k)) for k in data if k in old])
+                redis_writer_lua(conn, cls._pkey, model, id_only, unique, udeleted,
+                    deleted, data, list(keys), scores, prefix, suffix, old_data,
+                    delete)
                 return changes, redis_data
             elif delete:
                 changes += 1
@@ -473,10 +477,13 @@ class Model(six.with_metaclass(_ModelMetaclass, object)):
         '''
         return dict(self._data)
 
-    def save(self, full=False):
+    def save(self, full=False, force=False):
         '''
         Saves the current entity to Redis. Will only save changed data by
         default, but you can force a full save by passing ``full=True``.
+
+        If the underlying entity was deleted and you want to re-save the entity,
+        you can pass ``force=True`` to force a full re-save of the entity.
         '''
         # handle the pre-commit hooks
         was_new = self._new
@@ -486,7 +493,8 @@ class Model(six.with_metaclass(_ModelMetaclass, object)):
             self._before_update()
 
         new = self.to_dict()
-        ret, data = self._apply_changes(self._last, new, full or self._new)
+        ret, data = self._apply_changes(
+            self._last, new, full or self._new or force, is_new=self._new or force)
         self._last = data
         self._new = False
         self._modified = False
@@ -670,7 +678,22 @@ class Model(six.with_metaclass(_ModelMetaclass, object)):
 _redis_writer_lua = _script_load('''
 local namespace = ARGV[1]
 local id = ARGV[2]
+local row_key = string.format('%s:%s', namespace, id)
 local is_delete = cjson.decode(ARGV[11])
+
+if not is_delete then
+    -- check to make sure we don't have a data race condition
+    local updated = {}
+    for i, pair in ipairs(cjson.decode(ARGV[12])) do
+        local odata = redis.call('HGET', row_key, pair[1])
+        if odata ~= pair[2] then
+            table.insert(updated, pair[1])
+        end
+    end
+    if #updated > 0 then
+        return cjson.encode({race=updated})
+    end
+end
 
 -- check and update unique column constraints
 for i, write in ipairs({false, true}) do
@@ -681,7 +704,7 @@ for i, write in ipairs({false, true}) do
         else
             local known = redis.call('HGET', key, value)
             if known ~= id and known ~= false then
-                return col
+                return cjson.encode({unique=col})
             end
         end
     end
@@ -705,7 +728,7 @@ end
 -- update changed/added columns
 local data = cjson.decode(ARGV[6])
 if #data > 0 then
-    redis.call('HMSET', string.format('%s:%s', namespace, id), unpack(data))
+    redis.call('HMSET', row_key, unpack(data))
 end
 
 -- remove old index data, update util.clean_index_lua when changed
@@ -775,7 +798,7 @@ if not is_delete then
     local encoded = cjson.encode({nkeys, nscored, nprefix, nsuffix})
     redis.call('HSET', namespace .. '::', id, encoded)
 end
-return #nkeys + #nscored + #nprefix + #nsuffix
+return cjson.encode({changes=#nkeys + #nscored + #nprefix + #nsuffix})
 ''')
 
 def _fix_bytes(d):
@@ -785,8 +808,8 @@ def _fix_bytes(d):
         return d.decode('latin-1')
     raise TypeError
 
-def redis_writer_lua(conn, namespace, id, unique, udelete, delete, data, keys,
-                     scored, prefix, suffix, is_delete):
+def redis_writer_lua(conn, pkey, namespace, id, unique, udelete, delete, data, keys,
+                     scored, prefix, suffix, old_data, is_delete):
     ldata = []
     for pair in data.items():
         ldata.extend(pair)
@@ -796,9 +819,19 @@ def redis_writer_lua(conn, namespace, id, unique, udelete, delete, data, keys,
     for item in suffix:
         item.append(_prefix_score(item[-1]))
 
-    result = _redis_writer_lua(conn, [], [namespace, id] + [json.dumps(x, default=_fix_bytes)
-        for x in [unique, udelete, delete, ldata, keys, scored, prefix, suffix, is_delete]])
-    if isinstance(result, six.binary_type):
+    data = [json.dumps(x, default=_fix_bytes) for x in
+            (unique, udelete, delete, ldata, keys, scored, prefix, suffix, is_delete, old_data)]
+    result = _redis_writer_lua(conn, [], [namespace, id] + data)
+    if six.PY3:
         result = result.decode()
+    result = json.loads(result)
+    if 'unique' in result:
+        result = result['unique']
         raise UniqueKeyViolation("Value %r for %s:%s:uidx not distinct"%(unique[result], namespace, result))
+    if 'race' in result:
+        result = result['race']
+        if pkey in result:
+            raise EntityDeletedError("Entity with id=%s deleted by another writer; use .save(force=True) to re-save"%(id,))
+        raise DataRaceError("Column(s) %r updated by another writer, write aborted!"%(result,))
 
+__all__ = [k for k, v in globals().items() if getattr(v, '__doc__', None) and k not in _skip]

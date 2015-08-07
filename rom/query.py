@@ -18,7 +18,12 @@ import six
 
 from .exceptions import QueryError
 from .index import Pattern, Prefix, Suffix
-from .util import (_connect, session, dt2ts, t2ts, _script_load, CASE_INSENSITIVE, SIMPLE)
+from .util import (_connect, session, dt2ts, t2ts, _script_load,
+    CASE_INSENSITIVE, SIMPLE_CI, IDENTITY_CI,
+    STRING_SORT_KEYGENS, STRING_SORT_KEYGENS_STR)
+
+_skip = None
+_skip = set(globals()) - set(['__doc__'])
 
 NUMERIC_TYPES = six.integer_types + (float, _Decimal, datetime, date, dtime)
 
@@ -56,7 +61,7 @@ class Query(object):
             raise QueryError("Cannot use 'endswith' clause on a column defined with 'suffix=False'")
 
         if value is not None:
-            if col._keygen is CASE_INSENSITIVE:
+            if col._keygen in (SIMPLE_CI, CASE_INSENSITIVE, IDENTITY_CI):
                 value = value.lower()
             return value
         return col
@@ -252,11 +257,12 @@ class Query(object):
         '''
         cname = column.lstrip('-')
         col = self._check(cname)
-        if type(col).__name__ in ('String', 'Text', 'Json') and col._keygen not in (SIMPLE, CASE_INSENSITIVE):
+        if type(col).__name__ in ('String', 'Text', 'Json') and col._keygen not in STRING_SORT_KEYGENS:
             warnings.warn("You are trying to order by a non-numeric column %r. "
                           "Unless you have provided your own keygen or are using "
-                          "rom.SIMPLE or rom.CASE_INSENSITIVE, this probably won't "
-                          "work the way you expect it to."%(cname,), stacklevel=2)
+                          "one of the sortable keygens: (%s), this probably won't "
+                          "work the way you expect it to."%(cname, STRING_SORT_KEYGENS_STR),
+                          stacklevel=2)
 
         return self.replace(order_by=column)
 
@@ -530,3 +536,5 @@ while #contents > 0 do
 end
 return cjson.encode({cursor, results})
 ''')
+
+__all__ = [k for k, v in globals().items() if getattr(v, '__doc__', None) and k not in _skip]

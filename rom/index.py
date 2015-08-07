@@ -18,6 +18,9 @@ import six
 from .exceptions import QueryError
 from .util import _prefix_score, _script_load, _to_score
 
+_skip = None
+_skip = set(globals()) - set(['__doc__'])
+
 Prefix = namedtuple('Prefix', 'attr prefix')
 Suffix = namedtuple('Suffix', 'attr suffix')
 Pattern = namedtuple('Pattern', 'attr pattern')
@@ -461,3 +464,5 @@ def estimate_work_lua(conn, index, prefix):
         return _estimate_work_lua2(conn, [index], [], force_eval=True)
     start, end = _start_end(prefix)
     return _estimate_work_lua(conn, [index], [start, end], force_eval=True)
+
+__all__ = [k for k, v in globals().items() if getattr(v, '__doc__', None) and k not in _skip]

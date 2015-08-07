@@ -93,15 +93,12 @@ import weakref
 import warnings
 
 import redis
-from redis.client import BasePipeline
 import six
 
 from .exceptions import ORMError
 
-__all__ = '''
-    get_connection Session refresh_indices set_connection_settings
-    clean_old_index show_progress use_null_session use_rom_session
-    CASE_INSENSITIVE FULL_TEXT SIMPLE'''.split()
+_skip = None
+_skip = set(globals()) - set(['__doc__'])
 
 CONNECTION = redis.Redis()
 USE_LUA = True
@@ -230,22 +227,56 @@ def SIMPLE(val):
         comparison ordering (especially if an order is different based on
         characters past the 7th encoded byte).
     '''
-    if isinstance(val, float):
-        val = repr(val)
-    elif val in (None, ''):
+    if not val:
         return None
-    elif not isinstance(val, six.string_types):
+    if not isinstance(val, six.string_types):
         if six.PY3 and isinstance(val, bytes):
             val = val.decode('latin-1')
         else:
             val = str(val)
     return {'': _prefix_score(val)}
 
-def CASE_INSENSITIVE(val):
+def SIMPLE_CI(val):
     '''
     The same as SIMPLE, only case-insensitive.
     '''
     return SIMPLE(val.lower())
+
+def CASE_INSENSITIVE(val):
+    '''
+    Old alias for SIMPLE_CI
+    '''
+    return SIMPLE_CI(val)
+
+def IDENTITY(val):
+    '''
+    This is a basic "equality" index keygen, primarily meant to be used for
+    things like::
+
+        Model.query.filter(col='value')
+
+    Where ``FULL_TEXT`` would transform a sentence like "A Simple Sentence" into
+    an inverted index searchable by the words "a", "simple", and/or "sentence",
+    ``IDENTITY`` will only be searchable by the orginal full sentence with the
+    same capitalization - "A Simple Sentence". See ``IDENTITY_CI`` for the
+    same function, only case-insensitive.
+    '''
+    if not val:
+        return None
+    if not isinstance(val, six.string_types_ex):
+        val = str(val)
+    return [val]
+
+def IDENTITY_CI(val):
+    '''
+    Case-insensitive version of IDENTITY
+    '''
+    return IDENTITY(val.lower())
+
+STRING_INDEX_KEYGENS = (FULL_TEXT, SIMPLE, SIMPLE_CI, IDENTITY, IDENTITY_CI, CASE_INSENSITIVE)
+STRING_INDEX_KEYGENS_STR = ', '.join(x.__name__ for x in STRING_INDEX_KEYGENS)
+STRING_SORT_KEYGENS = (SIMPLE, SIMPLE_CI, CASE_INSENSITIVE)
+STRING_SORT_KEYGENS_STR = ', '.join(x.__name__ for x in STRING_SORT_KEYGENS)
 
 def _many_to_one_keygen(val):
     if val is None:
@@ -388,7 +419,7 @@ class Session(threading.local):
         self.known = {}
         self.wknown = weakref.WeakValueDictionary()
 
-    def flush(self, full=False, all=False):
+    def flush(self, full=False, all=False, force=False):
         '''
         Call ``.save()`` on all modified entities in the session. Use when you
         want to flush changes to Redis, but don't want to lose your local
@@ -401,10 +432,10 @@ class Session(threading.local):
         changes = 0
         for value in self.known.values():
             if not value._deleted and (all or value._modified):
-                changes += value.save(full)
+                changes += value.save(full, force)
         return changes
 
-    def commit(self, full=False, all=False):
+    def commit(self, full=False, all=False, force=False):
         '''
         Call ``.save()`` on all modified entities in the session. Also forgets
         all known entities in the session, so this should only be called at
@@ -416,8 +447,10 @@ class Session(threading.local):
               changes
             * *all* - pass ``True`` to save all entities known, not only those
               entities that have been modified.
+            * *full* - pass ``True`` to force-save all entities known, ignoring
+              DataRaceError and EntityDeletedError exceptions
         '''
-        changes = self.flush(full, all)
+        changes = self.flush(full, all, force)
         self.known = {}
         return changes
 
@@ -432,19 +465,20 @@ class Session(threading.local):
 
         And the entities will be flushed to Redis.
 
-        You can pass the keyword arguments ``full`` and ``all`` with the same
-        meaning and semantics as the ``.commit()`` method.
+        You can pass the keyword arguments ``full``, ``all``, and ``force`` with
+        the same meaning and semantics as the ``.commit()`` method.
         '''
         from rom import Model
         full = kwargs.get('full')
         all = kwargs.get('all')
+        force = kwargs.get('force')
         changes = 0
         for o in objects:
             if isinstance(o, (list, tuple)):
-                changes += self.save(*o, full=full, all=all)
+                changes += self.save(*o, full=full, all=all, force=force)
             elif isinstance(o, Model):
                 if not o._deleted and (all or o._modified):
-                    changes += o.save(full)
+                    changes += o.save(full, force)
             else:
                 raise ORMError(
                     "Cannot save an object that is not an instance of a Model (you provided %r)"%(
@@ -756,3 +790,5 @@ for _, id in ipairs(ARGV) do
 end
 return cleaned
 ''')
+
+__all__ = [k for k, v in globals().items() if getattr(v, '__doc__', None) and k not in _skip]

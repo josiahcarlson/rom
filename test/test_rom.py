@@ -117,6 +117,8 @@ class TestORM(unittest.TestCase):
         self.assertRaises(MissingColumn, RomTestIndexModel)
         item = RomTestIndexModel(key="hello")
         item.save()
+        item2 = item.copy()
+        self.assertRaises(UniqueKeyViolation, item2.save)
 
         m = RomTestIndexModel.get_by(key="hello")
         self.assertTrue(m)
@@ -497,7 +499,7 @@ class TestORM(unittest.TestCase):
         class RomTestPSP(Model):
             col = Text(prefix=True, suffix=True, keygen=FULL_TEXT)
             col2 = Text(prefix=True, suffix=True, keygen=SIMPLE)
-            col3 = Text(prefix=True, suffix=True, keygen=CASE_INSENSITIVE)
+            col3 = Text(prefix=True, suffix=True, keygen=SIMPLE_CI)
 
         x = RomTestPSP(col="hello world how are you doing, join us today",
                        col2="This is just another Test",
@@ -539,27 +541,35 @@ class TestORM(unittest.TestCase):
 
         class RomTestUnicode1(Model):
             col = Text(index=True, unique=True, keygen=FULL_TEXT)
+            col2 = Text(index=True, keygen=IDENTITY)
 
-        RomTestUnicode1(col=pre).save()
-        RomTestUnicode1(col=suf).save()
+        RomTestUnicode1(col=pre, col2=pre).save()
+        RomTestUnicode1(col=suf, col2=suf).save()
 
-        self.assertEqual(RomTestUnicode1.query.filter(col=pre).count(), 1)
-        self.assertEqual(RomTestUnicode1.query.filter(col=suf).count(), 1)
+        self.assertEqual(RomTestUnicode1.query.filter(col=pre, col2=pre).count(), 1)
+        self.assertEqual(RomTestUnicode1.query.filter(col=suf, col2=suf).count(), 1)
         self.assertTrue(RomTestUnicode1.get_by(col=pre))
+        self.assertTrue(RomTestUnicode1.get_by(col2=pre))
         self.assertTrue(RomTestUnicode1.get_by(col=suf))
+        self.assertTrue(RomTestUnicode1.get_by(col2=suf))
 
         import rom
         if rom.USE_LUA:
             class RomTestUnicode2(Model):
                 col = Text(prefix=True, suffix=True, keygen=FULL_TEXT)
+                col2 = Text(prefix=True, suffix=True, keygen=IDENTITY)
 
-            RomTestUnicode2(col=pre).save()
-            RomTestUnicode2(col=suf).save()
+            RomTestUnicode2(col=pre, col2=pre).save()
+            RomTestUnicode2(col=suf, col2=suf).save()
 
             self.assertEqual(RomTestUnicode2.query.startswith(col="h").count(), 1)
+            self.assertEqual(RomTestUnicode2.query.startswith(col2="h").count(), 1)
             self.assertEqual(RomTestUnicode2.query.startswith(col=ch).count(), 1)
+            self.assertEqual(RomTestUnicode2.query.startswith(col2=ch).count(), 1)
             self.assertEqual(RomTestUnicode2.query.endswith(col="o").count(), 1)
+            self.assertEqual(RomTestUnicode2.query.endswith(col2="o").count(), 1)
             self.assertEqual(RomTestUnicode2.query.endswith(col=ch).count(), 1)
+            self.assertEqual(RomTestUnicode2.query.endswith(col2=ch).count(), 1)
 
     def test_infinite_ranges(self):
         """ Infinite range lookups via None in tuple.
@@ -1186,7 +1196,7 @@ class TestORM(unittest.TestCase):
     def test_order_string_index(self):
         class RomTestOrderString(Model):
             test_s = string(index=True, keygen=SIMPLE)
-            test_c = string(index=True, keygen=CASE_INSENSITIVE)
+            test_c = string(index=True, keygen=SIMPLE_CI)
 
         RomTestOrderString(test_s='Hello', test_c='World 2').save()
         RomTestOrderString(test_s='hello', test_c='world 1').save()
@@ -1292,6 +1302,29 @@ class TestORM(unittest.TestCase):
         self.assertRaises(ValueError, d.delete)
         self.assertEqual(d.a, 256)
 
+    def test_data_race(self):
+        if not util.USE_LUA:
+            return
+
+        class RomTestDataRace(Model):
+            col = Integer()
+        x = RomTestDataRace(col=5)
+        x.save()
+        session.rollback()
+        y = RomTestDataRace.get(x.id)
+        self.assertTrue(y)
+        self.assertNotEqual(x, y)
+        y.col = 6
+        y.save()
+        session.rollback()
+        x.col = 7
+        self.assertRaises(DataRaceError, x.save)
+        self.assertRaises(DataRaceError, session.commit)
+        x.refresh(force=True)
+        x.save()
+        y.delete()
+        self.assertRaises(EntityDeletedError, x.save)
+        x.save(force=True)
 
 def main():
     testsFailed = False

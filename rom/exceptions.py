@@ -2,7 +2,7 @@
 __all__ = '''
     ORMError UniqueKeyViolation InvalidOperation
     QueryError ColumnError MissingColumn
-    InvalidColumnValue RestrictError'''.split()
+    InvalidColumnValue RestrictError DataRaceError EntityDeletedError'''.split()
 
 class ORMError(Exception):
     'Base class for all ORM-related errors'
@@ -18,6 +18,15 @@ class QueryError(InvalidOperation):
 
 class RestrictError(InvalidOperation):
     'Raised when deleting an object referenced by other objects'
+
+class DataRaceError(InvalidOperation):
+    'Raised when more than one writer tries to update the same columns on the same entity'
+
+class EntityDeletedError(InvalidOperation):
+    # This could be a sub-class of DataRaceError, but the DataRaceError has a
+    # possibly different resolution path, and we don't want the order of except
+    # clauses to mess up a user's ability to solve their problems.
+    'Raised when another writer deleted the entity from Redis; use .save(force=True) to re-save'
 
 class ColumnError(ORMError):
     'Raised when your column definitions are not kosher'

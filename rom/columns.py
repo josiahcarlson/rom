@@ -11,7 +11,6 @@ which you'd like to be bound under).
 from datetime import datetime, date, time as dtime
 from decimal import Decimal as _Decimal
 import json
-import warnings
 
 import six
 
@@ -19,7 +18,8 @@ from .exceptions import (ORMError, InvalidOperation, ColumnError,
     MissingColumn, InvalidColumnValue, RestrictError)
 from .util import (_numeric_keygen, _string_keygen, _many_to_one_keygen,
     _boolean_keygen, dt2ts, ts2dt, t2ts, ts2t, session, _connect,
-    FULL_TEXT, CASE_INSENSITIVE, SIMPLE)
+    STRING_INDEX_KEYGENS_STR)
+
 
 NULL = object()
 MODELS = {}
@@ -122,9 +122,9 @@ _missing_keygen_warning = '''You have not specified a keygen for generating keys
 to index your String() or Text() column. By default, rom has been using its
 FULL_TEXT index on these columns in the past, but now requests/requires the
 specification of a keygen function. Provide an explicit keygen argument of
-rom.FULL_TEXT, rom.SIMPLE, rom.CASE_INSENSITIVE or some other keygen that
+%s or some other keygen that
 matches the rom index API to remove this warning. This warning will become an
-exception in rom >= 0.31.0.'''.replace('\n', ' ')
+exception in rom >= 0.31.0.'''.replace('\n', ' ')%STRING_INDEX_KEYGENS_STR
 
 class Column(object):
     '''
@@ -233,7 +233,7 @@ class Column(object):
                     raise ColumnError("Non-numeric/string indexed columns must provide keygen argument on creation")
 
         if (index or prefix or suffix) and is_string and keygen is None:
-            raise ColumnError("Indexed string column missing explicit keygen argument, try rom.FULL_TEXT, rom.SIMPLE, or rom.CASE_INSENSITIVE")
+            raise ColumnError("Indexed string column missing explicit keygen argument, try one of: %s"%STRING_INDEX_KEYGENS_STR)
 
         if index:
             self._keygen = keygen if keygen else (
@@ -462,10 +462,12 @@ class String(Column):
     All standard arguments and String/Text arguments supported. See ``Column``
     for details on supported arguments.
 
-    This column can be indexed in one of three ways - a sorted index on a 7
+    This column can be indexed in one of five ways - a sorted index on a 7
     byte prefix of the value (``keygen=rom.SIMPLE``), a sorted index on a
-    lowercased 7 byte prefix of the value (``keygen=rom.CASE_INSENSITIVE``),
-    or a case-insensitive full-text index (``keygen=rom.FULL_TEXT``).
+    lowercased 7 byte prefix of the value (``keygen=rom.SIMPLE_CI``),
+    a case-insensitive full-text index (``keygen=rom.FULL_TEXT``),
+    a case-sensitive identity index (``keygen=rom.IDENTITY``), and a
+    case-insensitive identity index (``keygen=rom.IDENTITY_CI``).
 
     Used via::
 
@@ -481,19 +483,21 @@ class Text(Column):
     A unicode string column. Behavior is more or less identical to the String
     column type, except that unicode is supported (unicode in 2.x, str in 3.x).
     UTF-8 is used by default as the encoding to bytes on the wire, which *will*
-    affect ``rom.SIMPLE`` and ``rom.CASE_INSENSITIVE`` indexes.
+    affect ``rom.SIMPLE`` and ``rom.SIMPLE_CI`` indexes.
 
     All standard arguments supported. See ``Column`` for details on supported
     arguments.
 
-    This column can be indexed in one of three ways - a sorted index on a 7
+    This column can be indexed in one of five ways - a sorted index on a 7
     byte prefix of the value (``keygen=rom.SIMPLE``), a sorted index on a
-    lowercased 7 byte prefix of the value (``keygen=rom.CASE_INSENSITIVE``),
-    or a case-insensitive full-text index (``keygen=rom.FULL_TEXT``).
+    lowercased 7 byte prefix of the value (``keygen=rom.SIMPLE_CI``),
+    a case-insensitive full-text index (``keygen=rom.FULL_TEXT``),
+    a case-sensitive identity index (``keygen=rom.IDENTITY``), and a
+    case-insensitive identity index (``keygen=rom.IDENTITY_CI``).
 
     For the 7 byte prefix/suffixes on indexes using the ``rom.SIMPLE`` and
-    ``rom.CASE_INSENSITIVE`` keygen, because we use UTF-8 to encode text, a
-    single character can turn into 1-3 bytes.
+    ``rom.SIMPLE_CI`` keygen, because we use UTF-8 to encode text, a single
+    character can turn into 1-3 bytes, so may not be useful in practice.
 
     Used via::
 
@@ -784,3 +788,6 @@ class OneToMany(Column):
 
     def __delete__(self, obj):
         raise InvalidOperation("Cannot delete OneToMany relationships")
+
+COLUMN_TYPES = [v for v in globals().values() if isinstance(v, type) and issubclass(v, Column)]
+__all__ = [v.__name__ for v in COLUMN_TYPES] + 'MODELS MODELS_REFERENCED ON_DELETE'.split()
