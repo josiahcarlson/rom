@@ -1,7 +1,16 @@
 language: python
+sudo: required
+services:
+  - docker
+env:
+  matrix:
+    - REDIS_VERSION=2.6
+    - REDIS_VERSION=2.8
+    - REDIS_VERSION=3.0
+before_install:
+  - docker pull redis:$REDIS_VERSION
+  - docker run -d -p 6379:6379 redis
 install:
   - pip install tox
 script:
   - make test-tox
-services:
-  - redis-server
