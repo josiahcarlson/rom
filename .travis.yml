@@ -9,7 +9,7 @@ env:
     - REDIS_VERSION=3.0
 before_install:
   - docker pull redis:$REDIS_VERSION
-  - docker run -d -p 6379:6379 redis
+  - docker run -d -p 6379:6379 redis:$REDIS_VERSION
 install:
   - pip install tox
 script:
