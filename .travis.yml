@@ -8,6 +8,8 @@ env:
     - REDIS_VERSION=2.8
     - REDIS_VERSION=3.0
 before_install:
+  - sudo apt-get update
+  - sudo apt-get install lxc-docker
   - docker pull redis:$REDIS_VERSION
   - docker run -d -p 6379:6379 redis:$REDIS_VERSION
 install:
