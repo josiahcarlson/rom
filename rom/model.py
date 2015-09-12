@@ -35,6 +35,8 @@ _skip = set(globals()) - set(['__doc__'])
 
 USE_LUA = True
 
+_STRING_SORT_KEYGENS = [ss.__name__ for ss in STRING_SORT_KEYGENS]
+
 class _ModelMetaclass(type):
     def __new__(cls, name, bases, dict):
         ns = dict.pop('_namespace', None)
@@ -350,14 +352,20 @@ class Model(six.with_metaclass(_ModelMetaclass, object)):
 
                 # Add/update standard index
                 if ca._keygen and not delete and nval is not None and (ca._index or ca._prefix or ca._suffix):
-                    generated = ca._keygen(nval)
-                    if isinstance(generated, (list, tuple, set)):
+                    generated = ca._keygen(attr, new)
+                    if not generated:
+                        # No index entries, we'll clean out old ones as necessary
+                        continue
+
+                    elif isinstance(generated, (list, tuple, set)):
                         if ca._index:
                             for k in generated:
                                 keys.add('%s:%s'%(attr, k))
+
                         if ca._prefix:
                             for k in generated:
                                 prefix.append([attr, k])
+
                         if ca._suffix:
                             for k in generated:
                                 if six.PY2 and isinstance(k, str) and isinstance(ca, Text):
@@ -367,22 +375,29 @@ class Model(six.with_metaclass(_ModelMetaclass, object)):
                                         suffix.append([attr, k[::-1]])
                                 else:
                                     suffix.append([attr, k[::-1]])
+
                     elif isinstance(generated, dict):
-                        for k, v in generated.items():
-                            if not k:
-                                scores[attr] = v
-                            else:
-                                scores['%s:%s'%(attr, k)] = v
+                        if ca._index:
+                            for k, v in generated.items():
+                                if not k:
+                                    scores[attr] = v
+                                elif v in (None, ''):
+                                    # mixed index type support
+                                    keys.add('%s:%s'%(attr, k))
+                                else:
+                                    scores['%s:%s'%(attr, k)] = v
+
                         if ca._prefix:
-                            if ca._keygen not in STRING_SORT_KEYGENS:
+                            if ca._keygen.__name__ not in _STRING_SORT_KEYGENS:
                                 warnings.warn("Prefix indexes are currently not enabled for non-standard keygen functions", stacklevel=2)
                             else:
-                                prefix.append([attr, nval if ca._keygen in (SIMPLE, IDENTITY) else nval.lower()])
+                                prefix.append([attr, nval if ca._keygen.__name__ in ('SIMPLE', 'IDENTITY') else nval.lower()])
+
                         if ca._suffix:
-                            if ca._keygen not in STRING_SORT_KEYGENS:
+                            if ca._keygen.__name__ not in _STRING_SORT_KEYGENS:
                                 warnings.warn("Prefix indexes are currently not enabled for non-standard keygen functions", stacklevel=2)
                             else:
-                                ex = (lambda x:x) if ca._keygen in (SIMPLE, IDENTITY) else (lambda x:x.lower())
+                                ex = (lambda x:x) if ca._keygen.__name__ in ('SIMPLE', 'IDENTITY') else (lambda x:x.lower())
                                 if six.PY2 and isinstance(nval, str) and isinstance(ca, Text):
                                     try:
                                         suffix.append([attr, ex(nval.decode('utf-8')[::-1]).encode('utf-8')])
@@ -390,8 +405,7 @@ class Model(six.with_metaclass(_ModelMetaclass, object)):
                                         suffix.append([attr, ex(nval[::-1])])
                                 else:
                                     suffix.append([attr, ex(nval[::-1])])
-                    elif not generated:
-                        pass
+
                     else:
                         raise ColumnError("Don't know how to turn %r into a sequence of keys"%(generated,))
 

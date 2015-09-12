@@ -101,8 +101,11 @@ from .exceptions import ORMError
 _skip = None
 _skip = set(globals()) - set(['__doc__'])
 
-REDIS_URI = os.environ.get('ROM_REDIS_URI', 'tcp://localhost:6379')
-CONNECTION = redis.Redis().from_url(REDIS_URI)
+if redis.VERSION >= (2, 8):
+    REDIS_URI = os.environ.get('ROM_REDIS_URI', 'redis://localhost:6379/0')
+    CONNECTION = redis.Redis.from_url(REDIS_URI)
+else:
+    CONNECTION = redis.Redis()
 USE_LUA = True
 
 def set_connection_settings(*args, **kwargs):
@@ -615,7 +618,7 @@ def clean_old_index(model, block_size=100, **kwargs):
         raise Exception("Lua must be enabled to clean out old indexes")
 
     conn = _connect(model)
-    version = list(map(int, conn.info('server')['redis_version'].split('.')[:2]))
+    version = list(map(int, conn.info()['redis_version'].split('.')[:2]))
     has_hscan = version >= [2, 8]
     pipe = conn.pipeline(True)
     prefix = '%s:'%model._namespace
@@ -708,6 +711,7 @@ def show_progress(job):
             last_print = time.time()
     print()
 
+NO_SCRIPT_MESSAGES = ['NOSCRIPT', 'No matching script.']
 def _script_load(script):
     '''
     Borrowed/modified from my book, Redis in Action:
@@ -736,7 +740,7 @@ def _script_load(script):
                     "EVALSHA", sha[0], len(keys), *(keys+args))
 
             except redis.exceptions.ResponseError as msg:
-                if not msg.args[0].startswith("NOSCRIPT"):
+                if not any(msg.args[0].startswith(nsm) for nsm in NO_SCRIPT_MESSAGES):
                     raise
 
         return conn.execute_command(

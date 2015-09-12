@@ -1124,7 +1124,7 @@ class TestORM(unittest.TestCase):
             RomTestCleanOld(col1=i, col3=str(i)).save()
         session.rollback()
 
-        version = list(map(int, c.info('server')['redis_version'].split('.')[:2]))
+        version = list(map(int, c.info()['redis_version'].split('.')[:2]))
         has_hscan = version >= [2, 8]
         if has_hscan:
             self.assertEqual(len(RomTestCleanOld.query.all()), _count)
@@ -1134,7 +1134,8 @@ class TestORM(unittest.TestCase):
         self.assertTrue(all(c.hexists('RomTestNamespacedCleanup::', i) for i in to_delete))
         all(util.clean_old_index(RomTestCleanOld, 10, force_hscan=has_hscan))
         self.assertTrue(all(not c.hexists('RomTestNamespacedCleanup::', i) for i in to_delete))
-        self.assertTrue(all(not c.hexists('RomTestNamespacedCleanup:col3:uidx', i) for i in to_delete))
+        if has_hscan:
+            self.assertTrue(all(not c.hexists('RomTestNamespacedCleanup:col3:uidx', i) for i in to_delete))
 
         to_delete = list(range(minid+29, minid + _count, 29))
         c.delete(*['RomTestNamespacedCleanup:%i'%i for i in to_delete])
@@ -1325,6 +1326,44 @@ class TestORM(unittest.TestCase):
         y.delete()
         self.assertRaises(EntityDeletedError, x.save)
         x.save(force=True)
+
+    def test_keygen2(self):
+        string = String if six.PY2 else Text
+        def kg2(attr, data):
+            keys = set(FULL_TEXT(data.get('a')) or [])
+            keys.update(FULL_TEXT(data.get('b')) or [])
+            return keys
+
+        class RomTestKeygen2(Model):
+            a = string(index=True, keygen2=kg2)
+            b = string()
+
+        RomTestKeygen2(a='hello world', b='how are you').save()
+        self.assertEqual(RomTestKeygen2.query.filter(a='hello').filter(a='are').count(), 1)
+
+    def test_multiindex(self):
+        string = String if six.PY2 else Text
+        def kg(val):
+            keys = dict.fromkeys(val.split())
+            for k in list(keys):
+                if k.isdigit():
+                    keys['v:'+k] = int(k)
+            return keys
+        class RomTestMultiindex(Model):
+            a = string(index=True, keygen=kg)
+        RomTestMultiindex(a='hello world 123').save()
+        self.assertEqual(RomTestMultiindex.query.filter(a='hello').count(), 1)
+        self.assertEqual(RomTestMultiindex.query.filter(**{'a:v:123':(120, 125)}).count(), 1)
+
+    ## def test_script_flush(self):
+        ## if util.USE_LUA:
+            ## c = connect(None)
+            ## script = util._script_load('''
+                ## return 1
+            ## ''')
+            ## self.assertEqual(script(c), 1)
+            ## c.execute_command('SCRIPT', 'FLUSH', parse="FLUSH")
+            ## self.assertEqual(script(c), 1)
 
 def main():
     testsFailed = False

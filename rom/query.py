@@ -28,6 +28,7 @@ _skip = set(globals()) - set(['__doc__'])
 NUMERIC_TYPES = six.integer_types + (float, _Decimal, datetime, date, dtime)
 
 NOT_NULL = (None, None)
+_STRING_SORT_KEYGENS = [ss.__name__ for ss in STRING_SORT_KEYGENS]
 
 class Query(object):
     '''
@@ -43,7 +44,7 @@ class Query(object):
         self._limit = limit
 
     def _check(self, column, value=None, which='order_by'):
-        column = column.strip('-')
+        column = column.strip('-').partition(':')[0]
         col = self._model._columns.get(column)
         if not col:
             raise QueryError("Cannot use '%s' clause on a non-existent column %r"%(which, column))
@@ -61,7 +62,7 @@ class Query(object):
             raise QueryError("Cannot use 'endswith' clause on a column defined with 'suffix=False'")
 
         if value is not None:
-            if col._keygen in (SIMPLE_CI, CASE_INSENSITIVE, IDENTITY_CI):
+            if col._keygen.__name__ in ('SIMPLE_CI', 'CASE_INSENSITIVE', 'IDENTITY_CI'):
                 value = value.lower()
             return value
         return col
@@ -257,7 +258,7 @@ class Query(object):
         '''
         cname = column.lstrip('-')
         col = self._check(cname)
-        if type(col).__name__ in ('String', 'Text', 'Json') and col._keygen not in STRING_SORT_KEYGENS:
+        if type(col).__name__ in ('String', 'Text', 'Json') and col._keygen.__name__ not in _STRING_SORT_KEYGENS:
             warnings.warn("You are trying to order by a non-numeric column %r. "
                           "Unless you have provided your own keygen or are using "
                           "one of the sortable keygens: (%s), this probably won't "
@@ -322,7 +323,7 @@ class Query(object):
             if self._model._columns[self._model._pkey]._index:
                 return self._iter_all_pkey()
             conn = _connect(self._model)
-            version = list(map(int, conn.info('server')['redis_version'].split('.')[:2]))
+            version = list(map(int, conn.info()['redis_version'].split('.')[:2]))
             if version >= [2,8] and not no_hscan:
                 return self._iter_all_hscan()
             return self._iter_all()

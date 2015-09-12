@@ -1,3 +1,35 @@
+#---------------------------------- 0.34.0 -----------------------------------
+[added] For column definitions that previously took a `keygen` argument, you
+    can isntead pass a `keygen2` argument. This `keygen2` argument will be a
+    callable that accepts 2 arguments, the name of the key, and the dictionary
+    representing the data that will be written to Redis when the save has been
+    completed - warning: modifying this dictionary could lead to unpredictable
+    and/or unexpected behavior
+[changed] If an explicit keygen/keygen2 argument is specified on column
+    creation, you must pass `index=True`, `prefix=True`, or `suffix=True` to
+    prevent errors
+[changed] Previously if a keygen and any either prefix/suffix were set to True
+    on column creation, you would get "as a bonus" a numeric index for sorting
+    data by that column. To re-enable this, you must pass `index=True` (the
+    extra index was not intended)
+[changed] If your keygen function returns a dictionary, that dictionary can be
+    used for both full-text indexes as well as scored value indexes - None or
+    empty string values in the dictionary will be used for string keys,
+    numeric values will be used for numeric indexes
+[fixed] Tests for index cleanup would fail under Redis 2.6, even though that
+    test failure was expected under Redis 2.6 . That specific test is now
+    skipped, and the warning produced during index cleanup informs the user of
+    the Redis 2.6 issue. Thanks to Github user https://github.com/thedrow for
+    the PR that demonstrated this issue
+[added] Thanks to Github user https://github.com/thedrow for additional tests
+    for various Redis versions via Travis-ci
+[added] Thanks to Github user https://github.com/jmmills for the PR to provide
+    the ability to use the environment variable ROM_REDIS_URI to pass
+    connection configuration information into rom
+[fixed] Script execution after "SCRIPT FLUSH" has mostly been fixed, thanks to
+    Github user https://github.com/thedrow for the initial PR/bug report for
+    updating to fix new Redis client versions - note that you really should
+    restart your rom-using daemons after a SCRIPT FLUSH call to Redis.
 #---------------------------------- 0.33.0 -----------------------------------
 [changed] Cleaned up imports and __all__ that was put off after the refactor
 [changed] Entities whose underlying data has changed will raise either the

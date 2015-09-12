@@ -10,6 +10,7 @@ which you'd like to be bound under).
 
 from datetime import datetime, date, time as dtime
 from decimal import Decimal as _Decimal
+from functools import wraps
 import json
 
 import six
@@ -118,6 +119,12 @@ def _check_on_delete(on_delete, required, default):
         elif on_delete == 'set default' and default in (NULL, None):
             return ColumnError("on_delete action is 'set default', but this required column has no default")
 
+def _keygen_wrapper(keygen):
+    @wraps(keygen)
+    def _wrapper(attr, dct):
+        return keygen(dct.get(attr))
+    return _wrapper
+
 _missing_keygen_warning = '''You have not specified a keygen for generating keys
 to index your String() or Text() column. By default, rom has been using its
 FULL_TEXT index on these columns in the past, but now requests/requires the
@@ -153,6 +160,9 @@ class Column(object):
         * *keygen* - pass a function that takes your column's value and
           returns the data that you want to index (see the keygen docs for
           what kinds of data to return)
+        * *keygen2* - pass a function that takes your column name and the dict
+          representing the current entity's complete data - can be used for
+          creating multi-column indexes
 
     String/Text arguments:
 
@@ -201,7 +211,7 @@ class Column(object):
 
     __slots__ = '_required _default _init _unique _index _model _attr _keygen _prefix _suffix'.split()
 
-    def __init__(self, required=False, default=NULL, unique=False, index=False, keygen=None, prefix=False, suffix=False):
+    def __init__(self, required=False, default=NULL, unique=False, index=False, keygen=None, prefix=False, suffix=False, keygen2=None):
         self._required = required
         self._default = default
         self._unique = unique
@@ -213,6 +223,9 @@ class Column(object):
         self._attr = None
         self._keygen = None
 
+        if (keygen or keygen2) and not (index or prefix or suffix):
+            raise ColumnError("Explicit keygen provided, but no index type spcified (index, prefix, and suffix all False)")
+
         if not self._allowed and not hasattr(self, '_fmodel') and not hasattr(self, '_ftable'):
             raise ColumnError("Missing valid _allowed attribute")
 
@@ -222,6 +235,14 @@ class Column(object):
         if unique:
             if not (is_string or is_integer):
                 raise ColumnError("Unique columns can only be strings or integers")
+
+        if keygen and keygen2:
+            raise ColumnError("Can only specify one of 'keygen' and 'keygen2' arguments at a time, you provided both")
+
+        if keygen2:
+            # new-style keygen is ready :D
+            self._keygen = keygen2
+            return
 
         numeric = True
         if index and not isinstance(self, (ManyToOne, OneToOne)):
@@ -236,10 +257,14 @@ class Column(object):
             raise ColumnError("Indexed string column missing explicit keygen argument, try one of: %s"%STRING_INDEX_KEYGENS_STR)
 
         if index:
-            self._keygen = keygen if keygen else (
+            keygen = keygen if keygen else (
                 _numeric_keygen if numeric else _string_keygen)
         elif prefix or suffix:
-            self._keygen = keygen if keygen else _string_keygen
+            keygen = keygen if keygen else _string_keygen
+
+        if keygen:
+            # old-style keygen needs a wrapper
+            self._keygen = _keygen_wrapper(keygen)
 
     def _from_redis(self, value):
         convert = self._allowed[0] if isinstance(self._allowed, (tuple, list)) else self._allowed
