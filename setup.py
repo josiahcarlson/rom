@@ -30,6 +30,6 @@ setup(
     license='GNU LGPL v2.1',
     long_description=long_description,
     requires=['redis', 'six'],
-    install_requires=['redis', 'six'],
+    install_requires=['redis>=2.7.0', 'six'],
 )
 

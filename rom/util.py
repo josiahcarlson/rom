@@ -735,9 +735,8 @@ def _script_load(script):
                 return conn.execute_command(
                     "EVALSHA", sha[0], len(keys), *(keys+args))
 
-            except redis.exceptions.ResponseError as msg:
-                if not msg.args[0].startswith("NOSCRIPT"):
-                    raise
+            except redis.exceptions.NoScriptError:
+                pass
 
         return conn.execute_command(
             "EVAL", script, len(keys), *(keys+args))
