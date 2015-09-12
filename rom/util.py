@@ -92,6 +92,7 @@ import time
 import weakref
 import warnings
 
+import os
 import redis
 import six
 
@@ -100,7 +101,8 @@ from .exceptions import ORMError
 _skip = None
 _skip = set(globals()) - set(['__doc__'])
 
-CONNECTION = redis.Redis()
+REDIS_URI = os.environ.get('ROM_REDIS_URI', 'tcp://localhost:6379')
+CONNECTION = redis.Redis().from_url(REDIS_URI)
 USE_LUA = True
 
 def set_connection_settings(*args, **kwargs):
