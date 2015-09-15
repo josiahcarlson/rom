@@ -10,10 +10,7 @@ which you'd like to be bound under).
 '''
 
 from collections import defaultdict
-try:
-    import simplejson as json
-except ImportError:
-    import json
+import json
 import warnings
 
 import redis

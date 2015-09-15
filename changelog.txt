@@ -1,3 +1,6 @@
+#---------------------------------- 0.34.1 -----------------------------------
+[changed] Removed the simplejson import at the top of model.py - it was an
+    accidental testing change that made it through a previous release
 #---------------------------------- 0.34.0 -----------------------------------
 [added] For column definitions that previously took a `keygen` argument, you
     can isntead pass a `keygen2` argument. This `keygen2` argument will be a
