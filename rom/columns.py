@@ -207,7 +207,6 @@ class Column(object):
           matches (aka: expensive)
     '''
     _allowed = ()
-    _default_ = None
 
     __slots__ = '_required _default _init _unique _index _model _attr _keygen _prefix _suffix'.split()
 
@@ -227,7 +226,7 @@ class Column(object):
             raise ColumnError("Explicit keygen provided, but no index type spcified (index, prefix, and suffix all False)")
 
         if not self._allowed and not hasattr(self, '_fmodel') and not hasattr(self, '_ftable'):
-            raise ColumnError("Missing valid _allowed attribute")
+            raise ColumnError("Missing valid class-level _allowed attribute on %r"%(type(self),))
 
         allowed = (self._allowed,) if isinstance(self._allowed, type) else self._allowed
         is_string = all(issubclass(x, six.string_types_ex) for x in allowed)
@@ -267,7 +266,7 @@ class Column(object):
             self._keygen = _keygen_wrapper(keygen)
 
     def _from_redis(self, value):
-        convert = self._allowed[0] if isinstance(self._allowed, (tuple, list)) else self._allowed
+        convert = self._allowed if callable(self._allowed) else self._allowed[0]
         return convert(value)
 
     def _to_redis(self, value):
@@ -501,7 +500,18 @@ class String(Column):
     '''
     _allowed = str if six.PY2 else bytes
     def _to_redis(self, value):
+        return value.decode('latin-1').encode('utf-8')
+
+    def _from_redis(self, value):
         return value
+
+    def _init_(self, obj, model, attr, value, loading):
+        if value != None:
+            if not isinstance(value, self._allowed):
+                value = value.encode('latin-1')
+            if loading and (USE_LUA or six.PY2):
+                value = value.decode('utf-8').encode('latin-1')
+        return Column._init_(self, obj, model, attr, value, loading)
 
 class Text(Column):
     '''

@@ -35,6 +35,7 @@ test:
 	PYTHONPATH=`pwd` python2.7 test/test_rom.py
 	PYTHONPATH=`pwd` python3.3 test/test_rom.py
 	PYTHONPATH=`pwd` python3.4 test/test_rom.py
+	PYTHONPATH=`pwd` python3.5 test/test_rom.py
 
 install-test-requirements:
 	sudo apt-get install python2.6 python2.6-dev python2.7 python2.7-dev python3.3 python3.3-dev python3.4 python3.4-dev
@@ -47,6 +48,8 @@ install-test-requirements:
 	sudo python3.3 -m pip install redis hiredis six
 	sudo python3.4 -m pip install setuptools
 	sudo python3.4 -m pip install redis hiredis six
+	sudo python3.5 -m pip install setuptools
+	sudo python3.5 -m pip install redis hiredis six
 
 test-tox:
 	tox

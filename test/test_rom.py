@@ -9,6 +9,8 @@ which you'd like to be bound under).
 '''
 
 from __future__ import print_function
+import base64
+import binascii
 from datetime import datetime, timedelta
 from decimal import Decimal as _Decimal
 import sys
@@ -1328,7 +1330,6 @@ class TestORM(unittest.TestCase):
         x.save(force=True)
 
     def test_keygen2(self):
-        string = String if six.PY2 else Text
         def kg2(attr, data):
             keys = set(FULL_TEXT(data.get('a')) or [])
             keys.update(FULL_TEXT(data.get('b')) or [])
@@ -1342,15 +1343,16 @@ class TestORM(unittest.TestCase):
         self.assertEqual(RomTestKeygen2.query.filter(a='hello').filter(a='are').count(), 1)
 
     def test_multiindex(self):
-        string = String if six.PY2 else Text
         def kg(val):
             keys = dict.fromkeys(val.split())
             for k in list(keys):
                 if k.isdigit():
                     keys['v:'+k] = int(k)
             return keys
+
         class RomTestMultiindex(Model):
             a = string(index=True, keygen=kg)
+
         RomTestMultiindex(a='hello world 123').save()
         self.assertEqual(RomTestMultiindex.query.filter(a='hello').count(), 1)
         self.assertEqual(RomTestMultiindex.query.filter(**{'a:v:123':(120, 125)}).count(), 1)
@@ -1364,6 +1366,40 @@ class TestORM(unittest.TestCase):
             ## self.assertEqual(script(c), 1)
             ## c.execute_command('SCRIPT', 'FLUSH', parse="FLUSH")
             ## self.assertEqual(script(c), 1)
+
+    def test_binary2(self):
+        class TestBinaryData2(Model):
+            value = String()
+        self.test_binary(TestBinaryData2, ''.join(chr(i) for i in range(256)))
+
+    def test_binary(self, TestBinaryData=None, bad=None):
+        if not bad:
+            bad = base64.b64decode(b'UEsDBBQAAAAIACUdX0djd8CXNQEAAAoCAAAYAAAAeGwvd29ya3NoZQ==')
+            if six.PY3:
+                bad = bad.decode('latin-1')
+
+        if not TestBinaryData:
+            class TestBinaryData(Model):
+                value = String()
+
+        d = TestBinaryData(value=bad)
+        d.save()
+
+        id = d.id
+        del d
+        session.rollback()
+        d = TestBinaryData.get(id)
+        dv = d.value
+        ## print(type(dv), type(bad))
+        if six.PY3:
+            # This right here is ridiculous. The 2.x way was 10x better.
+            ## print(binascii.hexlify(d.value))
+            ## print(binascii.hexlify(bad.encode('latin-1')))
+            self.assertEqual(d.value, bad.encode('latin-1'))
+        else:
+            ## print(d.value.encode('hex'))
+            ## print(bad.encode('hex'))
+            self.assertEqual(d.value, bad)
 
 def main():
     testsFailed = False

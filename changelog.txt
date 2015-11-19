@@ -1,3 +1,15 @@
+#---------------------------------- 0.35.0 -----------------------------------
+[added] Now supporting Python 3.5
+[changed] Removed unnecessary class-level _default attribute on Column objects
+    (it was alway overridden by the instance __slots__)
+[fixed] Thanks to a bug report by Github user https://github.com/Edorka from
+    4 weeks ago, rom now has proper round-tripping for *all* binary data
+    stored in String columns. Previously, some data would not decode properly
+    on reading, forcing users to base-64 encode their data on the way in and
+    out. This is no longer necessary. :D
+[fixed] Also fixed an issue with String columns not working properly with
+    Python 3.x; bug report thanks to Github user https://github.com/summer1988
+[added] tests for binary data
 #---------------------------------- 0.34.1 -----------------------------------
 [changed] Removed the simplejson import at the top of model.py - it was an
     accidental testing change that made it through a previous release
