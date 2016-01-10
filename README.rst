@@ -125,3 +125,31 @@ If you are using a version of Redis prior to 2.6, you should upgrade Redis. If
 you are unable or unwilling to upgrade Redis, but you still wish to use rom,
 you should call ``rom._disable_lua_writes()``, which will prevent you from
 using features that require Lua scripting support.
+
+Expiring models/TTLs
+====================
+
+There is a series of feature requests/bug reports/pull requests to add the
+ability for rom to automatically delete and/or expire entity data stored in
+Redis. This is a request that has been made (as of January 2016) 6 different
+times.
+
+Long story short: rom stores a bunch of data in secondary structures to make
+querying fast. When a model "expires", that data doesn't get deleted. To
+delete that data, you have to run a cleanup function that literally has to
+scan over every entity in order to determine if the model had been expired. That
+is a huge waste and is the antithesis of good design.
+
+Instead, if you create a new ``expire_at`` float column with ``index=True``,
+the column can store when the entity is to expire. Then to expire the data, you
+can use: ``Model.query.filter(expire_at=(0, time.time())).limit(10)`` to (for
+example) get up to the 10 oldest entites that need to be expired.
+
+Now, I know what you are thinking. You are thinking, "but I wish the data would
+just go away on its own." And I don't disagree. But for that to happen, Redis
+needs to grow Lua-script triggers, or you need to run a separate daemon to
+periodically clean up lef-over data. But ... if you need to run a separate
+daemon to clean up left-over data by scanning all of your rom entities,
+wouldn't it just be better/faster in every way to keep an explicit column and do
+it efficiently? I think so, and you should too.
+

@@ -1,3 +1,6 @@
+#---------------------------------- 0.35.1 -----------------------------------
+[added] documentation about expiring models/ttls. This is going to be a docs-
+    only update.
 #---------------------------------- 0.35.0 -----------------------------------
 [added] Now supporting Python 3.5
 [changed] Removed unnecessary class-level _default attribute on Column objects
