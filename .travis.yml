@@ -13,7 +13,8 @@ before_install:
   - sudo apt-get update
   - sudo apt-get purge lxc-docker
   - sudo apt-get update
-  - sudo apt-get install lxc-docker
+  - sudo apt-get install docker-engine
+  - sudo service docker start
   - docker pull redis:$REDIS_VERSION
   - docker run -d -p 6379:6379 redis:$REDIS_VERSION
 install:
