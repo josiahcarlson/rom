@@ -92,7 +92,7 @@ class TestORM(unittest.TestCase):
         self.assertRaises(MissingColumn, lambda: RomTestBasicModel(created_at=7))
 
         # try object saving/loading
-        x = RomTestBasicModel(val=1, req="hello")
+        x = RomTestBasicModel(val=1, req=b"h\xd0\x80llo".decode('utf-8'))
         x.save()
         id = x.id
         x = x.to_dict()
@@ -111,6 +111,10 @@ class TestORM(unittest.TestCase):
         yd.pop('id')
         self.assertEqual(yd, zd)
         ## self.assertTrue(abs(cay-caz) < .005, cay-caz)
+        if util.USE_LUA:
+            util.session.rollback()
+            self.assertEqual([m.id for m in RomTestBasicModel.query], [id])
+            self.assertEqual([m.id for m in RomTestBasicModel.query.iter_result(no_hscan=True)], [id])
 
     def test_unique_index(self):
         class RomTestIndexModel(Model):

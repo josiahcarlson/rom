@@ -391,7 +391,7 @@ class Query(object):
         while cursor != '0' and remaining > 0:
             result = _scan_fetch_index_hash(conn, [ns, tkey], [cursor, json.dumps(ids or '')])
             if isinstance(result, six.binary_type):
-                result = result.decode()
+                result = result.decode('utf-8')
             cursor, data = json.loads(result)
 
             ids = []

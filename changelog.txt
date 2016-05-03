@@ -1,3 +1,8 @@
+#---------------------------------- 0.35.3 -----------------------------------
+[fixed] a unicode decoding issue in some cases when iterating over data that
+    wasn't filtered. Thanks to Axel for the email report and 1-line fix :)
+[added] unittests to cover the two paths that weren't previously covered for
+    no-filter data traversal.
 #---------------------------------- 0.35.2 -----------------------------------
 [fixed] fixed the travis-ci build.
 #---------------------------------- 0.35.1 -----------------------------------
