@@ -29,10 +29,13 @@ class EntityDeletedError(InvalidOperation):
     'Raised when another writer deleted the entity from Redis; use .save(force=True) to re-save'
 
 class ColumnError(ORMError):
-    'Raised when your column definitions are not kosher'
+    'Raised when your column definitions are not correct'
 
 class MissingColumn(ColumnError):
     'Raised when a model has a required column, but it is not provided on construction'
 
 class InvalidColumnValue(ColumnError):
     'Raised when you attempt to pass a primary key on entity creation or when data assigned to a column is the wrong type'
+
+class BulkError(ORMError):
+    'Raised when using session.commit(fast=True) or equivalent, and there is at least one error.'

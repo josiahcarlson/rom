@@ -2,7 +2,7 @@
 '''
 Rom - the Redis object mapper for Python
 
-Copyright 2013-2015 Josiah Carlson
+Copyright 2013-2016 Josiah Carlson
 
 Released under the LGPL license version 2.1 and version 3 (you can choose
 which you'd like to be bound under).
@@ -10,7 +10,6 @@ which you'd like to be bound under).
 
 from __future__ import print_function
 import base64
-import binascii
 from datetime import datetime, timedelta
 from decimal import Decimal as _Decimal
 import sys
@@ -27,10 +26,10 @@ util.CONNECTION = redis.Redis(db=15)
 connect = util._connect
 
 from rom import *
-from rom import _disable_lua_writes, _enable_lua_writes
 from rom.exceptions import *
 
 string = String if six.PY2 else Text
+
 
 def global_setup():
     c = connect(None)
@@ -111,10 +110,10 @@ class TestORM(unittest.TestCase):
         yd.pop('id')
         self.assertEqual(yd, zd)
         ## self.assertTrue(abs(cay-caz) < .005, cay-caz)
-        if util.USE_LUA:
-            util.session.rollback()
-            self.assertEqual([m.id for m in RomTestBasicModel.query], [id])
-            self.assertEqual([m.id for m in RomTestBasicModel.query.iter_result(no_hscan=True)], [id])
+
+        util.session.rollback()
+        self.assertEqual([m.id for m in RomTestBasicModel.query], [id])
+        self.assertEqual([m.id for m in RomTestBasicModel.query.iter_result(no_hscan=True)], [id])
 
     def test_unique_index(self):
         class RomTestIndexModel(Model):
@@ -277,7 +276,7 @@ class TestORM(unittest.TestCase):
         self.assertEqual(RomTestIndexedModel.query.filter(attr='world', attr5=_Decimal('2.643')).count(), 2)
 
         results = RomTestIndexedModel.query.filter(attr='world').order_by('attr4').execute()
-        self.assertEqual([x.id for x in results], [2,1])
+        self.assertEqual([y.id for y in results], [2,1])
 
         for i in range(50):
             RomTestIndexedModel(attr3=i)
@@ -293,12 +292,12 @@ class TestORM(unittest.TestCase):
         self.assertEqual(conn.zcard(key), 1)
         conn.delete(key)
         self.assertRaises(QueryError, lambda: RomTestIndexedModel.query.order_by('attr6'))
-        if not util.USE_LUA:
-            # Only the first call raises the warning, so only bother to call it
-            # for our first pass through tests (non-Lua case).
-            with warnings.catch_warnings(record=True) as w:
-                RomTestIndexedModel.query.order_by('attr')
-                self.assertEqual(len(w), 1)
+
+        # Only the first call raises the warning, so only bother to call it
+        # for our first pass through tests (non-Lua case).
+        with warnings.catch_warnings(record=True) as w:
+            RomTestIndexedModel.query.order_by('attr')
+            self.assertEqual(len(w), 1)
 
     def test_alternate_models(self):
         ctr = [0]
@@ -498,10 +497,6 @@ class TestORM(unittest.TestCase):
         self.assertEqual(len(RomTestDT.get_by(event_datetime=(datetime(2000, 1, 1), datetime.utcnow()))), 2)
 
     def test_prefix_suffix_pattern(self):
-        import rom
-        if not rom.USE_LUA:
-            return
-
         class RomTestPSP(Model):
             col = Text(prefix=True, suffix=True, keygen=FULL_TEXT)
             col2 = Text(prefix=True, suffix=True, keygen=SIMPLE)
@@ -540,7 +535,6 @@ class TestORM(unittest.TestCase):
         self.assertEqual(RomTestPSP.query.like(col3="nope").count(), 0)
 
     def test_unicode_text(self):
-        import rom
         ch = unichr(0xfeff) if six.PY2 else chr(0xfeff)
         pre = ch + 'hello'
         suf = 'hello' + ch
@@ -559,23 +553,21 @@ class TestORM(unittest.TestCase):
         self.assertTrue(RomTestUnicode1.get_by(col=suf))
         self.assertTrue(RomTestUnicode1.get_by(col2=suf))
 
-        import rom
-        if rom.USE_LUA:
-            class RomTestUnicode2(Model):
-                col = Text(prefix=True, suffix=True, keygen=FULL_TEXT)
-                col2 = Text(prefix=True, suffix=True, keygen=IDENTITY)
+        class RomTestUnicode2(Model):
+            col = Text(prefix=True, suffix=True, keygen=FULL_TEXT)
+            col2 = Text(prefix=True, suffix=True, keygen=IDENTITY)
 
-            RomTestUnicode2(col=pre, col2=pre).save()
-            RomTestUnicode2(col=suf, col2=suf).save()
+        RomTestUnicode2(col=pre, col2=pre).save()
+        RomTestUnicode2(col=suf, col2=suf).save()
 
-            self.assertEqual(RomTestUnicode2.query.startswith(col="h").count(), 1)
-            self.assertEqual(RomTestUnicode2.query.startswith(col2="h").count(), 1)
-            self.assertEqual(RomTestUnicode2.query.startswith(col=ch).count(), 1)
-            self.assertEqual(RomTestUnicode2.query.startswith(col2=ch).count(), 1)
-            self.assertEqual(RomTestUnicode2.query.endswith(col="o").count(), 1)
-            self.assertEqual(RomTestUnicode2.query.endswith(col2="o").count(), 1)
-            self.assertEqual(RomTestUnicode2.query.endswith(col=ch).count(), 1)
-            self.assertEqual(RomTestUnicode2.query.endswith(col2=ch).count(), 1)
+        self.assertEqual(RomTestUnicode2.query.startswith(col="h").count(), 1)
+        self.assertEqual(RomTestUnicode2.query.startswith(col2="h").count(), 1)
+        self.assertEqual(RomTestUnicode2.query.startswith(col=ch).count(), 1)
+        self.assertEqual(RomTestUnicode2.query.startswith(col2=ch).count(), 1)
+        self.assertEqual(RomTestUnicode2.query.endswith(col="o").count(), 1)
+        self.assertEqual(RomTestUnicode2.query.endswith(col2="o").count(), 1)
+        self.assertEqual(RomTestUnicode2.query.endswith(col=ch).count(), 1)
+        self.assertEqual(RomTestUnicode2.query.endswith(col2=ch).count(), 1)
 
     def test_infinite_ranges(self):
         """ Infinite range lookups via None in tuple.
@@ -876,9 +868,6 @@ class TestORM(unittest.TestCase):
         self.assertEqual(len(b.get_by(col=ia)), 0)
 
     def test_prefix_suffix1(self):
-        from rom import columns
-        if not columns.USE_LUA:
-            return
         class RomTestPerson(Model):
             name = Text(prefix=True, suffix=True, index=True, keygen=FULL_TEXT)
 
@@ -904,9 +893,6 @@ class TestORM(unittest.TestCase):
         self.assertEqual(RomTestPerson.query.like(name='*asao*').count(), 5)
 
     def test_prefix_suffix2(self):
-        from rom import columns
-        if not columns.USE_LUA:
-            return
         class RomTestPerson2(Model):
             idPerson = string(prefix=True, suffix=True, index=True, keygen=FULL_TEXT)
             description = string(prefix=True, suffix=True, index=True, keygen=FULL_TEXT)
@@ -964,7 +950,7 @@ class TestORM(unittest.TestCase):
             col1 = Integer(index=True)
 
         for i in range(10):
-            a = RomTestIndexClear(col1=i)
+            RomTestIndexClear(col1=i)
 
         session.commit()
         session.rollback()
@@ -983,10 +969,6 @@ class TestORM(unittest.TestCase):
         self.assertEqual(RomTestIndexClear.query.count(), 0)
 
     def test_multi_col_unique_index(self):
-        from rom import columns
-        if not columns.USE_LUA:
-            return
-
         class RomTestCompositeUnique(Model):
             col1 = Integer()
             col2 = Integer()
@@ -1081,10 +1063,6 @@ class TestORM(unittest.TestCase):
             col2 = ManyToOne('RomTestO2M__', 'no action')
 
     def test_clean_old_index(self):
-        from rom import util
-        if not util.USE_LUA:
-            return
-
         class RomTestCleanOld(Model):
             _namespace = 'RomTestNamespacedCleanup'
             col1 = Integer(index=True)
@@ -1170,7 +1148,7 @@ class TestORM(unittest.TestCase):
         self.assertEqual(len(RomTestIndexMultiCol.query.filter(attr1='548ef7ee7b77b93ab41ksjh3', attr2=['1']).execute()), 0)
 
     def test_namespace(self):
-        _ex = {'prefix':True, 'suffix':True, 'keygen':FULL_TEXT} if util.USE_LUA else {}
+        _ex = {'prefix':True, 'suffix':True, 'keygen':FULL_TEXT}
         class TestNamespace(Model):
             _namespace = 'RomTestNamespace'
             test_i = Integer(index=True)
@@ -1190,12 +1168,11 @@ class TestORM(unittest.TestCase):
         self.assertEqual(a.get_by(test_i=(3, 5)), [a])
         self.assertEqual(a.get_by(test_i=6), [])
         self.assertEqual(a.get_by(test_s='hello'), a)
-        if util.USE_LUA:
-            self.assertEqual(a.query.startswith(test_s='hel').all(), [a])
-            self.assertEqual(a.query.startswith(test_s='hel0').all(), [])
-            self.assertEqual(a.query.endswith(test_s='lo').all(), [a])
-            self.assertEqual(a.query.endswith(test_s='llo').all(), [a])
-            self.assertEqual(a.query.endswith(test_s='elo').all(), [])
+        self.assertEqual(a.query.startswith(test_s='hel').all(), [a])
+        self.assertEqual(a.query.startswith(test_s='hel0').all(), [])
+        self.assertEqual(a.query.endswith(test_s='lo').all(), [a])
+        self.assertEqual(a.query.endswith(test_s='llo').all(), [a])
+        self.assertEqual(a.query.endswith(test_s='elo').all(), [])
         self.assertEqual(a.get_by(test_t='this'), [a])
         self.assertEqual(a.get_by(test_t=['test', 'blah']), [a])
         self.assertEqual(a.query.count(), 1)
@@ -1226,8 +1203,6 @@ class TestORM(unittest.TestCase):
 
     def test_string_in_3x(self):
         if six.PY2:
-            return
-        if not util.USE_LUA:
             return
         by = 'hello'.encode('utf-8')
         class RomTestByteString(Model):
@@ -1310,9 +1285,6 @@ class TestORM(unittest.TestCase):
         self.assertEqual(d.a, 256)
 
     def test_data_race(self):
-        if not util.USE_LUA:
-            return
-
         class RomTestDataRace(Model):
             col = Integer()
         x = RomTestDataRace(col=5)
@@ -1362,38 +1334,36 @@ class TestORM(unittest.TestCase):
         self.assertEqual(RomTestMultiindex.query.filter(**{'a:v:123':(120, 125)}).count(), 1)
 
     ## def test_script_flush(self):
-        ## if util.USE_LUA:
-            ## c = connect(None)
-            ## script = util._script_load('''
-                ## return 1
-            ## ''')
-            ## self.assertEqual(script(c), 1)
-            ## c.execute_command('SCRIPT', 'FLUSH', parse="FLUSH")
-            ## self.assertEqual(script(c), 1)
+        ## c = connect(None)
+        ## script = util._script_load('''
+            ## return 1
+        ## ''')
+        ## self.assertEqual(script(c), 1)
+        ## c.execute_command('SCRIPT', 'FLUSH', parse="FLUSH")
+        ## self.assertEqual(script(c), 1)
 
     def test_binary2(self):
-        class TestBinaryData2(Model):
+        class RomTestBinaryData2(Model):
             value = String()
-        self.test_binary(TestBinaryData2, ''.join(chr(i) for i in range(256)))
+        self.test_binary(RomTestBinaryData2, ''.join(chr(i) for i in range(256)))
 
-    def test_binary(self, TestBinaryData=None, bad=None):
+    def test_binary(self, RomTestBinaryData=None, bad=None):
         if not bad:
             bad = base64.b64decode(b'UEsDBBQAAAAIACUdX0djd8CXNQEAAAoCAAAYAAAAeGwvd29ya3NoZQ==')
             if six.PY3:
                 bad = bad.decode('latin-1')
 
-        if not TestBinaryData:
-            class TestBinaryData(Model):
+        if not RomTestBinaryData:
+            class RomTestBinaryData(Model):
                 value = String()
 
-        d = TestBinaryData(value=bad)
+        d = RomTestBinaryData(value=bad)
         d.save()
 
         id = d.id
         del d
         session.rollback()
-        d = TestBinaryData.get(id)
-        dv = d.value
+        d = RomTestBinaryData.get(id)
         ## print(type(dv), type(bad))
         if six.PY3:
             # This right here is ridiculous. The 2.x way was 10x better.
@@ -1405,34 +1375,30 @@ class TestORM(unittest.TestCase):
             ## print(bad.encode('hex'))
             self.assertEqual(d.value, bad)
 
+    def _test_filter_performance(self):
+        import time
+        class RomTestFilterPerformance(Model):
+            id = PrimaryKey(index=True)
+
+        ids = []
+        for i in range(10000):
+            a = RomTestFilterPerformance()
+            a.save()
+            ids.append(a.id)
+        session.rollback()
+
+        t = time.time()
+        for i in range(100):
+            RomTestFilterPerformance.query.filter(id=(1, 1)).cached_result(30)
+        print("\nelapsed: ", time.time()-t)
+
+
 def main():
-    testsFailed = False
-    _disable_lua_writes()
     global_setup()
-    print("Testing standard writing")
     try:
         unittest.main()
-    except SystemExit as err:
-        testsFailed = testsFailed or err.code
-    data = get_state()
-    global_setup()
-    _enable_lua_writes()
-    print("Testing Lua writing")
-    try:
-        unittest.main()
-    except SystemExit as err:
-        testsFailed = testsFailed or err.code
-    lua_data = get_state()
-    global_setup()
-
-    if testsFailed:
-        raise Exception("Tests failed.")
-
-    ## if data != lua_data:
-        ## print("WARNING: Regular/Lua data writing does not match!")
-        ## import pprint
-        ## pprint.pprint(data)
-        ## pprint.pprint(lua_data)
+    finally:
+        global_setup()
 
 if __name__ == '__main__':
     main()

@@ -2,7 +2,7 @@
 '''
 Rom - the Redis object mapper for Python
 
-Copyright 2013-2015 Josiah Carlson
+Copyright 2013-2016 Josiah Carlson
 
 Released under the LGPL license version 2.1 and version 3 (you can choose
 which you'd like to be bound under).
@@ -24,6 +24,7 @@ _skip = set(globals()) - set(['__doc__'])
 Prefix = namedtuple('Prefix', 'attr prefix')
 Suffix = namedtuple('Suffix', 'attr suffix')
 Pattern = namedtuple('Pattern', 'attr pattern')
+
 
 SPECIAL = re.compile('([-().%[^$])')
 def _pattern_to_lua_pattern(pat):
@@ -145,11 +146,11 @@ class GeneralIndex(object):
               ``column_name:key`` to index
             * *scores* - a dictionary mapping ``column_name`` to numeric
               scores and/or mapping ``column_name:key`` to numeric scores
-            * *prefix* - an iterable sequence of strings that will be used for
-              prefix matching
-            * *suffix* - an iterable sequence of strings that will be used for
-              suffix matching (each string is likely to be a reversed version
-              of *pre*, but this is not required)
+            * *prefix* - an iterable sequence of (attr, key) pairs that will be
+              used for prefix matching
+            * *suffix* - an iterable sequence of (attr, key) pairs that will be
+              used for suffix matching (each string is likely to be a reversed
+              version of *pre*, but this is not required)
 
         This will automatically unindex the provided id before
         indexing/re-indexing.
@@ -178,7 +179,8 @@ class GeneralIndex(object):
         temp_id = "%s:%s"%(self.namespace, uuid.uuid4())
         pipe = conn.pipeline(True)
         sfilters = filters
-        if len(filters) > 1:
+        sizes = [(None, 0)]
+        if filters:
             # reorder filters based on the size of the underlying set/zset
             for fltr in filters:
                 if isinstance(fltr, six.string_types):
@@ -189,18 +191,22 @@ class GeneralIndex(object):
                     estimate_work_lua(pipe, '%s:%s:suf'%(self.namespace, fltr.attr), fltr.suffix)
                 elif isinstance(fltr, Pattern):
                     estimate_work_lua(pipe, '%s:%s:pre'%(self.namespace, fltr.attr), _find_prefix(fltr.pattern))
-                elif isinstance(fltr, (tuple, list)):
+                elif isinstance(fltr, list):
                     estimate_work_lua(pipe, '%s:%s:idx'%(self.namespace, fltr[0]), None)
+                elif isinstance(fltr, tuple):
+                    estimate_work_lua(pipe, '%s:%s:idx'%(self.namespace, fltr[0]), fltr[1:3])
                 else:
                     raise QueryError("Don't know how to handle a filter of: %r"%(fltr,))
             sizes = list(enumerate(pipe.execute()))
-            sizes.sort(key=lambda x:x[1])
+            sizes.sort(key=lambda x:abs(x[1]))
             sfilters = [filters[x[0]] for x in sizes]
 
-        # the first "intersection" is actually a union to get us started
+        # the first "intersection" is actually a union to get us started, unless
+        # we can explicitly create a sub-range in Lua for a fast start to
+        # intersection
         intersect = pipe.zunionstore
         first = True
-        for fltr in sfilters:
+        for ii, fltr in enumerate(sfilters):
             if isinstance(fltr, list):
                 # or string string/tag search
                 if len(fltr) == 1:
@@ -232,11 +238,20 @@ class GeneralIndex(object):
                 if len(fltr) != 3:
                     raise QueryError("Cannot filter range of data without 2 endpoints (%s given)"%(len(fltr)-1,))
                 fltr, mi, ma = fltr
-                intersect(temp_id, {temp_id:0, '%s:%s:idx'%(self.namespace, fltr):1})
-                if mi is not None:
-                    pipe.zremrangebyscore(temp_id, '-inf', _to_score(mi, True))
-                if ma is not None:
-                    pipe.zremrangebyscore(temp_id, _to_score(ma, True), 'inf')
+                if not ii and sizes[0][1] < 0:
+                    # We've got a special case where we want to explicitly extract
+                    # a subrange instead of starting from a larger index, because
+                    # it turns out that this is going to be faster :P
+                    lua_subrange(pipe, [temp_id, '%s:%s:idx'%(self.namespace, fltr)],
+                        ['-inf' if mi is None else _to_score(mi), 'inf' if ma is None else _to_score(ma)]
+                    )
+
+                else:
+                    intersect(temp_id, {temp_id:0, '%s:%s:idx'%(self.namespace, fltr):1})
+                    if mi is not None:
+                        pipe.zremrangebyscore(temp_id, '-inf', _to_score(mi, True))
+                    if ma is not None:
+                        pipe.zremrangebyscore(temp_id, _to_score(ma, True), 'inf')
             first = False
             intersect = pipe.zinterstore
         return pipe, intersect, temp_id
@@ -418,39 +433,81 @@ def redis_prefix_lua(conn, dest, index, prefix, is_first, pattern=None):
         [start, end, pattern or prefix, int(pattern is not None), int(bool(is_first))]
     )
 
-_estimate_work_lua = _script_load('''
--- We could use the ZADD/ZREM stuff from our prefix searching if we have a
--- prefix, but this is only an estimate, and it doesn't make sense to modify
--- an index just to get a better estimate.
-local idx = KEYS[1]
+lua_subrange = _script_load('''
+-- KEYS - {dest_key, source_key}
+-- ARGV - {start_value, end_value}
 
-local start_score = ARGV[1]
-local end_score = ARGV[2]
+local idx = KEYS[2]
 
-local start_member = redis.call('ZRANGEBYSCORE', idx, start_score, 'inf', 'limit', 0, 1)
+local start_member = redis.call('ZRANGEBYSCORE', idx, ARGV[1], 'inf', 'limit', 0, 1)
 local start_index = 0
 if #start_member == 1 then
     start_index = tonumber(redis.call('ZRANK', idx, start_member[1]))
 end
 
-local end_member = redis.call('ZREVRANGEBYSCORE', idx, '('..end_score, '-inf', 'limit', 0, 1)
-local end_index = -1
+local end_member = redis.call('ZREVRANGEBYSCORE', idx, ARGV[2], '-inf', 'limit', 0, 1)
+local end_index
 if #end_member == 1 then
     end_index = tonumber(redis.call('ZRANK', idx, end_member[1]))
+else
+    end_index = tonumber(redis.call('ZCARD', idx))
 end
 
+for i=start_index, end_index, 100 do
+    local members = redis.call('ZRANGE', idx, i, math.min(i+99, end_index), 'withscores')
+    for j=1, #members, 2 do
+        members[j], members[j+1] = members[j+1], members[j]
+    end
+    redis.call('ZADD', KEYS[1], unpack(members))
+end
 return math.max(0, end_index - start_index + 1)
 ''')
 
-_estimate_work_lua2 = _script_load('''
--- These indexes will be on numbers or strings, which requires us to check both
--- sorted set cardinality and set cardinality - depending on type.
+_estimate_work_lua = _script_load('''
+-- These indexes will be on numbers, strings, and/or prefixes. We'll check set
+-- and sorted set cardinality, as well as range size.
 local idx = KEYS[1]
-local typ = redis.call('TYPE', idx)
+
+-- redis.call('type') returns a table {"ok":<type>} ... looks like a bug, so use
+-- redis.pcall() instead.
+local typ = redis.pcall('TYPE', idx).ok
 if typ == 'set' then
     return tonumber(redis.call('scard', idx))
 elseif typ == 'zset' then
-    return tonumber(redis.call('zcard', idx))
+    local size = tonumber(redis.call('zcard', idx))
+
+    if #ARGV == 2 then
+        local start_member = redis.call('ZRANGEBYSCORE', idx, ARGV[1], 'inf', 'limit', 0, 1)
+        local start_index = 0
+        if #start_member == 1 then
+            start_index = tonumber(redis.call('ZRANK', idx, start_member[1]))
+        end
+
+        local end_member = redis.call('ZREVRANGEBYSCORE', idx, ARGV[2], '-inf', 'limit', 0, 1)
+        local end_index = -1
+        if #end_member == 1 then
+            end_index = tonumber(redis.call('ZRANK', idx, end_member[1]))
+        end
+
+        local range_size = math.max(0, end_index - start_index + 1)
+        -- take into consideration deletions from the full copied zset
+        if string.sub(idx, -4) == ':idx' then
+            size = size + size - range_size
+        end
+
+        -- pulling ranges isn't free, call it 2x as expensive per operation as
+        -- the union/delete
+        range_size = range_size * 2
+
+        -- If you do the (simple) algebra, this will pick the range variant if
+        -- range <= 2/3 * size. We keep the long form here to explain the *why*,
+        -- even if a couple multiplies and a compare might be faster.
+
+        if range_size < size then
+            return -range_size
+        end
+    end
+    return size
 end
 return 0
 ''')
@@ -461,8 +518,12 @@ def estimate_work_lua(conn, index, prefix):
     given index with the provided prefix.
     '''
     if index.endswith(':idx'):
-        return _estimate_work_lua2(conn, [index], [], force_eval=True)
+        args = [] if not prefix else list(prefix)
+        if args:
+            args[0] = '-inf' if args[0] is None else repr(float(args[0]))
+            args[1] = 'inf' if args[1] is None else repr(float(args[1]))
+        return _estimate_work_lua(conn, [index], args, force_eval=True)
     start, end = _start_end(prefix)
-    return _estimate_work_lua(conn, [index], [start, end], force_eval=True)
+    return _estimate_work_lua(conn, [index], [start, '(' + end], force_eval=True)
 
 __all__ = [k for k, v in globals().items() if getattr(v, '__doc__', None) and k not in _skip]

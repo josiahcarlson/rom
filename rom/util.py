@@ -2,7 +2,7 @@
 '''
 Rom - the Redis object mapper for Python
 
-Copyright 2013-2015 Josiah Carlson
+Copyright 2013-2016 Josiah Carlson
 
 Released under the LGPL license version 2.1 and version 3 (you can choose
 which you'd like to be bound under).
@@ -83,6 +83,7 @@ global or per-thread basis.
 '''
 
 from __future__ import print_function
+from collections import deque
 from datetime import datetime, date, time as dtime
 from hashlib import sha1
 from itertools import chain
@@ -106,7 +107,6 @@ if redis.VERSION >= (2, 8):
     CONNECTION = redis.Redis.from_url(REDIS_URI)
 else:
     CONNECTION = redis.Redis()
-USE_LUA = True
 
 def set_connection_settings(*args, **kwargs):
     '''
@@ -434,11 +434,7 @@ class Session(threading.local):
         '''
         self._init()
 
-        changes = 0
-        for value in self.known.values():
-            if not value._deleted and (all or value._modified):
-                changes += value.save(full, force)
-        return changes
+        return self.save(*self.known.values(), full=full, all=all, force=force)
 
     def commit(self, full=False, all=False, force=False):
         '''
@@ -478,16 +474,21 @@ class Session(threading.local):
         all = kwargs.get('all')
         force = kwargs.get('force')
         changes = 0
-        for o in objects:
+        items = deque()
+        items.extend(objects)
+        while items:
+            o = items.popleft()
             if isinstance(o, (list, tuple)):
-                changes += self.save(*o, full=full, all=all, force=force)
+                items.extendleft(reversed(o))
             elif isinstance(o, Model):
                 if not o._deleted and (all or o._modified):
                     changes += o.save(full, force)
+
             else:
                 raise ORMError(
                     "Cannot save an object that is not an instance of a Model (you provided %r)"%(
                         o,))
+
         return changes
 
     def refresh(self, *objects, **kwargs):
@@ -613,9 +614,6 @@ def clean_old_index(model, block_size=100, **kwargs):
         for progress, total in clean_old_index(MyModel, block_size=200):
             print "%s of %s"%(progress, total)
     '''
-
-    if not USE_LUA:
-        raise Exception("Lua must be enabled to clean out old indexes")
 
     conn = _connect(model)
     version = list(map(int, conn.info()['redis_version'].split('.')[:2]))
@@ -764,6 +762,9 @@ return {page[1], clear}
 
 _clean_index_lua = _script_load('''
 -- remove old index data
+-- [1] string.format("%s", d) will truncate d to the first null value, so we
+--     can't rely on string.format() where we can reasonably expect nulls.
+
 local namespace = KEYS[1]
 local cleaned = 0
 for _, id in ipairs(ARGV) do
@@ -771,24 +772,35 @@ for _, id in ipairs(ARGV) do
     if idata then
         cleaned = cleaned + 1
         idata = cjson.decode(idata)
-        if #idata == 2 then
-            idata[3] = {}
-            idata[4] = {}
+        while #idata < 4 do
+            idata[#idata + 1] = {}
         end
         for i, key in ipairs(idata[1]) do
             redis.call('SREM', string.format('%s:%s:idx', namespace, key), id)
+            -- see note [1]
+            redis.call('SREM', namespace .. ':' .. key .. ':idx', id)
         end
         for i, key in ipairs(idata[2]) do
             redis.call('ZREM', string.format('%s:%s:idx', namespace, key), id)
+            -- see note [1]
+            redis.call('ZREM', namespace .. ':' .. key .. ':idx', id)
         end
         for i, data in ipairs(idata[3]) do
             local key = string.format('%s:%s:pre', namespace, data[1])
             local mem = string.format('%s\0%s', data[2], id)
             redis.call('ZREM', key, mem)
+            -- see note [1]
+            local key = namespace .. ':' .. data[1] .. ':pre'
+            local mem = data[2] .. '\0' .. id
+            redis.call('ZREM', key, mem)
         end
         for i, data in ipairs(idata[4]) do
             local key = string.format('%s:%s:suf', namespace, data[1])
             local mem = string.format('%s\0%s', data[2], id)
+            redis.call('ZREM', key, mem)
+            -- see note [1]
+            local key = namespace .. ':' .. data[1] .. ':suf'
+            local mem = data[2] .. '\0' .. id
             redis.call('ZREM', key, mem)
         end
         redis.call('HDEL', namespace .. '::', id)

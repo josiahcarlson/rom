@@ -2,7 +2,7 @@
 '''
 Rom - the Redis object mapper for Python
 
-Copyright 2013-2015 Josiah Carlson
+Copyright 2013-2016 Josiah Carlson
 
 Released under the LGPL license version 2.1 and version 3 (you can choose
 which you'd like to be bound under).
@@ -11,6 +11,7 @@ which you'd like to be bound under).
 from datetime import datetime, date, time as dtime
 from decimal import Decimal as _Decimal
 from functools import wraps
+from itertools import product
 import json
 
 import six
@@ -26,13 +27,19 @@ NULL = object()
 MODELS = {}
 MODELS_REFERENCED = {}
 _NUMERIC = (0, 0.0, _Decimal('0'), datetime(1970, 1, 1), date(1970, 1, 1), dtime(0, 0, 0))
-USE_LUA = True
 NO_ACTION_DEFAULT = object()
 SKIP_ON_DELETE = object()
 ON_DELETE = ('no action', 'restrict', 'cascade', 'set null', 'set default')
 six.string_types_ex = six.string_types
 if six.PY3:
     six.string_types_ex += (bytes,)
+
+def is_numeric(allowed):
+    return any(isinstance(i, allowed) for i in _NUMERIC)
+
+def is_string(allowed):
+    allowed = (allowed,) if isinstance(allowed, type) else allowed
+    return any(issubclass(a, i) for a,i in product(allowed, six.string_types_ex))
 
 def _restrict(entity, attr, refs):
     name = entity._namespace
@@ -229,7 +236,6 @@ class Column(object):
             raise ColumnError("Missing valid class-level _allowed attribute on %r"%(type(self),))
 
         allowed = (self._allowed,) if isinstance(self._allowed, type) else self._allowed
-        is_string = all(issubclass(x, six.string_types_ex) for x in allowed)
         is_integer = all(issubclass(x, six.integer_types) for x in allowed)
         if unique:
             if not (is_string or is_integer):
@@ -245,14 +251,14 @@ class Column(object):
 
         numeric = True
         if index and not isinstance(self, (ManyToOne, OneToOne)):
-            if not any(isinstance(i, allowed) for i in _NUMERIC):
+            if not is_numeric(allowed):
                 numeric = False
                 if issubclass(bool, allowed):
                     keygen = keygen or _boolean_keygen
-                if not is_string and not keygen:
+                if not is_string(allowed) and not keygen:
                     raise ColumnError("Non-numeric/string indexed columns must provide keygen argument on creation")
 
-        if (index or prefix or suffix) and is_string and keygen is None:
+        if (index or prefix or suffix) and is_string(allowed) and keygen is None:
             raise ColumnError("Indexed string column missing explicit keygen argument, try one of: %s"%STRING_INDEX_KEYGENS_STR)
 
         if index:
@@ -509,7 +515,7 @@ class String(Column):
         if value != None:
             if not isinstance(value, self._allowed):
                 value = value.encode('latin-1')
-            if loading and (USE_LUA or six.PY2):
+            if loading:
                 value = value.decode('utf-8').encode('latin-1')
         return Column._init_(self, obj, model, attr, value, loading)
 
@@ -541,7 +547,7 @@ class Text(Column):
     '''
     _allowed = six.text_type
     def _to_redis(self, value):
-        return value.encode('utf-8') if six.PY2 or not USE_LUA else value
+        return value.encode('utf-8') if six.PY2 else value
     def _from_redis(self, value):
         if isinstance(value, six.binary_type):
             return value.decode('utf-8')

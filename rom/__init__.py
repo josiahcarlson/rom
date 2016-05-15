@@ -4,7 +4,7 @@
 
 Rom - the Redis object mapper for Python
 
-Copyright 2013-2015 Josiah Carlson
+Copyright 2013-2016 Josiah Carlson
 
 Released under the LGPL license version 2.1 and version 3 (you can choose
 which you'd like to be bound under).
@@ -157,7 +157,6 @@ it efficiently? I think so, and you should too.
 
 from datetime import datetime, date, time as dtime
 from decimal import Decimal as _Decimal
-import warnings
 
 import six
 
@@ -171,7 +170,6 @@ from .exceptions import (ORMError, UniqueKeyViolation, InvalidOperation,
     QueryError, ColumnError, MissingColumn, InvalidColumnValue, RestrictError,
     DataRaceError, EntityDeletedError)
 from .index import GeneralIndex, Pattern, Prefix, Suffix
-from . import model
 from .model import _ModelMetaclass, Model
 from .query import NOT_NULL, Query
 from .util import (ClassProperty, _connect, session,
@@ -198,19 +196,3 @@ Pattern, Suffix, GeneralIndex, Prefix, Model, _ModelMetaclass, Query, NOT_NULL
 IDENTITY, IDENTITY_CI, SIMPLE, SIMPLE_CI, CASE_INSENSITIVE, FULL_TEXT
 ClassProperty
 session, _connect, _encode_unique_constraint, _prefix_score, _script_load
-
-USE_LUA = True
-def _enable_lua_writes():
-    from . import columns
-    from . import util
-    global USE_LUA
-    util.USE_LUA = columns.USE_LUA = model.USE_LUA = USE_LUA = True
-
-def _disable_lua_writes():
-    from . import columns
-    from . import util
-    global USE_LUA
-    util.USE_LUA = columns.USE_LUA = model.USE_LUA = USE_LUA = False
-    warnings.warn("Lua writing is disabled, which disables a lot of useful "
-                  "functionality. The ability to disable Lua writing will "
-                  "be removed in some future version of rom.")

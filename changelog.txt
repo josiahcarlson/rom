@@ -1,3 +1,12 @@
+#---------------------------------- 0.36.0 -----------------------------------
+[changed] Lua is now requried for rom 0.36.0 and later
+[fixed] Lua string.format() is not binary safe, and has been silently
+    corrupting portions of index values for years. This has been fixed, but
+    you need to rebuild your indexes. Discovered in February, but delayed
+    until other changes came through.
+[changed] filter speed estimation improved substantially, and queries with
+    numeric range searches can be hundreds of times faster than before.
+[removed] unnecessary recursive calls inside session-based entity saving.
 #---------------------------------- 0.35.3 -----------------------------------
 [fixed] a unicode decoding issue in some cases when iterating over data that
     wasn't filtered. Thanks to Axel for the email report and 1-line fix :)

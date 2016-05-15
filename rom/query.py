@@ -2,7 +2,7 @@
 '''
 Rom - the Redis object mapper for Python
 
-Copyright 2013-2015 Josiah Carlson
+Copyright 2013-2016 Josiah Carlson
 
 Released under the LGPL license version 2.1 and version 3 (you can choose
 which you'd like to be bound under).
@@ -19,7 +19,6 @@ import six
 from .exceptions import QueryError
 from .index import Pattern, Prefix, Suffix
 from .util import (_connect, session, dt2ts, t2ts, _script_load,
-    CASE_INSENSITIVE, SIMPLE_CI, IDENTITY_CI,
     STRING_SORT_KEYGENS, STRING_SORT_KEYGENS_STR)
 
 _skip = None

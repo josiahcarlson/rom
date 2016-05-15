@@ -3,7 +3,7 @@
 '''
 Rom - the Redis object mapper for Python
 
-Copyright 2013-2015 Josiah Carlson
+Copyright 2013-2016 Josiah Carlson
 
 Released under the LGPL license version 2.1 and version 3 (you can choose
 which you'd like to be bound under).
@@ -13,11 +13,11 @@ from collections import defaultdict
 import json
 import warnings
 
-import redis
+from redis import client
 import six
 
-from .columns import (Column, Text, PrimaryKey, ManyToOne, OneToOne,
-    OneToMany, MODELS, MODELS_REFERENCED, _on_delete, SKIP_ON_DELETE)
+from .columns import (Column, Text, PrimaryKey, ManyToOne, OneToOne, OneToMany,
+    MODELS, MODELS_REFERENCED, _on_delete, SKIP_ON_DELETE)
 from .exceptions import (ORMError, UniqueKeyViolation, InvalidOperation,
     QueryError, ColumnError, InvalidColumnValue, DataRaceError,
     EntityDeletedError)
@@ -25,12 +25,10 @@ from .index import GeneralIndex
 from .query import Query, NUMERIC_TYPES
 from .util import (ClassProperty, _connect, session,
     _prefix_score, _script_load, _encode_unique_constraint,
-    SIMPLE, IDENTITY, STRING_SORT_KEYGENS)
+    STRING_SORT_KEYGENS)
 
 _skip = None
 _skip = set(globals()) - set(['__doc__'])
-
-USE_LUA = True
 
 _STRING_SORT_KEYGENS = [ss.__name__ for ss in STRING_SORT_KEYGENS]
 
@@ -78,20 +76,10 @@ class _ModelMetaclass(type):
                 if col._index:
                     index.add(attr)
                 if col._prefix:
-                    if not USE_LUA:
-                        raise ColumnError("Lua scripting must be enabled to support prefix indexes (%s.%s)"%(name, attr))
                     prefix.add(attr)
                 if col._suffix:
-                    if not USE_LUA:
-                        raise ColumnError("Lua scripting must be enabled to support suffix indexes (%s.%s)"%(name, attr))
                     suffix.add(attr)
                 if col._unique:
-                    # We only allow one for performance when USE_LUA is False
-                    if unique and not USE_LUA:
-                        raise ColumnError(
-                            "Only one unique column allowed, you have at least two: %s %s"%(
-                            attr, unique)
-                        )
                     unique.add(attr)
 
             if isinstance(col, PrimaryKey):
@@ -117,8 +105,6 @@ class _ModelMetaclass(type):
                 MODELS_REFERENCED.setdefault(col._ftable, []).append((dict['_namespace'], attr, col._on_delete))
 
             if attr == 'unique_together':
-                if not USE_LUA:
-                    raise ColumnError("Lua scripting must be enabled to support multi-column uniqueness constraints")
                 composite_unique = col
 
         # verify reverse OneToMany attributes for these ManyToOne/OneToOne
@@ -278,207 +264,144 @@ class Model(six.with_metaclass(_ModelMetaclass, object)):
 
     @classmethod
     def _apply_changes(cls, old, new, full=False, delete=False, is_new=False):
-        use_lua = USE_LUA
         conn = _connect(cls)
         pk = old.get(cls._pkey) or new.get(cls._pkey)
         if not pk:
             raise ColumnError("Missing primary key value")
 
         model = cls._namespace
-        key = '%s:%s'%(model, pk)
-        pipe = conn.pipeline(True)
-
         columns = cls._columns
-        while 1:
-            changes = 0
-            keys = set()
-            scores = {}
-            data = {}
-            unique = {}
-            deleted = []
-            udeleted = {}
-            prefix = []
-            suffix = []
-            redis_data = {}
+        changes = 0
+        keys = set()
+        scores = {}
+        data = {}
+        unique = {}
+        deleted = []
+        udeleted = {}
+        prefix = []
+        suffix = []
+        redis_data = {}
 
-            # check for unique keys
-            if len(cls._unique) > 1 and not use_lua:
-                raise ColumnError(
-                    "Only one unique column allowed, you have: %s"%(unique,))
+        # update individual columns
+        for attr in cls._columns:
+            ikey = None
+            if attr in cls._unique:
+                ikey = "%s:%s:uidx"%(model, attr)
 
-            if cls._cunique and not use_lua:
-                raise ColumnError(
-                    "Cannot use multi-column unique constraint 'unique_together' with Lua disabled")
+            ca = columns[attr]
+            roval = old.get(attr)
+            oval = ca._from_redis(roval) if roval is not None else None
 
-            if not use_lua:
-                for col in cls._unique:
-                    ouval = old.get(col)
-                    nuval = new.get(col)
-                    nuvale = columns[col]._to_redis(nuval) if nuval is not None else None
+            nval = new.get(attr)
+            rnval = ca._to_redis(nval) if nval is not None else None
+            if rnval is not None:
+                redis_data[attr] = rnval
 
-                    if six.PY2 and not isinstance(ouval, str):
-                        ouval = columns[col]._to_redis(ouval)
-                    if not (nuval and (ouval != nuvale or full)):
-                        # no changes to unique columns
-                        continue
+            # Add/update standard index
+            if ca._keygen and not delete and nval is not None and (ca._index or ca._prefix or ca._suffix):
+                generated = ca._keygen(attr, new)
+                if not generated:
+                    # No index entries, we'll clean out old ones as necessary
+                    continue
 
-                    ikey = "%s:%s:uidx"%(model, col)
-                    pipe.watch(ikey)
-                    ival = pipe.hget(ikey, nuvale)
-                    ival = ival if isinstance(ival, str) or ival is None else ival.decode()
-                    if not ival or ival == str(pk):
-                        pipe.multi()
-                    else:
-                        pipe.unwatch()
-                        raise UniqueKeyViolation("Value %r for %s is not distinct"%(nuval, ikey))
+                elif isinstance(generated, (list, tuple, set)):
+                    if ca._index:
+                        for k in generated:
+                            keys.add('%s:%s'%(attr, k))
 
-            # update individual columns
-            for attr in cls._columns:
-                ikey = None
-                if attr in cls._unique:
-                    ikey = "%s:%s:uidx"%(model, attr)
+                    if ca._prefix:
+                        for k in generated:
+                            prefix.append([attr, k])
 
-                ca = columns[attr]
-                roval = old.get(attr)
-                oval = ca._from_redis(roval) if roval is not None else None
-
-                nval = new.get(attr)
-                rnval = ca._to_redis(nval) if nval is not None else None
-                if rnval is not None:
-                    redis_data[attr] = rnval
-
-                # Add/update standard index
-                if ca._keygen and not delete and nval is not None and (ca._index or ca._prefix or ca._suffix):
-                    generated = ca._keygen(attr, new)
-                    if not generated:
-                        # No index entries, we'll clean out old ones as necessary
-                        continue
-
-                    elif isinstance(generated, (list, tuple, set)):
-                        if ca._index:
-                            for k in generated:
-                                keys.add('%s:%s'%(attr, k))
-
-                        if ca._prefix:
-                            for k in generated:
-                                prefix.append([attr, k])
-
-                        if ca._suffix:
-                            for k in generated:
-                                if six.PY2 and isinstance(k, str) and isinstance(ca, Text):
-                                    try:
-                                        suffix.append([attr, k.decode('utf-8')[::-1].encode('utf-8')])
-                                    except UnicodeDecodeError:
-                                        suffix.append([attr, k[::-1]])
-                                else:
+                    if ca._suffix:
+                        for k in generated:
+                            if six.PY2 and isinstance(k, str) and isinstance(ca, Text):
+                                try:
+                                    suffix.append([attr, k.decode('utf-8')[::-1].encode('utf-8')])
+                                except UnicodeDecodeError:
                                     suffix.append([attr, k[::-1]])
-
-                    elif isinstance(generated, dict):
-                        if ca._index:
-                            for k, v in generated.items():
-                                if not k:
-                                    scores[attr] = v
-                                elif v in (None, ''):
-                                    # mixed index type support
-                                    keys.add('%s:%s'%(attr, k))
-                                else:
-                                    scores['%s:%s'%(attr, k)] = v
-
-                        if ca._prefix:
-                            if ca._keygen.__name__ not in _STRING_SORT_KEYGENS:
-                                warnings.warn("Prefix indexes are currently not enabled for non-standard keygen functions", stacklevel=2)
                             else:
-                                prefix.append([attr, nval if ca._keygen.__name__ in ('SIMPLE', 'IDENTITY') else nval.lower()])
+                                suffix.append([attr, k[::-1]])
 
-                        if ca._suffix:
-                            if ca._keygen.__name__ not in _STRING_SORT_KEYGENS:
-                                warnings.warn("Prefix indexes are currently not enabled for non-standard keygen functions", stacklevel=2)
+                elif isinstance(generated, dict):
+                    if ca._index:
+                        for k, v in generated.items():
+                            if not k:
+                                scores[attr] = v
+                            elif v in (None, ''):
+                                # mixed index type support
+                                keys.add('%s:%s'%(attr, k))
                             else:
-                                ex = (lambda x:x) if ca._keygen.__name__ in ('SIMPLE', 'IDENTITY') else (lambda x:x.lower())
-                                if six.PY2 and isinstance(nval, str) and isinstance(ca, Text):
-                                    try:
-                                        suffix.append([attr, ex(nval.decode('utf-8')[::-1]).encode('utf-8')])
-                                    except UnicodeDecodeError:
-                                        suffix.append([attr, ex(nval[::-1])])
-                                else:
+                                scores['%s:%s'%(attr, k)] = v
+
+                    if ca._prefix:
+                        if ca._keygen.__name__ not in _STRING_SORT_KEYGENS:
+                            warnings.warn("Prefix indexes are currently not enabled for non-standard keygen functions", stacklevel=2)
+                        else:
+                            prefix.append([attr, nval if ca._keygen.__name__ in ('SIMPLE', 'IDENTITY') else nval.lower()])
+
+                    if ca._suffix:
+                        if ca._keygen.__name__ not in _STRING_SORT_KEYGENS:
+                            warnings.warn("Prefix indexes are currently not enabled for non-standard keygen functions", stacklevel=2)
+                        else:
+                            ex = (lambda x:x) if ca._keygen.__name__ in ('SIMPLE', 'IDENTITY') else (lambda x:x.lower())
+                            if six.PY2 and isinstance(nval, str) and isinstance(ca, Text):
+                                try:
+                                    suffix.append([attr, ex(nval.decode('utf-8')[::-1]).encode('utf-8')])
+                                except UnicodeDecodeError:
                                     suffix.append([attr, ex(nval[::-1])])
+                            else:
+                                suffix.append([attr, ex(nval[::-1])])
 
-                    else:
-                        raise ColumnError("Don't know how to turn %r into a sequence of keys"%(generated,))
+                else:
+                    raise ColumnError("Don't know how to turn %r into a sequence of keys"%(generated,))
 
-                if nval == oval and not full:
-                    continue
-
-                changes += 1
-
-                # Delete removed columns
-                if nval is None and oval is not None:
-                    if use_lua:
-                        deleted.append(attr)
-                        if ikey:
-                            udeleted[attr] = roval
-                    else:
-                        pipe.hdel(key, attr)
-                        if ikey:
-                            pipe.hdel(ikey, roval)
-                        # Index removal will occur by virtue of no index entry
-                        # for this column.
-                    continue
-
-                # Add/update column value
-                if nval is not None:
-                    data[attr] = rnval
-
-                # Add/update unique index
-                if ikey:
-                    if six.PY2 and not isinstance(roval, str):
-                        roval = columns[attr]._to_redis(roval)
-                    if use_lua:
-                        if oval is not None and roval != rnval:
-                            udeleted[attr] = oval
-                        if rnval is not None:
-                            unique[attr] = rnval
-                    else:
-                        if oval is not None:
-                            pipe.hdel(ikey, roval)
-                        pipe.hset(ikey, rnval, pk)
-
-            # Add/update multi-column unique constraint
-            for uniq in cls._cunique:
-                attr = ':'.join(uniq)
-
-                odata = [old.get(c) for c in uniq]
-                ndata = [new.get(c) for c in uniq]
-                ndata = [columns[c]._to_redis(nv) if nv is not None else None for c, nv in zip(uniq, ndata)]
-
-                if odata != ndata and None not in odata:
-                    udeleted[attr] = _encode_unique_constraint(odata)
-
-                if None not in ndata:
-                    unique[attr] = _encode_unique_constraint(ndata)
-
-            id_only = str(pk)
-            if use_lua:
-                old_data = [] if is_new else ([(cls._pkey, str(pk))] + [(k, old.get(k)) for k in data if k in old])
-                redis_writer_lua(conn, cls._pkey, model, id_only, unique, udeleted,
-                    deleted, data, list(keys), scores, prefix, suffix, old_data,
-                    delete)
-                return changes, redis_data
-            elif delete:
-                changes += 1
-                cls._gindex._unindex(conn, pipe, id_only)
-                pipe.delete(key)
-            else:
-                if data:
-                    pipe.hmset(key, data)
-                cls._gindex.index(conn, id_only, keys, scores, prefix, suffix, pipe=pipe)
-
-            try:
-                pipe.execute()
-            except redis.exceptions.WatchError:
+            if nval == oval and not full:
                 continue
-            else:
-                return changes, redis_data
+
+            changes += 1
+
+            # Delete removed columns
+            if nval is None and oval is not None:
+                deleted.append(attr)
+                if ikey:
+                    udeleted[attr] = roval
+                continue
+
+            # Add/update column value
+            if nval is not None:
+                data[attr] = rnval
+
+            # Add/update unique index
+            if ikey:
+                if six.PY2 and not isinstance(roval, str):
+                    roval = columns[attr]._to_redis(roval)
+                if oval is not None and roval != rnval:
+                    udeleted[attr] = oval
+                if rnval is not None:
+                    unique[attr] = rnval
+
+        # Add/update multi-column unique constraint
+        for uniq in cls._cunique:
+            attr = ':'.join(uniq)
+
+            odata = [old.get(c) for c in uniq]
+            ndata = [new.get(c) for c in uniq]
+            ndata = [columns[c]._to_redis(nv) if nv is not None else None for c, nv in zip(uniq, ndata)]
+
+            if odata != ndata and None not in odata:
+                udeleted[attr] = _encode_unique_constraint(odata)
+
+            if None not in ndata:
+                unique[attr] = _encode_unique_constraint(ndata)
+
+        id_only = str(pk)
+        old_data = [] if is_new else ([(cls._pkey, str(pk))] + [(k, old.get(k)) for k in data if k in old])
+        redis_writer_lua(conn, cls._pkey, model, id_only, unique, udeleted,
+            deleted, data, list(keys), scores, prefix, suffix, old_data,
+            delete)
+
+        return changes, redis_data
 
     def to_dict(self):
         '''
@@ -692,6 +615,9 @@ local id = ARGV[2]
 local row_key = string.format('%s:%s', namespace, id)
 local is_delete = cjson.decode(ARGV[11])
 
+-- [1] string.format("%s", d) will truncate d to the first null value, so we
+--     can't rely on string.format() where we can reasonably expect nulls.
+
 if not is_delete then
     -- check to make sure we don't have a data race condition
     local updated = {}
@@ -746,24 +672,35 @@ end
 local idata = redis.call('HGET', namespace .. '::', id)
 if idata then
     idata = cjson.decode(idata)
-    if #idata == 2 then
-        idata[3] = {}
-        idata[4] = {}
+    while #idata < 4 do
+        idata[#idata + 1] = {}
     end
     for i, key in ipairs(idata[1]) do
         redis.call('SREM', string.format('%s:%s:idx', namespace, key), id)
+        -- see note [1]
+        redis.call('SREM', namespace .. ':' .. key .. ':idx', id)
     end
     for i, key in ipairs(idata[2]) do
         redis.call('ZREM', string.format('%s:%s:idx', namespace, key), id)
+        -- see note [1]
+        redis.call('ZREM', namespace .. ':' .. key .. ':idx', id)
     end
     for i, data in ipairs(idata[3]) do
         local key = string.format('%s:%s:pre', namespace, data[1])
         local mem = string.format('%s\0%s', data[2], id)
         redis.call('ZREM', key, mem)
+        -- see note [1]
+        local key = namespace .. ':' .. data[1] .. ':pre'
+        local mem = data[2] .. '\0' .. id
+        redis.call('ZREM', key, mem)
     end
     for i, data in ipairs(idata[4]) do
         local key = string.format('%s:%s:suf', namespace, data[1])
         local mem = string.format('%s\0%s', data[2], id)
+        redis.call('ZREM', key, mem)
+        -- see note [1]
+        local key = namespace .. ':' .. data[1] .. ':suf'
+        local mem = data[2] .. '\0' .. id
         redis.call('ZREM', key, mem)
     end
 end
@@ -776,21 +713,21 @@ end
 -- add new key index data
 local nkeys = cjson.decode(ARGV[7])
 for i, key in ipairs(nkeys) do
-    redis.call('SADD', string.format('%s:%s:idx', namespace, key), id)
+    redis.call('SADD', namespace .. ':' .. key .. ':idx', id)
 end
 
 -- add new scored index data
 local nscored = {}
 for key, score in pairs(cjson.decode(ARGV[8])) do
-    redis.call('ZADD', string.format('%s:%s:idx', namespace, key), score, id)
+    redis.call('ZADD', namespace .. ':' .. key .. ':idx', score, id)
     nscored[#nscored + 1] = key
 end
 
 -- add new prefix data
 local nprefix = {}
 for i, data in ipairs(cjson.decode(ARGV[9])) do
-    local key = string.format('%s:%s:pre', namespace, data[1])
-    local mem = string.format("%s\0%s", data[2], id)
+    local key = namespace .. ':' .. data[1] .. ':pre'
+    local mem = data[2] .. '\0' .. id
     redis.call('ZADD', key, data[3], mem)
     nprefix[#nprefix + 1] = {data[1], data[2]}
 end
@@ -798,8 +735,8 @@ end
 -- add new suffix data
 local nsuffix = {}
 for i, data in ipairs(cjson.decode(ARGV[10])) do
-    local key = string.format('%s:%s:suf', namespace, data[1])
-    local mem = string.format("%s\0%s", data[2], id)
+    local key = namespace .. ':' .. data[1] .. ':suf'
+    local mem = data[2] .. '\0' .. id
     redis.call('ZADD', key, data[3], mem)
     nsuffix[#nsuffix + 1] = {data[1], data[2]}
 end
@@ -819,8 +756,12 @@ def _fix_bytes(d):
         return d.decode('latin-1')
     raise TypeError
 
-def redis_writer_lua(conn, pkey, namespace, id, unique, udelete, delete, data, keys,
-                     scored, prefix, suffix, old_data, is_delete):
+def redis_writer_lua(conn, pkey, namespace, id, unique, udelete, delete,
+                     data, keys, scored, prefix, suffix, old_data, is_delete):
+    '''
+    ... Actually write data to Redis. This is an internal detail. Please don't
+    call me directly.
+    '''
     ldata = []
     for pair in data.items():
         ldata.extend(pair)
@@ -833,16 +774,33 @@ def redis_writer_lua(conn, pkey, namespace, id, unique, udelete, delete, data, k
     data = [json.dumps(x, default=_fix_bytes) for x in
             (unique, udelete, delete, ldata, keys, scored, prefix, suffix, is_delete, old_data)]
     result = _redis_writer_lua(conn, [], [namespace, id] + data)
+
+    if isinstance(result, client.BasePipeline):
+        # we're in a pipelined write situation, don't parse the pipeline :P
+        return
+
     if six.PY3:
         result = result.decode()
+
     result = json.loads(result)
     if 'unique' in result:
         result = result['unique']
-        raise UniqueKeyViolation("Value %r for %s:%s:uidx not distinct"%(unique[result], namespace, result))
+        raise UniqueKeyViolation(
+            "Value %r for %s:%s:uidx not distinct (failed for pk=%s)"%(
+                unique[result], namespace, result, id),
+            namespace, id)
+
     if 'race' in result:
         result = result['race']
         if pkey in result:
-            raise EntityDeletedError("Entity with id=%s deleted by another writer; use .save(force=True) to re-save"%(id,))
-        raise DataRaceError("Column(s) %r updated by another writer, write aborted!"%(result,))
+            raise EntityDeletedError(
+                "Entity %s:%s deleted by another writer; use .save(force=True) to re-save"%(
+                    namespace, id),
+                namespace, id)
+
+        raise DataRaceError(
+            "%s:%s Column(s) %r updated by another writer, write aborted!"%(
+                namespace, id, result),
+            namespace, id)
 
 __all__ = [k for k, v in globals().items() if getattr(v, '__doc__', None) and k not in _skip]
