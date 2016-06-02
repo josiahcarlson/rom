@@ -113,11 +113,11 @@ per model.::
 
     # Gets the 50 *best* restaurants, up to 25 miles away, from a given point,
     # ordered by highest to lowest rating
-    points = PointOfInterest.query \
-        .filter(tags='restaurant') \
-        .near('geo_index', <lon>, <lat>, 25, 'mi') \
-        .order_by('-avg_rating') \
-        .limit(0, 50) \
+    points = PointOfInterest.query \\
+        .filter(tags='restaurant') \\
+        .near('geo_index', <lon>, <lat>, 25, 'mi') \\
+        .order_by('-avg_rating') \\
+        .limit(0, 50) \\
         .all()
 
     # geo queries can also independently have their own counts, which can offer
@@ -126,10 +126,10 @@ per model.::
 
     # Gets the 50 *closest* restaurants, up to 25 miles away, from a given point,
     # ordered by highest to lowest rating.
-    points = PointOfInterest.query \
-        .filter(tags='restaurant') \
-        .near('geo_index', <lon>, <lat>, 25, 'mi', 50) \
-        .order_by('-avg_rating') \
+    points = PointOfInterest.query \\
+        .filter(tags='restaurant') \\
+        .near('geo_index', <lon>, <lat>, 25, 'mi', 50) \\
+        .order_by('-avg_rating') \\
         .all()
 
 '''
