@@ -1375,6 +1375,31 @@ class TestORM(unittest.TestCase):
             ## print(bad.encode('hex'))
             self.assertEqual(d.value, bad)
 
+    def test_geo(self):
+        conn = connect(None)
+        version = list(map(int, conn.info()['redis_version'].split('.')))
+        if version < [3, 2]:
+            print("Skipping geo tests")
+            return
+
+        class RomTestGeo(Model):
+            tags = String(index=True, keygen=FULL_TEXT)
+            lat = Float()
+            lon = Float()
+            geo_index = [
+                # also test out attrdict in here :)
+                GeoIndex('basic', lambda x: {'lat':x.lat, 'lon':x['lon']})
+            ]
+
+        a = RomTestGeo(lat=0, lon=0, tags='restaurant')
+        a.save()
+        self.assertEqual(a.query.filter(tags='restaurant').near('basic', .5, 0, 60, 'km').count(), 1)
+        self.assertEqual(a.query.filter(tags='gasoline').near('basic', .5, 0, 60, 'km').count(), 0)
+        self.assertEqual(a.query.filter(tags='restaurant').near('basic', 0, .5, 60, 'km').count(), 1)
+        self.assertEqual(a.query.filter(tags='gasoline').near('basic', 0, .5, 60, 'km').count(), 0)
+        self.assertEqual(a.query.filter(tags='restaurant').near('basic', 1, 0, 60, 'km').count(), 0)
+        self.assertEqual(a.query.filter(tags='restaurant').near('basic', 0, 1, 60, 'km').count(), 0)
+
     def _test_filter_performance(self):
         import time
         class RomTestFilterPerformance(Model):

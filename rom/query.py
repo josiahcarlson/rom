@@ -17,7 +17,7 @@ import uuid
 import six
 
 from .exceptions import QueryError
-from .index import Pattern, Prefix, Suffix
+from .index import Geofilter, Pattern, Prefix, Suffix
 from .util import (_connect, session, dt2ts, t2ts, _script_load,
     STRING_SORT_KEYGENS, STRING_SORT_KEYGENS_STR)
 
@@ -28,6 +28,7 @@ NUMERIC_TYPES = six.integer_types + (float, _Decimal, datetime, date, dtime)
 
 NOT_NULL = (None, None)
 _STRING_SORT_KEYGENS = [ss.__name__ for ss in STRING_SORT_KEYGENS]
+ALLOWED_DIST = ('m', 'km', 'mi', 'ft')
 
 class Query(object):
     '''
@@ -246,6 +247,16 @@ class Query(object):
             v = self._check(k, v, 'like')
             new.append(Pattern(k, v))
         return self.replace(filters=self._filters+tuple(new))
+
+    def near(self, name, lon, lat, distance, measure, count=None):
+        if name not in self._model._geo:
+            raise ValueError("provided index name must be defined as a geo index")
+
+        measure = measure.lower()
+        if measure not in ALLOWED_DIST:
+            raise ValueError("distance measure must be one of %r"%(ALLOWED_DIST,))
+
+        return self.replace(filters=self._filters + (Geofilter(name, lon, lat, distance, measure, count),))
 
     def order_by(self, column):
         '''

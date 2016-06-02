@@ -47,7 +47,9 @@ Indexes:
 * Prefix matching (can be used for prefix-based autocomplete)
 * Suffix matching (can be used for suffix-based autocomplete)
 * Pattern matching on string-based columns
-* All indexing is available when using Redis 2.6.0 and later
+* All indexing except Geo indexing is available when using Redis 2.6.0 and
+  later
+* Geo indexing available with Redis 3.2.0 and later
 
 Other features:
 

@@ -24,7 +24,9 @@ _skip = set(globals()) - set(['__doc__'])
 Prefix = namedtuple('Prefix', 'attr prefix')
 Suffix = namedtuple('Suffix', 'attr suffix')
 Pattern = namedtuple('Pattern', 'attr pattern')
+Geofilter = namedtuple('Geo', 'name lon lat radius measure count')
 
+GeoIndex = namedtuple('GeoIndex', 'name callback')
 
 SPECIAL = re.compile('([-().%[^$])')
 def _pattern_to_lua_pattern(pat):
@@ -102,79 +104,6 @@ class GeneralIndex(object):
     def __init__(self, namespace):
         self.namespace = namespace
 
-    def _unindex(self, conn, pipe, id):
-        known = conn.hget(self.namespace + '::', id)
-        if not known:
-            return 0
-        old = json.loads(known.decode())
-        keys, scored = old[:2]
-        pre, suf = ([],[]) if len(old) == 2 else old[2:]
-
-        for key in keys:
-            pipe.srem('%s:%s:idx'%(self.namespace, key), id)
-        for key in scored:
-            pipe.zrem('%s:%s:idx'%(self.namespace, key), id)
-        for attr, key in pre:
-            pipe.zrem('%s:%s:pre'%(self.namespace, attr), '%s\0%s'%(key, id))
-        for attr, key in suf:
-            pipe.zrem('%s:%s:suf'%(self.namespace, attr), '%s\0%s'%(key, id))
-
-        pipe.hdel(self.namespace + '::', id)
-        return len(keys) + len(scored)
-
-    def unindex(self, conn, id):
-        '''
-        Will unindex an entity atomically.
-
-        Arguments:
-
-            * *id* - the id of the entity to remove from the index
-        '''
-        pipe = conn.pipeline(True)
-        ret = self._unindex(conn, pipe, id)
-        pipe.execute()
-        return ret
-
-    def index(self, conn, id, keys, scores, prefix, suffix, pipe=None):
-        '''
-        Will index the provided data atomically.
-
-        Arguments:
-
-            * *id* - the id of the entity that is being indexed
-            * *keys* - an iterable sequence of keys of the form:
-              ``column_name:key`` to index
-            * *scores* - a dictionary mapping ``column_name`` to numeric
-              scores and/or mapping ``column_name:key`` to numeric scores
-            * *prefix* - an iterable sequence of (attr, key) pairs that will be
-              used for prefix matching
-            * *suffix* - an iterable sequence of (attr, key) pairs that will be
-              used for suffix matching (each string is likely to be a reversed
-              version of *pre*, but this is not required)
-
-        This will automatically unindex the provided id before
-        indexing/re-indexing.
-
-        Unindexing is possible because we keep a record of all keys, score
-        keys, pre, and suf lists that were provided.
-        '''
-        had_pipe = bool(pipe)
-        pipe = pipe or conn.pipeline(True)
-        self._unindex(conn, pipe, id)
-
-        for key in keys:
-            pipe.sadd('%s:%s:idx'%(self.namespace, key), id)
-        for key, score in scores.items():
-            pipe.zadd('%s:%s:idx'%(self.namespace, key), id, _to_score(score))
-        for attr, key in prefix:
-            pipe.zadd('%s:%s:pre'%(self.namespace, attr), '%s\0%s'%(key, id), _prefix_score(key))
-        for attr, key in suffix:
-            pipe.zadd('%s:%s:suf'%(self.namespace, attr), '%s\0%s'%(key, id), _prefix_score(key))
-        pipe.hset(self.namespace + '::', id, json.dumps([list(keys), list(scores), list(prefix), list(suffix)]))
-        if not had_pipe:
-            pipe.execute()
-        return len(keys) + len(scores) + len(prefix) + len(suffix)
-
     def _prepare(self, conn, filters):
         temp_id = "%s:%s"%(self.namespace, uuid.uuid4())
         pipe = conn.pipeline(True)
@@ -193,6 +122,8 @@ class GeneralIndex(object):
                     estimate_work_lua(pipe, '%s:%s:pre'%(self.namespace, fltr.attr), _find_prefix(fltr.pattern))
                 elif isinstance(fltr, list):
                     estimate_work_lua(pipe, '%s:%s:idx'%(self.namespace, fltr[0]), None)
+                elif isinstance(fltr, Geofilter):
+                    estimate_work_lua(pipe, '%s:%s:geo'%(self.namespace, fltr.name), fltr.count)
                 elif isinstance(fltr, tuple):
                     estimate_work_lua(pipe, '%s:%s:idx'%(self.namespace, fltr[0]), fltr[1:3])
                 else:
@@ -218,7 +149,7 @@ class GeneralIndex(object):
                     temp_id2 = str(uuid.uuid4())
                     pipe.zunionstore(temp_id2, dict(
                         ('%s:%s:idx'%(self.namespace, fi), 0) for fi in fltr))
-                    intersect(temp_id, {temp_id:0, temp_id2:0})
+                    intersect(temp_id, {temp_id: 0, temp_id2: 0})
                     pipe.delete(temp_id2)
             if isinstance(fltr, six.string_types):
                 # simple string/tag search
@@ -233,6 +164,24 @@ class GeneralIndex(object):
                     _find_prefix(fltr.pattern),
                     first, '^' + _pattern_to_lua_pattern(fltr.pattern),
                 )
+            elif isinstance(fltr, Geofilter):
+                # Prep the georadius command
+                args = [
+                    'georadius', '%s:%s:geo'%(self.namespace, fltr.name),
+                    repr(fltr.lon), repr(fltr.lat), fltr.radius, fltr.measure
+                ]
+                if fltr.count and fltr.count >= 0:
+                    args.append('COUNT')
+                    args.append(fltr.count)
+                args.append('STOREDIST')
+                first = intersect == pipe.zunionstore
+                args.append(temp_id if first else str(uuid.uuid4()))
+
+                pipe.pipeline_execute_command(*args)
+                if not first:
+                    intersect(temp_id, {temp_id: 0, args[-1]: 1})
+                    pipe.delete(args[-1])
+
             elif isinstance(fltr, tuple):
                 # zset range search
                 if len(fltr) != 3:
@@ -476,7 +425,13 @@ if typ == 'set' then
 elseif typ == 'zset' then
     local size = tonumber(redis.call('zcard', idx))
 
-    if #ARGV == 2 then
+    if string.sub(idx, -4) == ':geo' then
+        if #ARGV > 0 then
+            return math.min(size, tonumber(ARGV[1]))
+        end
+        return size
+
+    elseif #ARGV == 2 then
         local start_member = redis.call('ZRANGEBYSCORE', idx, ARGV[1], 'inf', 'limit', 0, 1)
         local start_index = 0
         if #start_member == 1 then
@@ -523,6 +478,9 @@ def estimate_work_lua(conn, index, prefix):
             args[0] = '-inf' if args[0] is None else repr(float(args[0]))
             args[1] = 'inf' if args[1] is None else repr(float(args[1]))
         return _estimate_work_lua(conn, [index], args, force_eval=True)
+    elif index.endswith(':geo'):
+        return _estimate_work_lua(conn, [index], filter(None, [prefix]), force_eval=True)
+
     start, end = _start_end(prefix)
     return _estimate_work_lua(conn, [index], [start, '(' + end], force_eval=True)
 

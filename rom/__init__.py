@@ -47,7 +47,9 @@ Indexes:
 * Prefix matching (can be used for prefix-based autocomplete)
 * Suffix matching (can be used for suffix-based autocomplete)
 * Pattern matching on string-based columns
-* All indexing is available when using Redis 2.6.0 and later
+* All indexing except Geo indexing is available when using Redis 2.6.0 and
+  later
+* Geo indexing available with Redis 3.2.0 and later
 
 Other features:
 
@@ -169,14 +171,14 @@ from .columns import (Column, Integer, Boolean, Float, Decimal, DateTime,
 from .exceptions import (ORMError, UniqueKeyViolation, InvalidOperation,
     QueryError, ColumnError, MissingColumn, InvalidColumnValue, RestrictError,
     DataRaceError, EntityDeletedError)
-from .index import GeneralIndex, Pattern, Prefix, Suffix
+from .index import GeneralIndex, GeoIndex, Pattern, Prefix, Suffix
 from .model import _ModelMetaclass, Model
 from .query import NOT_NULL, Query
 from .util import (ClassProperty, _connect, session,
     _prefix_score, _script_load, _encode_unique_constraint,
     FULL_TEXT, CASE_INSENSITIVE, SIMPLE, SIMPLE_CI, IDENTITY, IDENTITY_CI)
 
-VERSION = '0.36.0'
+VERSION = '0.37.0'
 
 COLUMN_TYPES = [Column, Integer, Boolean, Float, Decimal, DateTime, Date,
 Time, String, Text, Json, PrimaryKey, ManyToOne, ForeignModel, OneToMany,

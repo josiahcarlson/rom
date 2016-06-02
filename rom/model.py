@@ -21,7 +21,7 @@ from .columns import (Column, Text, PrimaryKey, ManyToOne, OneToOne, OneToMany,
 from .exceptions import (ORMError, UniqueKeyViolation, InvalidOperation,
     QueryError, ColumnError, InvalidColumnValue, DataRaceError,
     EntityDeletedError)
-from .index import GeneralIndex
+from .index import GeneralIndex, GeoIndex
 from .query import Query, NUMERIC_TYPES
 from .util import (ClassProperty, _connect, session,
     _prefix_score, _script_load, _encode_unique_constraint,
@@ -46,6 +46,7 @@ class _ModelMetaclass(type):
         dict['_cunique'] = cunique = set()
         dict['_prefix'] = prefix = set()
         dict['_suffix'] = suffix = set()
+        dict['_geo'] = geo = {}
 
         dict['_columns'] = columns = {}
         pkey = None
@@ -107,6 +108,14 @@ class _ModelMetaclass(type):
             if attr == 'unique_together':
                 composite_unique = col
 
+            if attr == 'geo_index':
+                if not isinstance(col, list) or not all(isinstance(v, GeoIndex) for v in col):
+                    raise ORMError("geo_index attribute must be a list of Geoindex() definitions if present")
+                for g in col:
+                    if g.name in geo:
+                        raise ColumnError("Geo index named %r already defined"%(g.name,))
+                    geo[g.name] = g
+
         # verify reverse OneToMany attributes for these ManyToOne/OneToOne
         # attributes if created after referenced models
         for t, cols in many_to_one.items():
@@ -143,6 +152,14 @@ class _ModelMetaclass(type):
 
         MODELS[dict['_namespace']] = MODELS[name] = model = type.__new__(cls, name, bases, dict)
         return model
+
+class AttrDict(dict):
+    def __getattr__(self, attr):
+        return self.get(attr)
+    def __setattr__(self, attr, value):
+        self[attr] = value
+    def __delattr__(self, attr):
+        self.pop(attr, None)
 
 class Model(six.with_metaclass(_ModelMetaclass, object)):
     '''
@@ -280,6 +297,7 @@ class Model(six.with_metaclass(_ModelMetaclass, object)):
         udeleted = {}
         prefix = []
         suffix = []
+        geo = []
         redis_data = {}
 
         # update individual columns
@@ -395,10 +413,21 @@ class Model(six.with_metaclass(_ModelMetaclass, object)):
             if None not in ndata:
                 unique[attr] = _encode_unique_constraint(ndata)
 
+        for name in cls._geo:
+            idx = cls._geo[name]
+            val = idx.callback(AttrDict(new))
+            if isinstance(val, dict):
+                val = [val]
+            for v in val:
+                if 'lon' in v and 'lat' in v:
+                    geo.append((name, v['lon'], v['lat']))
+                else:
+                    raise ORMError("Lon/Lat pair for geo index is not a dictionary of {'lon': ..., 'lat': ...}")
+
         id_only = str(pk)
         old_data = [] if is_new else ([(cls._pkey, str(pk))] + [(k, old.get(k)) for k in data if k in old])
         redis_writer_lua(conn, cls._pkey, model, id_only, unique, udeleted,
-            deleted, data, list(keys), scores, prefix, suffix, old_data,
+            deleted, data, list(keys), scores, prefix, suffix, geo, old_data,
             delete)
 
         return changes, redis_data
@@ -613,7 +642,7 @@ _redis_writer_lua = _script_load('''
 local namespace = ARGV[1]
 local id = ARGV[2]
 local row_key = string.format('%s:%s', namespace, id)
-local is_delete = cjson.decode(ARGV[11])
+local is_delete = cjson.decode(ARGV[12])
 
 -- [1] string.format("%s", d) will truncate d to the first null value, so we
 --     can't rely on string.format() where we can reasonably expect nulls.
@@ -621,7 +650,7 @@ local is_delete = cjson.decode(ARGV[11])
 if not is_delete then
     -- check to make sure we don't have a data race condition
     local updated = {}
-    for i, pair in ipairs(cjson.decode(ARGV[12])) do
+    for i, pair in ipairs(cjson.decode(ARGV[13])) do
         local odata = redis.call('HGET', row_key, pair[1])
         if odata ~= pair[2] then
             table.insert(updated, pair[1])
@@ -670,20 +699,23 @@ end
 
 -- remove old index data, update util.clean_index_lua when changed
 local idata = redis.call('HGET', namespace .. '::', id)
+local _changes = 0
 if idata then
     idata = cjson.decode(idata)
-    while #idata < 4 do
+    while #idata < 5 do
         idata[#idata + 1] = {}
     end
     for i, key in ipairs(idata[1]) do
         redis.call('SREM', string.format('%s:%s:idx', namespace, key), id)
         -- see note [1]
         redis.call('SREM', namespace .. ':' .. key .. ':idx', id)
+        _changes = _changes + 1
     end
     for i, key in ipairs(idata[2]) do
         redis.call('ZREM', string.format('%s:%s:idx', namespace, key), id)
         -- see note [1]
         redis.call('ZREM', namespace .. ':' .. key .. ':idx', id)
+        _changes = _changes + 1
     end
     for i, data in ipairs(idata[3]) do
         local key = string.format('%s:%s:pre', namespace, data[1])
@@ -693,6 +725,7 @@ if idata then
         local key = namespace .. ':' .. data[1] .. ':pre'
         local mem = data[2] .. '\0' .. id
         redis.call('ZREM', key, mem)
+        _changes = _changes + 1
     end
     for i, data in ipairs(idata[4]) do
         local key = string.format('%s:%s:suf', namespace, data[1])
@@ -702,12 +735,19 @@ if idata then
         local key = namespace .. ':' .. data[1] .. ':suf'
         local mem = data[2] .. '\0' .. id
         redis.call('ZREM', key, mem)
+        _changes = _changes + 1
+    end
+    for i, data in ipairs(idata[5]) do
+        local key = namespace .. ':' .. data .. ':geo'
+        redis.call('ZREM', key, id)
+        _changes = _changes + 1
     end
 end
 
 if is_delete then
     redis.call('DEL', string.format('%s:%s', namespace, id))
     redis.call('HDEL', namespace .. '::', id)
+    return cjson.encode({changes=_changes})
 end
 
 -- add new key index data
@@ -741,12 +781,20 @@ for i, data in ipairs(cjson.decode(ARGV[10])) do
     nsuffix[#nsuffix + 1] = {data[1], data[2]}
 end
 
+-- add new geo data
+local ngeo = {}
+for i, data in ipairs(cjson.decode(ARGV[11])) do
+    local key = namespace .. ':' .. data[1] .. ':geo'
+    redis.call('GEOADD', key, data[2], data[3], id)
+    nsuffix[#nsuffix + 1] = data[1]
+end
+
 if not is_delete then
     -- update known index data
-    local encoded = cjson.encode({nkeys, nscored, nprefix, nsuffix})
+    local encoded = cjson.encode({nkeys, nscored, nprefix, nsuffix, ngeo})
     redis.call('HSET', namespace .. '::', id, encoded)
 end
-return cjson.encode({changes=#nkeys + #nscored + #nprefix + #nsuffix})
+return cjson.encode({changes=#nkeys + #nscored + #nprefix + #nsuffix + #ngeo + _changes})
 ''')
 
 def _fix_bytes(d):
@@ -757,7 +805,7 @@ def _fix_bytes(d):
     raise TypeError
 
 def redis_writer_lua(conn, pkey, namespace, id, unique, udelete, delete,
-                     data, keys, scored, prefix, suffix, old_data, is_delete):
+                     data, keys, scored, prefix, suffix, geo, old_data, is_delete):
     '''
     ... Actually write data to Redis. This is an internal detail. Please don't
     call me directly.
@@ -772,7 +820,7 @@ def redis_writer_lua(conn, pkey, namespace, id, unique, udelete, delete,
         item.append(_prefix_score(item[-1]))
 
     data = [json.dumps(x, default=_fix_bytes) for x in
-            (unique, udelete, delete, ldata, keys, scored, prefix, suffix, is_delete, old_data)]
+            (unique, udelete, delete, ldata, keys, scored, prefix, suffix, geo, is_delete, old_data)]
     result = _redis_writer_lua(conn, [], [namespace, id] + data)
 
     if isinstance(result, client.BasePipeline):

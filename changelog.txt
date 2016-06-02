@@ -1,3 +1,7 @@
+#---------------------------------- 0.37.0 -----------------------------------
+[added] geo index and 'near' query option backed by Redis 3.2's GEOADD and
+    GEORADIUS operations. Feature request thanks to Github user
+    https://github.com/peter-conalgo
 #---------------------------------- 0.36.0 -----------------------------------
 [changed] Lua is now requried for rom 0.36.0 and later
 [fixed] Lua string.format() is not binary safe, and has been silently
