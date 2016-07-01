@@ -62,7 +62,7 @@ class Query(object):
             raise QueryError("Cannot use 'endswith' clause on a column defined with 'suffix=False'")
 
         if value is not None:
-            if col._keygen.__name__ in ('SIMPLE_CI', 'CASE_INSENSITIVE', 'IDENTITY_CI'):
+            if col._keygen.__name__ in ('FULL_TEXT', 'SIMPLE_CI', 'CASE_INSENSITIVE', 'IDENTITY_CI'):
                 value = value.lower()
             return value
         return col

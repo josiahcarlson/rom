@@ -1,3 +1,7 @@
+#---------------------------------- 0.37.1 -----------------------------------
+[fixed] query objects will now lowercase queries against FULL_TEXT indexes, as
+    the index is case-insensitive already. Thanks to Github user
+    https://github.com/slorg1
 #---------------------------------- 0.37.0 -----------------------------------
 [added] geo index and 'near' query option backed by Redis 3.2's GEOADD and
     GEORADIUS operations. Feature request thanks to Github user
