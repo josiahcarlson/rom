@@ -728,14 +728,16 @@ if idata then
         _changes = _changes + 1
     end
     for i, data in ipairs(idata[4]) do
-        local key = string.format('%s:%s:suf', namespace, data[1])
-        local mem = string.format('%s\0%s', data[2], id)
-        redis.call('ZREM', key, mem)
-        -- see note [1]
-        local key = namespace .. ':' .. data[1] .. ':suf'
-        local mem = data[2] .. '\0' .. id
-        redis.call('ZREM', key, mem)
-        _changes = _changes + 1
+        if data[1] and data[2] then
+            local key = string.format('%s:%s:suf', namespace, data[1])
+            local mem = string.format('%s\0%s', data[2], id)
+            redis.call('ZREM', key, mem)
+            -- see note [1]
+            local key = namespace .. ':' .. data[1] .. ':suf'
+            local mem = data[2] .. '\0' .. id
+            redis.call('ZREM', key, mem)
+            _changes = _changes + 1
+        end
     end
     for i, data in ipairs(idata[5]) do
         local key = namespace .. ':' .. data .. ':geo'
