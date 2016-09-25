@@ -212,6 +212,26 @@ class Column(object):
           scanned. A pattern starting with ``?``, ``*``, ``+``, or ``!`` will
           not be able to use any prefix, so will scan the entire index for
           matches (aka: expensive)
+
+    There are 3 types of string indexes that rom currently supports:
+
+        * *SIMPLE*/*SIMPLE_CI* - sorting only with ``query.order_by('x')`` -
+          https://pythonhosted.org/rom/rom.html#rom.util.SIMPLE
+        * *IDENTITY*/*IDENTITY_CI* - equality only with ``query.filter(x=...)`` -
+          https://pythonhosted.org/rom/rom.html#rom.util.IDENTITY
+        * *FULL_TEXT* - bag of words inverted index for ``query.filter(x=...)`` -
+          https://pythonhosted.org/rom/rom.html#rom.util.FULL_TEXT
+
+    To each of those 3 index types, you can further add a prefix/suffix index,
+    whose semantics are as follows:
+
+        * *prefix* - ``query.startswith(column=pfix)`` and ``query.like(column='stuff?*')``
+        * *suffix* - ``query.endswith(column=sfix)``
+        * *SIMPLE*/*SIMPLE_CI*/*IDENTITY*/*IDENTITY_CI* - *prefix*/*suffix* the
+          whole string case sensitive or insensitive
+        * *FULL_TEXT* - *prefix*/*suffix* on individual words parsed out of the
+          full text
+
     '''
     _allowed = ()
 

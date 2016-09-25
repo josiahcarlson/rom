@@ -1417,6 +1417,18 @@ class TestORM(unittest.TestCase):
             RomTestFilterPerformance.query.filter(id=(1, 1)).cached_result(30)
         print("\nelapsed: ", time.time()-t)
 
+    def test_recursive_model(self):
+        class RomTestRecursiveModel(Model):
+            manager = ManyToOne('RomTestRecursiveModel', on_delete='restrict')
+            reports = OneToMany('RomTestRecursiveModel')
+
+        a = RomTestRecursiveModel()
+        a.save()
+        b = RomTestRecursiveModel(manager=a)
+        b.save()
+        self.assertEqual(a, b.manager)
+        self.assertEqual(a.reports, [b])
+
 
 def main():
     global_setup()
