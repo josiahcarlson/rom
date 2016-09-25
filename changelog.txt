@@ -1,3 +1,6 @@
+#---------------------------------- 0.37.2 -----------------------------------
+[fixed] make sure that index data is valid before writing. Bug report and PR
+    thanks to Github user https://github.com/LuisUrrutia
 #---------------------------------- 0.37.1 -----------------------------------
 [fixed] query objects will now lowercase queries against FULL_TEXT indexes, as
     the index is case-insensitive already. Thanks to Github user
