@@ -1429,6 +1429,20 @@ class TestORM(unittest.TestCase):
         self.assertEqual(a, b.manager)
         self.assertEqual(a.reports, [b])
 
+    def test_lock(self):
+        class RomTestModelLock(Model):
+            example = Integer()
+
+        a = RomTestModelLock()
+        a.save()
+        l = util.EntityLock(a, 1, 5)
+        self.assertTrue(l.acquire())
+
+        l2 = util.EntityLock(a, 1, 1)
+        self.assertFalse(l2.acquire())
+        self.assertTrue(l.refresh())
+        self.assertTrue(l.release())
+
 
 def main():
     global_setup()

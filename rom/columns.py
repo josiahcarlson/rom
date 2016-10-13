@@ -587,7 +587,7 @@ class Json(Column):
     '''
     _allowed = (dict, list, tuple)
     def _to_redis(self, value):
-        return json.dumps(value)
+        return json.dumps(value, sort_keys=True)
     def _from_redis(self, value):
         if isinstance(value, self._allowed):
             return value

@@ -1,9 +1,14 @@
-
+#---------------------------------- 0.37.3 -----------------------------------
 [added] test for recursive ManyToOne/OneToMany relationships, information:
     https://github.com/josiahcarlson/rom/issues/78#issuecomment-249451280
 [added] docs for index types and their semantics, information available in the
     documentation for `rom.column`:
     https://pythonhosted.org/rom/rom.html#rom.Column
+[added] Lock and EntityLock objects to rom.util, for access to locks with the
+    implementation/semantics I like.
+[fixed] Made JSON column serialization deterministic to fix race condition
+    check. Thanks to Github user https://github.com/bparker98 for the bug
+    report and recommended fix.
 #---------------------------------- 0.37.2 -----------------------------------
 [fixed] make sure that index data is valid before writing. Bug report and PR
     thanks to Github user https://github.com/LuisUrrutia

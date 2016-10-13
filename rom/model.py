@@ -243,10 +243,10 @@ class Model(six.with_metaclass(_ModelMetaclass, object)):
         "Called before a new entity is saved to Redis"
 
     def _before_update(self):
-        "Called before a previously-saved entity is saved to Redis"
+        "Called before an entity is saved to Redis"
 
     def _before_delete(self):
-        "Called before a previously-saved entity is deleted"
+        "Called before an entity is deleted"
 
     def _after_insert(self):
         "Called after a new entity has been saved to Redis"

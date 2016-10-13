@@ -139,17 +139,21 @@ from collections import deque
 from datetime import datetime, date, time as dtime
 from hashlib import sha1
 from itertools import chain
+import math
+import os
 import string
 import threading
 import time
 import weakref
 import warnings
 
-import os
 import redis
 import six
 
-from .exceptions import ORMError
+from .exceptions import DataRaceError, ORMError
+
+if six.PY3:
+    import binascii
 
 _skip = None
 _skip = set(globals()) - set(['__doc__'])
@@ -859,6 +863,93 @@ for _, id in ipairs(ARGV) do
     end
 end
 return cleaned
+''')
+
+def _random_hex(bytes):
+    if six.PY2:
+        return os.urandom(bytes).encode('hex')
+    return binascii.hexlify(os.urandom(bytes))
+
+class Lock(object):
+    '''
+    Borrowed/modified from my book, Redis in Action:
+    https://github.com/josiahcarlson/redis-in-action/blob/master/python/ch11_listing_source.py
+
+    Useful for locking over a string key in Redis. Minimally correct for the
+    required semantics. Mostly intended as a general building block for use by
+    EntityLock.
+    '''
+    __slots__ = 'identifier', 'conn', 'lockname', 'lock_timeout', 'acquire_timeout'
+    def __init__(self, conn, lockname, acquire_timeout, lock_timeout):
+        self.identifier = None
+        self.conn = conn
+        self.lockname = 'lock:' + lockname
+        self.lock_timeout = int(math.ceil(lock_timeout))
+        self.acquire_timeout = int(math.ceil(acquire_timeout))
+
+    def _acquire(self):
+        self.identifier = self.identifier or str(_random_hex(16))
+        return _acquire_refresh_lock_with_timeout_lua(
+            self.conn, [self.lockname], [self.lock_timeout, self.identifier]) in ('OK', 1)
+
+    def acquire(self):
+        acquired = False
+        end = time.time() + self.acquire_timeout
+        while time.time() < end and not acquired:
+            acquired = self._acquire()
+
+            time.sleep(.001 * (not acquired))
+
+        return acquired
+
+    def refresh(self):
+        refreshed = self._acquire()
+        if not refreshed:
+            self.identifier = None
+        return refreshed
+
+    def release(self):
+        return bool(_release_lock_lua(self.conn, [self.lockname], [self.identifier]))
+
+    def __enter__(self):
+        if not self.acquire():
+            raise DataRaceError("Lock is already held")
+        return self
+
+    def __exit__(self, *args, **kwargs):
+        self.release()
+
+def EntityLock(entity, acquire_timeout, lock_timeout):
+    '''
+    Useful when you want exclusive access to an entity across all writers.::
+
+        # example
+        import rom
+
+        class Document(rom.Model):
+            owner = rom.ManyToOne('User', on_delete='restrict')
+            ...
+
+        def change_owner(document, new_owner):
+            with rom.util.EntityLock(document, 5, 90):
+                document.owner = new_owner
+                document.save()
+
+    '''
+    return Lock(entity._connection, entity._pk, acquire_timeout, lock_timeout)
+
+_acquire_refresh_lock_with_timeout_lua = _script_load('''
+if redis.call('exists', KEYS[1]) == 0 then
+    return redis.call('setex', KEYS[1], unpack(ARGV))
+elseif redis.call('get', KEYS[1]) == ARGV[2] then
+    return redis.call('expire', KEYS[1], ARGV[1])
+end
+''')
+
+_release_lock_lua = _script_load('''
+if redis.call('get', KEYS[1]) == ARGV[1] then
+    return redis.call('del', KEYS[1])
+end
 ''')
 
 __all__ = [k for k, v in globals().items() if getattr(v, '__doc__', None) and k not in _skip]
