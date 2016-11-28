@@ -319,8 +319,8 @@ class Model(six.with_metaclass(_ModelMetaclass, object)):
             if ca._keygen and not delete and nval is not None and (ca._index or ca._prefix or ca._suffix):
                 generated = ca._keygen(attr, new)
                 if not generated:
-                    # No index entries, we'll clean out old ones as necessary
-                    continue
+                    # No index entries, we'll clean out old entries later
+                    pass
 
                 elif isinstance(generated, (list, tuple, set)):
                     if ca._index:

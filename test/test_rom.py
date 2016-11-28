@@ -1443,6 +1443,19 @@ class TestORM(unittest.TestCase):
         self.assertTrue(l.refresh())
         self.assertTrue(l.release())
 
+    def test_empty_keygen_result(self):
+        class RomTestEmptyKeygen(Model):
+            col = Text(required=True, index=True, keygen=FULL_TEXT, prefix=True)
+
+        a = RomTestEmptyKeygen(col=u'& &')
+        a.save()
+        aid = a.id
+        del a
+        session.rollback()
+
+        b = RomTestEmptyKeygen.get(aid)
+        self.assertTrue(b.col)
+
 
 def main():
     global_setup()

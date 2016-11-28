@@ -1,3 +1,7 @@
+#---------------------------------- 0.38.0 -----------------------------------
+[fixed] In some cases, columns with keygens that didn't generate an index
+    entry would not have its column data saved. Thanks to github user
+    https://github.com/slorg1 for the bug report and 95% of the solution.
 #---------------------------------- 0.37.3 -----------------------------------
 [added] test for recursive ManyToOne/OneToMany relationships, information:
     https://github.com/josiahcarlson/rom/issues/78#issuecomment-249451280
