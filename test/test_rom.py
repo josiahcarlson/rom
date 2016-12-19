@@ -1457,6 +1457,35 @@ class TestORM(unittest.TestCase):
         self.assertTrue(b.col)
 
 
+    def test_naked_order_by_num(self):
+        class RomTestNakedOrderByNum(Model):
+            num = Integer(index=True)
+
+        s = RomTestNakedOrderByNum(num=1)
+        s.save()
+        s = RomTestNakedOrderByNum(num=2)
+        s.save()
+
+        total = RomTestNakedOrderByNum.query.order_by('num').execute()
+        self.assertEqual(len(total), 2)
+        self.assertEqual(total[0].num, 1)
+        self.assertEqual(RomTestNakedOrderByNum.query.order_by('num').count(), 2)
+
+    def test_naked_order_by_string(self):
+        class RomTestNakedOrderByString(Model):
+            name = String(index=True) if six.PY2 else Text(index=True)
+
+        s = RomTestNakedOrderByString(name='a')
+        s.save()
+        s = RomTestNakedOrderByString(name='b')
+        s.save()
+
+        total = RomTestNakedOrderByString.query.order_by('name').execute()
+        self.assertEqual(len(total), 2)
+        self.assertEqual(total[0].name, 'a')
+        self.assertEqual(RomTestNakedOrderByString.query.order_by('name').count(), 2)
+
+
 def main():
     global_setup()
     try:
