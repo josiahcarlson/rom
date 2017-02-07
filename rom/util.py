@@ -170,7 +170,8 @@ def set_connection_settings(*args, **kwargs):
     model-specific connections.
     '''
     global CONNECTION
-    CONNECTION = redis.Redis(*args, **kwargs)
+    redis_cls = kwargs.pop('redis_cls', redis.Redis)
+    CONNECTION = redis_cls(*args, **kwargs)
 
 def get_connection():
     '''
