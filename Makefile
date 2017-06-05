@@ -36,6 +36,7 @@ test:
 	PYTHONPATH=`pwd` python3.3 test/test_rom.py
 	PYTHONPATH=`pwd` python3.4 test/test_rom.py
 	PYTHONPATH=`pwd` python3.5 test/test_rom.py
+	PYTHONPATH=`pwd` python3.6 test/test_rom.py
 
 install-test-requirements:
 	sudo apt-get install python2.6 python2.6-dev python2.7 python2.7-dev python3.3 python3.3-dev python3.4 python3.4-dev python3.5 python3.5-dev

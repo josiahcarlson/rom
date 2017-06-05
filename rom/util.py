@@ -560,6 +560,7 @@ class Session(threading.local):
 
         To force reloading for modified entities, you can pass ``force=True``.
         '''
+        self._init()
         from rom import Model
         force = kwargs.get('force')
         for o in objects:
