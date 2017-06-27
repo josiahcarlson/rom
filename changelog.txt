@@ -1,3 +1,6 @@
+#---------------------------------- 0.39.2 -----------------------------------
+[fixed] Travis CI - Python 2.6 is no longer supported in Travis (even if it is
+    supported by rom :P)
 #---------------------------------- 0.39.1 -----------------------------------
 [fixed] Added more tests, removed pk as included by default in select()
 #---------------------------------- 0.39.0 -----------------------------------
