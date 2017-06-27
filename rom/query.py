@@ -146,7 +146,7 @@ class Query(object):
           does exactly what you want, and pass it; they are really easy!
 
         '''
-        include_pk = kwargs.pop('include_pk', True)
+        include_pk = kwargs.pop('include_pk', False)
         decode = kwargs.pop('decode', True)
         ff = kwargs.pop('ff', _dict_data_factory)
 

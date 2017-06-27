@@ -1,3 +1,5 @@
+#---------------------------------- 0.39.1 -----------------------------------
+[fixed] Added more tests, removed pk as included by default in select()
 #---------------------------------- 0.39.0 -----------------------------------
 [added] Model.query.select(...) allows for selecting individual columns from
     the model, and will return (by default) a dictionary, but can be prodded

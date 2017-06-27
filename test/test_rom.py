@@ -1026,11 +1026,25 @@ class TestORM(unittest.TestCase):
         self.assertEqual(total, 50 * 51 / 2)
 
         from rom.query import _namedtuple_data_factory as ntf
+        from rom.query import _tuple_data_factory
+        from rom.query import _list_data_factory
 
         # test alternate factory function output
         total = 0
         for it in RomTestIterResult.query.select('col1', decode=True, ff=ntf).order_by('col1').iter_result(30, 10):
             total += it.col1
+        self.assertEqual(total, 50 * 51 / 2)
+
+        # test alternate factory function output
+        total = 0
+        for it in RomTestIterResult.query.select('col1', decode=True, ff=_tuple_data_factory).order_by('col1').iter_result(30, 10):
+            total += it[0]
+        self.assertEqual(total, 50 * 51 / 2)
+
+        # test alternate factory function output
+        total = 0
+        for it in RomTestIterResult.query.select('col1', decode=True, ff=_list_data_factory).order_by('col1').iter_result(30, 10):
+            total += it[0]
         self.assertEqual(total, 50 * 51 / 2)
 
         # test bare column factory function output
