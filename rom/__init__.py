@@ -166,8 +166,8 @@ _skip = None
 _skip = set(globals()) - set('__doc__')
 
 from .columns import (Column, Integer, Boolean, Float, Decimal, DateTime,
-    Date, Time, String, Text, Json, PrimaryKey, ManyToOne, OneToOne,
-    ForeignModel, OneToMany, MODELS, MODELS_REFERENCED, SKIP_ON_DELETE)
+    SaferDateTime, Date, Time, String, Text, Json, PrimaryKey, ManyToOne,
+    OneToOne, ForeignModel, OneToMany, MODELS, MODELS_REFERENCED, SKIP_ON_DELETE)
 from .exceptions import (ORMError, UniqueKeyViolation, InvalidOperation,
     QueryError, ColumnError, MissingColumn, InvalidColumnValue, RestrictError,
     DataRaceError, EntityDeletedError)
@@ -178,7 +178,7 @@ from .util import (ClassProperty, _connect, session,
     _prefix_score, _script_load, _encode_unique_constraint,
     FULL_TEXT, CASE_INSENSITIVE, SIMPLE, SIMPLE_CI, IDENTITY, IDENTITY_CI)
 
-VERSION = '0.38.1'
+VERSION = '0.39.0'
 
 COLUMN_TYPES = [Column, Integer, Boolean, Float, Decimal, DateTime, Date,
 Time, String, Text, Json, PrimaryKey, ManyToOne, ForeignModel, OneToMany,

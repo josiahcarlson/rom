@@ -237,7 +237,9 @@ class Model(six.with_metaclass(_ModelMetaclass, object)):
                     cval = self._columns[attr]._to_redis(cval)
                 self._last[attr] = cval
         self._init = True
-        session.add(self)
+        # note: this is a lie, don't use it outside of query.py
+        if kwargs.pop('_bypass_session_entirely', False):
+            session.add(self)
 
     def _before_insert(self):
         "Called before a new entity is saved to Redis"

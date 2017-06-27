@@ -466,6 +466,41 @@ class DateTime(Column):
     def _to_redis(self, value):
         return repr(dt2ts(value))
 
+class SaferDateTime(DateTime):
+    '''
+    A (safer) datetime column (see Issue #109 or the below note for more
+    information)
+
+    All standard arguments supported. See ``Column`` for details on supported
+    arguments.
+
+    Used via::
+
+        class MyModel(Model):
+            col = SaferDateTime()
+
+    .. note:: tzinfo objects are not stored
+    .. note:: what makes this "safer" than other datetime objects is that there
+      are exactly two types of values that can be set here: a ``datetime``
+      object, or a ``str`` that can represent a float, which is the number of
+      seconds since the unix epoch.
+    '''
+
+    def _from_redis(self, value):
+        if isinstance(value, datetime):
+            return value
+        elif isinstance(value, str):
+            try:
+                return ts2dt(float(value))
+            except ValueError:
+                raise InvalidColumnValue("Cannot convert %r into type %s"%(value, self._allowed))
+        raise InvalidColumnValue("Cannot convert %r into type %s"%(value, self._allowed))
+
+    def __set__(self, obj, value):
+        if obj._init and not isinstance(obj, self._allowed):
+            raise InvalidColumnValue("Value %r is not the right type: %s"%(value, self._allowed))
+        return super(SaferDateTime, self).__set__(obj, value)
+
 class Date(Column):
     '''
     A date column.

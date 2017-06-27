@@ -1,3 +1,11 @@
+#---------------------------------- 0.39.0 -----------------------------------
+[added] Model.query.select(...) allows for selecting individual columns from
+    the model, and will return (by default) a dictionary, but can be prodded
+    to produce a namedtuple (or anything you want). Thanks to github user
+    https://github.com/peter-conalgo for the feature request
+[added] columns.SaferDateTime() to offer better type checking of values set to
+    datetime columns (partly the result of the in-Redis representation of the
+    column data)
 #---------------------------------- 0.38.1 -----------------------------------
 [fixed] If the first method that was called on the rom.session object was
     either .refresh() or .refresh_all(), rom would raise an AttributeError.

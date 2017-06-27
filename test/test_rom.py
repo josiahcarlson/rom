@@ -10,6 +10,7 @@ which you'd like to be bound under).
 
 from __future__ import print_function
 import base64
+from collections import namedtuple
 from datetime import datetime, timedelta
 from decimal import Decimal as _Decimal
 import sys
@@ -1011,22 +1012,82 @@ class TestORM(unittest.TestCase):
             total += it.col1
         session.rollback()
         self.assertEqual(total, 50 * 51 / 2)
+
+        # test no decoding
+        total = 0
+        for it in RomTestIterResult.query.select('col1', decode=False).order_by('col1').iter_result(30, 10):
+            total += int(it['col1'])
+        self.assertEqual(total, 50 * 51 / 2)
+
+        # test with decoding
+        total = 0
+        for it in RomTestIterResult.query.select('col1', decode=True).order_by('col1').iter_result(30, 10):
+            total += it['col1']
+        self.assertEqual(total, 50 * 51 / 2)
+
+        from rom.query import _namedtuple_data_factory as ntf
+
+        # test alternate factory function output
+        total = 0
+        for it in RomTestIterResult.query.select('col1', decode=True, ff=ntf).order_by('col1').iter_result(30, 10):
+            total += it.col1
+        self.assertEqual(total, 50 * 51 / 2)
+
+        # test bare column factory function output
+        def mf(ignore):
+            def make(data):
+                return data[0]
+            return make
+
+        total = 0
+        for it in RomTestIterResult.query.select('col1', include_pk=False, decode=True, ff=mf):
+            total += int(it)
+        self.assertEqual(total, 50 * 51 / 2)
+
         # also test open-ended get_by() on the indexed primary key
         self.assertEqual(len(RomTestIterResult.get_by(_id=(None, None))), 50)
         # also test order-by on the indexed primary key
         self.assertEqual(len(RomTestIterResult.query.order_by('_id').all()), 50)
+        session.rollback()
+
+        # check select on the plain order by id...
+        total = 0
+        for it in RomTestIterResult.query.select('_id', decode=True, ff=ntf).order_by('_id'):
+            total += it.id
+        self.assertEqual(total, 50 * 51 / 2)
 
         # Let's get all the entities
         session.rollback()
         self.assertEqual(len(RomTestIterResult.query.all()), 50)
+
+        # and get all the entities without an order by...
+        total = 0
+        for it in RomTestIterResult.query.select('col1', include_pk=False, decode=True, ff=ntf):
+            total += it.col1
+        self.assertEqual(total, 50 * 51 / 2)
+
         # And let's verify that it used the primary key index to iterate...
         c = connect(None)
         c.delete('%s:%s:idx'%(RomTestIterResult._namespace, RomTestIterResult._pkey))
         self.assertEqual(len(RomTestIterResult.query.all()), 0)
+        session.rollback()
+
         # hack the primary key column to force using HSCAN when available
         RomTestIterResult._columns['_id']._index = False
+
+        total = 0
+        for it in RomTestIterResult.query.select('col1', include_pk=False, ff=ntf):
+            total += int(it.col1)
+        self.assertEqual(total, 50 * 51 / 2)
+
         self.assertEqual(len(RomTestIterResult.query.all()), 50)
+
         # And now use the naive query
+        total = 0
+        for it in RomTestIterResult.query.select('col1', include_pk=False, ff=ntf).iter_result(no_hscan=True):
+            total += int(it.col1)
+        self.assertEqual(total, 50 * 51 / 2)
+
         self.assertEqual(len(list(RomTestIterResult.query.iter_result(no_hscan=True))), 50)
 
     def test_foreign_model_references(self):
@@ -1456,6 +1517,26 @@ class TestORM(unittest.TestCase):
         b = RomTestEmptyKeygen.get(aid)
         self.assertTrue(b.col)
 
+    def test_type_check_datetime(self):
+        class RomTestCheckedColumns(Model):
+            c = SaferDateTime()
+
+        # should be okay
+        RomTestCheckedColumns(c=datetime(1970, 1, 2)).save()
+
+        # also should work, because we need to round trip Redis
+        a = RomTestCheckedColumns(c='86400')
+        a.save()
+        # Fail on setting attributes
+        self.assertRaises(InvalidColumnValue, lambda: setattr(a, 'c', 1))
+        self.assertRaises(InvalidColumnValue, lambda: setattr(a, 'c', 'blah'))
+        self.assertRaises(InvalidColumnValue, lambda: setattr(a, 'c', '1'))
+        self.assertRaises(InvalidColumnValue, lambda: setattr(a, 'c', ()))
+        self.assertRaises(InvalidColumnValue, lambda: setattr(a, 'c', []))
+        self.assertRaises(InvalidColumnValue, lambda: setattr(a, 'c', {}))
+
+        # Should fail!
+        self.assertRaises(InvalidColumnValue, lambda: RomTestCheckedColumns(c=86400))
 
 def main():
     global_setup()

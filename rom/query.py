@@ -8,6 +8,7 @@ Released under the LGPL license version 2.1 and version 3 (you can choose
 which you'd like to be bound under).
 '''
 
+from collections import namedtuple
 from datetime import datetime, date, time as dtime
 from decimal import Decimal as _Decimal
 import json
@@ -30,18 +31,45 @@ NOT_NULL = (None, None)
 _STRING_SORT_KEYGENS = [ss.__name__ for ss in STRING_SORT_KEYGENS]
 ALLOWED_DIST = ('m', 'km', 'mi', 'ft')
 
+def _dict_data_factory(columns):
+    _dict = dict
+    _zip = zip
+    def make(data):
+        return _dict(_zip(columns, data))
+    return make
+
+def _namedtuple_data_factory(columns):
+    # note: named tuples don't like lowerscore prefix attributes
+    nt = namedtuple('_'.join(columns), [c.lstrip('_') for c in columns])
+    def make(data):
+        return nt(*data)
+    return make
+
+def _tuple_data_factory(columns):
+    def make(data):
+        return tuple(data)
+    return make
+
+def _list_data_factory(columns):
+    def make(data):
+        # Lists are the representation we get from the json.decode and/or the
+        # list comprehension. :P
+        return data
+    return make
+
 class Query(object):
     '''
     This is a query object. It behaves a lot like other query objects. Every
     operation performed on Query objects returns a new Query object. The old
     Query object *does not* have any updated filters.
     '''
-    __slots__ = '_model _filters _order_by _limit'.split()
-    def __init__(self, model, filters=(), order_by=None, limit=None):
+    __slots__ = '_model _filters _order_by _limit _select'.split()
+    def __init__(self, model, filters=(), order_by=None, limit=None, select=None):
         self._model = model
         self._filters = filters
         self._order_by = order_by
         self._limit = limit
+        self._select = select
 
     def _check(self, column, value=None, which='order_by'):
         column = column.strip('-').partition(':')[0]
@@ -67,6 +95,81 @@ class Query(object):
             return value
         return col
 
+    def select(self, *column_names, **kwargs):
+        '''
+        Select the provided column names from the model, do not return an entity,
+        do not involve the rom session, just get the raw and/or processed column
+        data from Redis.
+
+        Keyword-only arguments:
+
+            * *include_pk=False* - whether to include the primary key in the
+                returned data (we need to get this in some cases, so we fetch
+                it anyway; if you want it, we can return it to you - just be
+                careful with the namedtuple option - see the warning below)
+            * *decode=True* - whether to take a pass through normal data
+                decoding in the model (will not return an entity/model)
+            * *ff=_dict_data_factory* - the type of data to return from the
+                select after all filters/limits/order_by are applied
+
+        .. warning:: If ``include_pk = True`` and if you don't provide
+          the primary key column, it will be appended to your list of columns.
+
+        .. note:: if you want to provide a new factory function for the returned
+          data, it must be of the form (below is the actual dict factory
+          function)
+
+        ::
+
+            def _dict_data_factory(columns):
+                _dict = dict
+                _zip = zip
+                def make(data):
+                    # do whatever you need to turn your tuple of columns plus
+                    # your list of data into whatever you want:
+                    return _dict(_zip(columns, data))
+                return make
+
+        Available factory functions:
+
+            * *``rom.query._dict_data_factory``* - default
+            * *``rom.query._list_data_factory``* - lowest overhead, as the
+              ``data`` passed in above is a list that you can do anything to
+            * *``rom.query._tuple_data_factory``* - when you want tuples instead
+            * *``rom.query._namedtuple_data_factory``* - get namedtuples, see
+              see warning below
+
+        .. warning:: If you use the ``_namedtuple_data_factory``, and your
+          columns include underscore prefixes, they will be stripped. If this
+          results in a name collision, you *will* get an exception. If you want
+          differerent behavior, write your own 20 line factory function that
+          does exactly what you want, and pass it; they are really easy!
+
+        '''
+        include_pk = kwargs.pop('include_pk', True)
+        decode = kwargs.pop('decode', True)
+        ff = kwargs.pop('ff', _dict_data_factory)
+
+        if isinstance(column_names[0], (list, tuple)):
+            column_names = column_names[0]
+
+        if not column_names:
+            raise QueryError("Must provide at least one column to query for raw data")
+
+        if len(set(column_names)) != len(column_names):
+            raise QueryError("Column names must be unique")
+
+        missing = [c for c in column_names if c not in self._model._columns]
+        if missing:
+            raise QueryError("No such columns known: %r"%(missing,))
+
+        remove_last = False
+        if self._model._pkey not in column_names:
+            column_names += (self._model._pkey,)
+            remove_last = not include_pk
+
+        return self.replace(select=(column_names, decode, remove_last, ff))
+
     def replace(self, **kwargs):
         '''
         Copy the Query object, optionally replacing the filters, order_by, or
@@ -77,6 +180,7 @@ class Query(object):
             'filters': self._filters,
             'order_by': self._order_by,
             'limit': self._limit,
+            'select': self._select,
         }
         data.update(**kwargs)
         return Query(**data)
@@ -328,7 +432,6 @@ class Query(object):
                 ...
 
         '''
-
         if not self._filters and not self._order_by:
             if self._model._columns[self._model._pkey]._index:
                 return self._iter_all_pkey()
@@ -343,24 +446,41 @@ class Query(object):
         conn = _connect(self._model)
         limit = self._limit or (0, 2**64)
         start = max(limit[0], 0)
+        ns = '%s:'%self._model._namespace
         key = self.cached_result(timeout)
 
         remaining = limit[1]
         ids = [None]
         i = start
+        cols = None
+        if self._select:
+            cols = self._select[0]
+            dcols = json.dumps(cols)
+            data_gen = iter(_select_generator(None, self._model, *self._select))
+            next(data_gen) # prime the generator
+
         while ids and remaining > 0:
             # refresh the key
             conn.expire(key, timeout)
-            ids = conn.zrange(key, i, i+min(remaining, pagesize)-1)
+            ids = list(map(int, conn.zrange(key, i, i+min(remaining, pagesize)-1)))
+            if not ids:
+                break
+
             i += len(ids)
-            # No need to fill up memory with paginated items hanging around the
-            # session. Remove all entities from the session that are not
-            # already modified (were already in the session and modified).
-            for ent in self._model.get(ids):
-                if not ent._modified:
-                    session.forget(ent)
-                yield ent
-                remaining -= 1
+            if cols:
+                _ids = json.dumps(ids)
+                for data in _json_loads(_get_column_data(conn, [ns], [_ids, dcols])):
+                    yield data_gen.send(data)
+
+            else:
+                # No need to fill up memory with paginated items hanging around the
+                # session. Remove all entities from the session that are not
+                # already modified (were already in the session and modified).
+                for ent in self._model.get(ids):
+                    if not ent._modified:
+                        session.forget(ent)
+                    yield ent
+                    remaining -= 1
 
     def _iter_all(self):
         conn = _connect(self._model)
@@ -368,6 +488,13 @@ class Query(object):
         start = max(limit[0], 0)
         prefix = '%s:'%self._model._namespace
         max_id = int(conn.get('%s%s:'%(prefix, self._model._pkey)) or '0')
+
+        cols = None
+        if self._select:
+            cols = self._select[0]
+            dcols = json.dumps(cols)
+            data_gen = iter(_select_generator(None, self._model, *self._select))
+            next(data_gen) # prime the generator
 
         # We could use HSCAN here, except that we may get duplicates
         # as we are iterating. That's not good or expected behavior :/
@@ -377,15 +504,25 @@ class Query(object):
         while ids and i <= max_id and remaining > 0:
             ids = list(range(i, i + 100))
             i += 100
-            for ent in self._model.get(ids):
-                # Same session comment as from _iter_results()
-                if not ent._modified:
-                    session.forget(ent)
-                if start:
-                    start -= 1
-                elif remaining > 0:
-                    remaining -= 1
-                    yield ent
+            if cols:
+                _ids = json.dumps(ids)
+                for data in _json_loads(_get_column_data(conn, [prefix], [_ids, dcols])):
+                    if start:
+                        start -= 1
+                    elif remaining > 0:
+                        remaining -= 1
+                        yield data_gen.send(data)
+
+            else:
+                for ent in self._model.get(ids):
+                    # Same session comment as from _iter_results()
+                    if not ent._modified:
+                        session.forget(ent)
+                    if start:
+                        start -= 1
+                    elif remaining > 0:
+                        remaining -= 1
+                        yield ent
 
     def _iter_all_hscan(self):
         conn = _connect(self._model)
@@ -398,43 +535,68 @@ class Query(object):
         remaining = max(limit[1], 0)
         cursor = 0
         ids = ''
+        cols = None
+        ids = []
+        cols = ''
+        if self._select:
+            cols = self._select[0]
+            data_gen = iter(_select_generator(ids, self._model, *self._select))
+            next(data_gen) # prime the generator
+        dcols = json.dumps(cols)
+
         while cursor != '0' and remaining > 0:
-            result = _scan_fetch_index_hash(conn, [ns, tkey], [cursor, json.dumps(ids or '')])
-            if isinstance(result, six.binary_type):
-                result = result.decode('utf-8')
-            cursor, data = json.loads(result)
+            result = _scan_fetch_index_hash(conn, [ns, tkey], [cursor, json.dumps(ids or ''), dcols])
+            cursor, data = _json_loads(result)
 
-            ids = []
+            del ids[:]
             for mdata in data:
-                # Turn the flattened data into a dict so we can instantiate the
-                # result and/or fetch the object from the session.
-                mdata = iter(mdata)
-                mdata = dict(zip(mdata, mdata))
-                id = mdata[pkey]
-                ids.append(int(id))
+                if cols:
+                    # we are doing a special select, so ... do what we were going to do :)
+                    d = data_gen.send(mdata)
+                    if start:
+                        start -= 1
+                    elif remaining > 0:
+                        remaining -= 1
+                        yield d
 
-                # Try to get the shared entity from the session, even though
-                # we just fetched the data from Redis.
-                ent = session.get(ns + id)
-                if not ent:
-                    ent = self._model(_loading=True, **mdata)
+                else:
+                    # Turn the flattened data into a dict so we can instantiate the
+                    # result and/or fetch the object from the session.
+                    mdata = iter(mdata)
+                    mdata = dict(zip(mdata, mdata))
+                    id = mdata[pkey]
+                    ids.append(int(id))
+                    # Try to get the shared entity from the session, even though
+                    # we just fetched the data from Redis.
+                    ent = session.get(ns + id)
+                    if not ent:
+                        ent = self._model(_loading=True, **mdata)
 
-                # Same session comment as from _iter_results()
-                if not ent._modified:
-                    session.forget(ent)
-                if start:
-                    start -= 1
-                elif remaining > 0:
-                    remaining -= 1
-                    yield ent
+                    # Same session comment as from _iter_results()
+                    if not ent._modified:
+                        session.forget(ent)
+                    if start:
+                        start -= 1
+                    elif remaining > 0:
+                        remaining -= 1
+                        yield ent
 
     def _iter_all_pkey(self):
         conn = _connect(self._model)
         limit = self._limit or (0, 2**64)
         start = max(limit[0], 0)
         remaining = limit[1]
+        ns = '%s:'%self._model._namespace
         index = '%s:%s:idx'%(self._model._namespace, self._model._pkey)
         max_id = int((conn.zrevrange(index, 0, 0) or (0,))[0])
+
+        cols = None
+        if self._select:
+            cols = self._select[0]
+            dcols = json.dumps(cols)
+            data_gen = iter(_select_generator(None, self._model, *self._select))
+            next(data_gen) # prime the generator
+
         i = 1
         if start:
             # skip over the offset at the beginning
@@ -443,13 +605,21 @@ class Query(object):
         while i <= max_id and remaining > 0:
             ids = conn.zrangebyscore(index, i, i+99)
             i += 100
-            for ent in self._model.get(ids):
-                # Same session comment as from _iter_results()
-                if not ent._modified:
-                    session.forget(ent)
-                if remaining > 0:
-                    remaining -= 1
-                    yield ent
+            if cols:
+                _ids = json.dumps(list(map(int, ids)))
+                for data in _json_loads(_get_column_data(conn, [ns], [_ids, dcols])):
+                    if remaining > 0:
+                        remaining -= 1
+                        yield data_gen.send(data)
+
+            else:
+                for ent in self._model.get(ids):
+                    # Same session comment as from _iter_results()
+                    if not ent._modified:
+                        session.forget(ent)
+                    if remaining > 0:
+                        remaining -= 1
+                        yield ent
 
     def __iter__(self):
         return self.iter_result()
@@ -515,16 +685,68 @@ class Query(object):
             return self._model.get(ids[0])
         return None
 
+def _select_generator(lst, model, cols, decode, remove_last, factory):
+    final = factory(cols[:-1]) if remove_last else factory(cols)
+    if decode:
+        inter = final
+        if remove_last or factory is not _dict_data_factory:
+            inter = _dict_data_factory(cols)
+    # Get the primary key, and the number of columns we are returning from the
+    # query.
+    pki = cols.index(model._pkey)
+    wanted = len(cols) - remove_last
+
+    data = yield
+    while 1:
+        # We know which column is the primary key, so can just access it
+        # directly.
+        if lst is not None:
+            lst.append(int(data[pki]))
+        if decode:
+            # we need to decode, so use both the intermediate and final factories
+            inst = model(_loading=True, _bypass_session_entirely=True, **inter(data))
+            data = yield final([getattr(inst, c) for c in cols[:wanted]])
+        else:
+            data = yield final(data[:wanted])
+
+def _json_loads(data):
+    if six.PY3 and isinstance(data, six.binary_type):
+        data = data.decode('utf-8')
+    return json.loads(data)
+
+_get_column_data = _script_load('''
+local namespace = KEYS[1]
+local ids = cjson.decode(ARGV[1])
+local cols = cjson.decode(ARGV[2])
+
+local results = {}
+local result
+for _, id in ipairs(ids) do
+    result = redis.call('HMGET', namespace .. id, unpack(cols))
+    if #result > 0 then
+        table.insert(results, result)
+    end
+end
+return cjson.encode(results)
+''')
+
 _scan_fetch_index_hash = _script_load('''
 local namespace = KEYS[1]
 local hkey = namespace .. ':'
 local tkey = KEYS[2]
+local has_cols = false
+local cols, result
 
 -- Keep track of ids we've already returned. We need to write here because
 -- we can't write after the HSCAN call below.
 if #ARGV[2] > 2 then
     redis.call('SADD', KEYS[2], unpack(cjson.decode(ARGV[2])))
 end
+if #ARGV[3] > 2 then
+    has_cols = true
+    cols = cjson.decode(ARGV[3])
+end
+
 -- Make sure the temporary set goes away.
 redis.call('EXPIRE', KEYS[2], 30)
 
@@ -539,7 +761,11 @@ while #contents > 0 do
     local id = table.remove(contents)
 
     if redis.call('SISMEMBER', tkey, id) == 0 then
-        local result = redis.call('HGETALL', namespace .. id)
+        if has_cols then
+            result = redis.call('HMGET', namespace .. id, unpack(cols))
+        else
+            result = redis.call('HGETALL', namespace .. id)
+        end
         if #result > 0 then
             table.insert(results, result)
         end
