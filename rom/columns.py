@@ -497,7 +497,9 @@ class SaferDateTime(DateTime):
         raise InvalidColumnValue("Cannot convert %r into type %s"%(value, self._allowed))
 
     def __set__(self, obj, value):
-        if obj._init and not isinstance(obj, self._allowed):
+        if obj._init and not isinstance(value, self._allowed):
+            raise InvalidColumnValue("Value %r is not the right type: %s"%(value, self._allowed))
+        elif (not obj._init) and obj._new and not isinstance(value[2], self._allowed):
             raise InvalidColumnValue("Value %r is not the right type: %s"%(value, self._allowed))
         return super(SaferDateTime, self).__set__(obj, value)
 

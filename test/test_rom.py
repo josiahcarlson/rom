@@ -1536,11 +1536,10 @@ class TestORM(unittest.TestCase):
             c = SaferDateTime()
 
         # should be okay
-        RomTestCheckedColumns(c=datetime(1970, 1, 2)).save()
+        a = RomTestCheckedColumns(c=datetime(1970, 1, 2))
+        a.save()
 
         # also should work, because we need to round trip Redis
-        a = RomTestCheckedColumns(c='86400')
-        a.save()
         # Fail on setting attributes
         self.assertRaises(InvalidColumnValue, lambda: setattr(a, 'c', 1))
         self.assertRaises(InvalidColumnValue, lambda: setattr(a, 'c', 'blah'))
