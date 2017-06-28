@@ -1547,9 +1547,13 @@ class TestORM(unittest.TestCase):
         self.assertRaises(InvalidColumnValue, lambda: setattr(a, 'c', ()))
         self.assertRaises(InvalidColumnValue, lambda: setattr(a, 'c', []))
         self.assertRaises(InvalidColumnValue, lambda: setattr(a, 'c', {}))
+        a.c = datetime(1970, 1, 3)
+        a.save()
 
         # Should fail!
         self.assertRaises(InvalidColumnValue, lambda: RomTestCheckedColumns(c=86400))
+        self.assertRaises(InvalidColumnValue, lambda: RomTestCheckedColumns(c='86400'))
+
 
 def main():
     global_setup()
