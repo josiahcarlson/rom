@@ -1,3 +1,9 @@
+#---------------------------------- 0.39.4 -----------------------------------
+[fixed] Fix for bug where patterns could match primary key values in prefix
+    or suffix indexes. Thanks to github user https://github.com/peter-conalgo
+    for the bug report.
+#---------------------------------- 0.39.3 -----------------------------------
+[fixed] Fixes SaferDateTime column.
 #---------------------------------- 0.39.2 -----------------------------------
 [fixed] Travis CI - Python 2.6 is no longer supported in Travis (even if it is
     supported by rom :P)
