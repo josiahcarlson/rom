@@ -516,6 +516,8 @@ class TestORM(unittest.TestCase):
         self.assertEqual(RomTestPSP.query.like(col='*oin+').count(), 1)
         self.assertEqual(RomTestPSP.query.like(col='oin').count(), 0)
         self.assertEqual(RomTestPSP.query.like(col='+oin').like(col='wor!d').count(), 1)
+        self.assertEqual(RomTestPSP.query.like(col='*1').count(), 0)
+        self.assertEqual(RomTestPSP.query.like(col='*r').count(), 1)
 
         self.assertEqual(RomTestPSP.query.startswith(col2="This is just").count(), 1)
         self.assertEqual(RomTestPSP.query.startswith(col2="this is just").count(), 0)

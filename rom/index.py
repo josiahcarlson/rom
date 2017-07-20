@@ -40,7 +40,8 @@ def _pattern_to_lua_pattern(pat):
         .replace('?', '.?') \
         .replace('*', '.-') \
         .replace('+', '.+') \
-        .replace('!', '.')
+        .replace('!', '.') \
+        .replace('\0', '%z') + '.*%z%d+'
 
 def _find_prefix(pat):
     pat = SPECIAL.sub('%\1', pat)
