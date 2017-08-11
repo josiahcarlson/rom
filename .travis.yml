@@ -15,8 +15,7 @@ env:
     - REDIS_VERSION=3.0
     - REDIS_VERSION=3.2
 before_install:
-  - python -c 'import random,time; time.sleep(random.randrange(5, 35))'
-  - sudo apt-key adv --keyserver hkp://p80.pool.sks-keyservers.net:80 --recv-keys 58118E89F3A912897C070ADBF76221572C52609D
+  - sudo apt-key adv --keyserver hkp://pool.sks-keyservers.net --recv-keys 58118E89F3A912897C070ADBF76221572C52609D
   - sudo bash -c "echo 'deb https://apt.dockerproject.org/repo ubuntu-trusty main' > /etc/apt/sources.list.d/docker.list"
   - sudo docker pull redis:$REDIS_VERSION
   - sudo docker run -d -p 6379:6379 redis:$REDIS_VERSION
