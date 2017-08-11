@@ -477,8 +477,8 @@ class Session(threading.local):
         Forget about all entities in the session (``.commit()`` will do
         nothing).
         '''
-        self.known = {}
         self.wknown = weakref.WeakValueDictionary()
+        self.known = {}
 
     def flush(self, full=False, all=False, force=False):
         '''

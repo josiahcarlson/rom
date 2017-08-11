@@ -316,7 +316,7 @@ class Column(object):
 
         if value is None:
             if self._default in (NULL, None):
-                if self._required:
+                if self._required and not loading:
                     raise MissingColumn("%s.%s cannot be missing"%(self._model, self._attr))
             elif callable(self._default):
                 value = self._default()

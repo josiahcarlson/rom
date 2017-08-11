@@ -537,6 +537,9 @@ class TestORM(unittest.TestCase):
         self.assertEqual(RomTestPSP.query.like(col3="*this is*").count(), 1)
         self.assertEqual(RomTestPSP.query.like(col3="nope").count(), 0)
 
+        self.assertEqual(RomTestPSP.query.like(col="world\0").count(), 1)
+        self.assertEqual(RomTestPSP.query.startswith(col="world").count(), 1)
+
     def test_unicode_text(self):
         ch = unichr(0xfeff) if six.PY2 else chr(0xfeff)
         pre = ch + 'hello'
@@ -1004,9 +1007,10 @@ class TestORM(unittest.TestCase):
             _id = PrimaryKey(index=True)
             id = Integer()
             col1 = Integer(index=True)
+            alternate = Integer(required=True)
 
         for i in range(1, 51):
-            RomTestIterResult(col1=i).save()
+            RomTestIterResult(col1=i, alternate=1).save()
 
         session.rollback()
         total = 0
