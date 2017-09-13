@@ -1279,9 +1279,7 @@ class TestORM(unittest.TestCase):
         else:
             self.assertGreater(r2[0].id, r2[1].id)
 
-    def test_string_in_3x(self):
-        if six.PY2:
-            return
+    def test_string_in_all(self):
         by = 'hello'.encode('utf-8')
         class RomTestByteString(Model):
             scol = String(unique=True, index=True, suffix=True, keygen=FULL_TEXT)
@@ -1290,6 +1288,17 @@ class TestORM(unittest.TestCase):
         self.assertTrue(RomTestByteString.get_by(scol=by))
         self.assertEqual(RomTestByteString.query.filter(scol=by).count(), 1)
         self.assertEqual(RomTestByteString.query.endswith(scol=by[1:]).count(), 1)
+        self.assertRaises(UniqueKeyViolation, RomTestByteString(scol=by).save)
+
+    def test_weird(self):
+        ip = '192.168.10.22'
+        class RomTestSlaveServers(Model):
+            ip_address = String(required=True, unique=True)
+            free_slots = Integer(required=True, default=10)
+            status = String(required=True, default=b'idle')
+
+        RomTestSlaveServers(ip_address=ip).save()
+        self.assertRaises(UniqueKeyViolation, RomTestSlaveServers(ip_address=ip).save)
 
     def test_hooks(self):
         class RomTestHooks(Model):

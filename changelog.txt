@@ -1,3 +1,9 @@
+#---------------------------------- 0.40.0 -----------------------------------
+[fixed] Python 3.x+ rom had an issue where some unique binary String indexes
+    (the String column in Python 3.x, Text was fine), where in some cases, the
+    unique index would be unfilled - depending on the data that was passed to
+    the initial object. Thanks to Gitub user https://github.com/sreecodeslayer
+    for the bug report; see issue #113 for details.
 #---------------------------------- 0.39.5 -----------------------------------
 [fixed] When using Model.query.select(...), you are no longer required to
     include all 'required' columns as part of the select when decode=True.

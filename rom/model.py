@@ -309,7 +309,7 @@ class Model(six.with_metaclass(_ModelMetaclass, object)):
                 ikey = "%s:%s:uidx"%(model, attr)
 
             ca = columns[attr]
-            roval = old.get(attr)
+            roval = None if is_new else old.get(attr)
             oval = ca._from_redis(roval) if roval is not None else None
 
             nval = new.get(attr)
@@ -394,7 +394,7 @@ class Model(six.with_metaclass(_ModelMetaclass, object)):
 
             # Add/update unique index
             if ikey:
-                if six.PY2 and not isinstance(roval, str):
+                if not isinstance(roval, str) and roval is not None:
                     roval = columns[attr]._to_redis(roval)
                 if oval is not None and roval != rnval:
                     udeleted[attr] = oval
