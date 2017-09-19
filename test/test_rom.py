@@ -1211,19 +1211,36 @@ class TestORM(unittest.TestCase):
         # available. :/
         self.assertTrue(all(c.hexists('RomTestNamespacedCleanup:col3:uidx', i) for i in to_delete))
 
-    def test_mutli_query(self):
+    def test_multi_query(self):
         class RomTestIndexMultiCol(Model):
             attr1 = string(required=True, index=True, keygen=FULL_TEXT)
             attr2 = string(required=True, index=True, keygen=FULL_TEXT)
+            attr3 = String(required=True, index=True, default=b'', keygen=FULL_TEXT)
 
         a = RomTestIndexMultiCol(attr1='548ef7ee7b77b93ab41ksjh3', attr2='2')
         a.save()
+
+        import uuid
+        RomTestIndexMultiCol(attr1=str(uuid.uuid4()), attr2='4', attr3=b'Voting').save()
+        RomTestIndexMultiCol(attr1=str(uuid.uuid4()), attr2='4', attr3=b'boating').save()
 
         self.assertEqual(len(RomTestIndexMultiCol.query.filter(attr1='548ef7ee7b77b93ab41ksjh3').execute()), 1)
         self.assertEqual(len(RomTestIndexMultiCol.query.filter(attr2=['1', '2']).execute()), 1)
         self.assertEqual(len(RomTestIndexMultiCol.query.filter(attr1='548ef7ee7b77b93ab41ksjh3', attr2='2').execute()), 1)
         self.assertEqual(len(RomTestIndexMultiCol.query.filter(attr1='548ef7ee7b77b93ab41ksjh3', attr2=['2', '1']).execute()), 1)
         self.assertEqual(len(RomTestIndexMultiCol.query.filter(attr1='548ef7ee7b77b93ab41ksjh3', attr2=['1']).execute()), 0)
+        self.assertEqual(len(RomTestIndexMultiCol.query.filter(attr3=b'boating').execute()), 1)
+        self.assertEqual(len(RomTestIndexMultiCol.query.filter(attr3=b'voting').execute()), 1)
+        self.assertEqual(len(RomTestIndexMultiCol.query.filter(attr3=b'Voting').execute()), 1)
+
+    def test_issue_114(self):
+        import uuid
+        class RomTestIMASentence(Model):
+                uuid = String(required=True, unique=True)
+                section = String(required=True, index=True, keygen=FULL_TEXT)
+
+        RomTestIMASentence(section='Voting', uuid=uuid.uuid4().bytes).save()
+        self.assertEqual(RomTestIMASentence.query.filter(section='Voting').count(), 1)
 
     def test_namespace(self):
         _ex = {'prefix':True, 'suffix':True, 'keygen':FULL_TEXT}

@@ -57,6 +57,8 @@ def _list_data_factory(columns):
         return data
     return make
 
+_LT = six.string_types + (six.binary_type,)
+
 class Query(object):
     '''
     This is a query object. It behaves a lot like other query objects. Every
@@ -90,8 +92,15 @@ class Query(object):
             raise QueryError("Cannot use 'endswith' clause on a column defined with 'suffix=False'")
 
         if value is not None:
+            if isinstance(value, bool):
+                value = str(bool(value))
+
             if col._keygen.__name__ in ('FULL_TEXT', 'SIMPLE_CI', 'CASE_INSENSITIVE', 'IDENTITY_CI'):
-                value = value.lower()
+                if isinstance(value, _LT):
+                    value = value.lower()
+                if isinstance(value, list):
+                    value = [v.lower() for v in value]
+
             return value
         return col
 
@@ -236,9 +245,7 @@ class Query(object):
         '''
         cur_filters = list(self._filters)
         for attr, value in kwargs.items():
-            self._check(attr, which='filter')
-            if isinstance(value, bool):
-                value = str(bool(value))
+            value = self._check(attr, value, which='filter')
 
             if isinstance(value, NUMERIC_TYPES):
                 # for simple numeric equiality filters
