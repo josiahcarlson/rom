@@ -1583,6 +1583,15 @@ class TestORM(unittest.TestCase):
         self.assertRaises(InvalidColumnValue, lambda: RomTestCheckedColumns(c=86400))
         self.assertRaises(InvalidColumnValue, lambda: RomTestCheckedColumns(c='86400'))
 
+    def test_issue_115(self):
+        class RomTestCategory(Model):
+            name = String()
+
+        a = RomTestCategory(name='D\xe9cor'); a.save()
+        self.assertRaises(UnicodeEncodeError, lambda: RomTestCategory(name=u'D\ufffdcor'))
+        self.assertEqual(len(RomTestCategory.query.execute()), 1)
+        self.assertEqual(len(RomTestCategory.query.execute()), 1)
+
 
 def main():
     global_setup()

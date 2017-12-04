@@ -1,3 +1,9 @@
+#---------------------------------- 0.40.2 -----------------------------------
+[fixed] rom had an issue with some types of binary data not being restored
+    during query (users may receive UnicodeEncodeError). Thanks to github user
+    https://github.com/bernardko for the bug report.
+#---------------------------------- 0.40.1 -----------------------------------
+[fixed] this was the actual fix described for 0.40.0, actually here.
 #---------------------------------- 0.40.0 -----------------------------------
 [fixed] Python 3.x+ rom had an issue where some unique binary String indexes
     (the String column in Python 3.x, Text was fine), where in some cases, the

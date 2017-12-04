@@ -563,7 +563,7 @@ class String(Column):
     '''
     _allowed = str if six.PY2 else bytes
     def _to_redis(self, value):
-        return value.decode('latin-1').encode('utf-8')
+        return value.decode('latin-1')
 
     def _from_redis(self, value):
         return value
@@ -572,7 +572,7 @@ class String(Column):
         if value != None:
             if not isinstance(value, self._allowed):
                 value = value.encode('latin-1')
-            if loading:
+            elif loading:
                 value = value.decode('utf-8').encode('latin-1')
         return Column._init_(self, obj, model, attr, value, loading)
 
