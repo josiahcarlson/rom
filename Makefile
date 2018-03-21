@@ -58,6 +58,6 @@ test-tox:
 docs:
 	python -c "import rom; open('README.rst', 'wb').write(rom.__doc__); open('VERSION', 'wb').write(rom.VERSION);"
 	$(SPHINXBUILD) -b html $(ALLSPHINXOPTS) $(BUILDDIR)/html
-	cd _build/html/ && zip -r9 ../../rom_docs.zip * && cd ../../
+	cp -r $(BUILDDIR)/html/. docs
 	@echo
-	@echo "Build finished. The HTML pages are in $(BUILDDIR)/html."
+	@echo "Build finished. The HTML pages are in docs"

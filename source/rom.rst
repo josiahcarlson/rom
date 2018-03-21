@@ -5,6 +5,14 @@ rom Package
     :members:
     :show-inheritance:
 
+:mod:`columns` Module
+---------------------
+
+.. automodule:: rom.columns
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
 :mod:`exceptions` Module
 ------------------------
 
@@ -13,6 +21,31 @@ rom Package
     :undoc-members:
     :show-inheritance:
 
+:mod:`index` Module
+-------------------
+
+.. automodule:: rom.index
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+:mod:`model` Module
+-------------------
+
+.. automodule:: rom.model
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+:mod:`query` Module
+-------------------
+
+.. automodule:: rom.query
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+
 :mod:`util` Module
 ------------------
 
@@ -20,4 +53,3 @@ rom Package
     :members:
     :undoc-members:
     :show-inheritance:
-
