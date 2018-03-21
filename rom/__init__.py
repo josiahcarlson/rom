@@ -12,7 +12,7 @@ which you'd like to be bound under).
 Documentation
 =============
 
-Updated documentation can be found: http://pythonhosted.org/rom/
+Updated documentation can be found: https://josiahcarlson.github.io/rom/
 
 What
 ====

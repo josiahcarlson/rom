@@ -1,3 +1,6 @@
+#---------------------------------- 0.41.1 -----------------------------------
+[fixed] pythonhosted.org is not going to be hosting docs forever, this moves
+    the docs to github pages and updates references.
 #---------------------------------- 0.41.0 -----------------------------------
 [fixed] in some cases, bad column metadata could get left in the foreign key
     column metadata in rom internals. Shouldn't have affected anything, except
