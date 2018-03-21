@@ -1,3 +1,10 @@
+#---------------------------------- 0.41.2 -----------------------------------
+[added] Model.update(*args, **kwargs) as a convenience method per requset from
+    github user https://github.com/61t
+[fixed] multi-subclassed models may have raised a duplicate PrimaryKey error
+    on initialization.
+[fixed] small issue with over-writing values on IndexOnly() columns not
+    raising an exception.
 #---------------------------------- 0.41.1 -----------------------------------
 [fixed] pythonhosted.org is not going to be hosting docs forever, this moves
     the docs to github pages and updates references.

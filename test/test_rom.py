@@ -305,7 +305,17 @@ class TestORM(unittest.TestCase):
         self.assertEqual(RomTestIndexedModel.query.endswith(attr6='world').count(), 2)
         self.assertEqual(RomTestIndexedModel.query.endswith(attr6=' world').count(), 1)
         self.assertRaises(InvalidColumnValue, lambda: RomTestIndexedModel(attr6='hello'))
-        RomTestIndexedModel(attr6=None)
+        a = RomTestIndexedModel(attr6=None)
+
+        self.assertRaises(InvalidColumnValue, lambda: a.update(attr6='blah'))
+        a.update(attr='another world').save()
+        self.assertEqual(RomTestIndexedModel.query.endswith(attr6=' world').count(), 2)
+        if sys.version_info >= (3,6):
+            print("key order", list(RomTestIndexedModel._columns))
+            a.update('different world').save()
+            self.assertEqual(RomTestIndexedModel.query.endswith(attr6='different world').count(), 1)
+            a.update('overwritten', attr='kept').save()
+            self.assertEqual(RomTestIndexedModel.query.endswith(attr6='kept').count(), 1)
 
     def test_alternate_models(self):
         ctr = [0]

@@ -56,7 +56,9 @@ class _ModelMetaclass(type):
         odict = {}
         for ocls in reversed(bases):
             if hasattr(ocls, '_columns'):
-                odict.update(ocls._columns)
+                if __init and ocls is not Model:
+                    odict.update(ocls._columns)
+
         odict.update(dict)
         dict = odict
 
@@ -165,6 +167,8 @@ class AttrDict(dict):
         self[attr] = value
     def __delattr__(self, attr):
         self.pop(attr, None)
+
+_ModelMetaclass__init = False
 
 class Model(six.with_metaclass(_ModelMetaclass, object)):
     '''
@@ -644,6 +648,24 @@ class Model(six.with_metaclass(_ModelMetaclass, object)):
         subsequent filtering.
         '''
         return Query(cls)
+
+    def update(self, *args, **kwargs):
+        '''
+        Updates multiple attributes in a model. If ``args`` are provided, this
+        method will assign attributes in the order returned by
+        ``list(self._columns)`` until one or both are exhausted.
+
+        If ``kwargs`` are provided, this method will assign attributes to the
+        names provided, after ``args`` have been processed.
+        '''
+        sa = setattr
+        for a, v in zip(self._columns, args):
+            sa(self, a, v)
+        for a, v in kwargs.items():
+            sa(self, a, v)
+        return self
+
+_ModelMetaclass__init = True
 
 _redis_writer_lua = _script_load('''
 local namespace = ARGV[1]

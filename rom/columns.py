@@ -344,7 +344,7 @@ class Column(object):
                     # We can safely suppress this, the column was already set
                     # to None or deleted
                     return
-            if not isinstance(value, self._allowed):
+            if not isinstance(value, self._allowed) and self._allowed:
                 value = self._from_redis(value)
         except (ValueError, TypeError):
             raise InvalidColumnValue("Cannot convert %r into type %s"%(value, self._allowed))
