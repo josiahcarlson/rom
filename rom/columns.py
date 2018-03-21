@@ -252,7 +252,7 @@ class Column(object):
         if (keygen or keygen2) and not (index or prefix or suffix):
             raise ColumnError("Explicit keygen provided, but no index type spcified (index, prefix, and suffix all False)")
 
-        if not self._allowed and not hasattr(self, '_fmodel') and not hasattr(self, '_ftable'):
+        if not self._allowed and not hasattr(self, '_fmodel') and not hasattr(self, '_ftable') and not isinstance(self, IndexOnly):
             raise ColumnError("Missing valid class-level _allowed attribute on %r"%(type(self),))
 
         allowed = (self._allowed,) if isinstance(self._allowed, type) else self._allowed
@@ -322,7 +322,7 @@ class Column(object):
                 value = self._default()
             else:
                 value = self._default
-        elif not isinstance(value, self._allowed):
+        elif not isinstance(value, self._allowed) and self._allowed:
             try:
                 value = self._from_redis(value)
             except (ValueError, TypeError) as e:
@@ -634,13 +634,13 @@ class PrimaryKey(Column):
     '''
     This is a primary key column, used when you want the primary key to be
     named something other than 'id'. If you omit a PrimaryKey column on your
-    Model classes, one will be automatically cretaed for you.
+    Model classes, one will be automatically created for you.
 
     Only the ``index`` argument will be used. You may want to enable indexing
     on this column if you want to be able to perform queries and sort the
     results by primary key.
 
-    Used via:
+    Used via::
 
         class MyModel(Model):
             id = PrimaryKey()
@@ -668,6 +668,65 @@ class PrimaryKey(Column):
             self._init_(obj, *value)
             return
         raise InvalidOperation("Cannot update primary key value")
+
+class IndexOnly(Column):
+    '''
+    This column doesn't actually store data, except in indexes for other
+    columns. Say, for example, you have an email text field that you want to
+    be unique, look-up by identity, but also be parsed out for a sort of
+    address-book index. Normally that would suck. But not with ``IndexOnly()``
+    columns! Data set on this attribute will raise an exception, and will be
+    silently ignored (and potentially deleted) if already stored in Redis.
+
+    Used via::
+
+        import re
+        def split_email(val):
+            if val:
+                return set(filter(None, re.split('[^\w]', val.lower())))
+
+        class MyModel(Model):
+            email = Text(unique=True)
+            elookup = IndexOnly('email', keygen=split_email)
+
+        MyModel(email='user@host.com').save()
+        MyModel.get_by(elookup='user')
+        MyModel.query.filter(elookup=['user', 'host']).all()
+
+    .. Note:: I've been using a variation of this internally for some of my
+        own work, and I thought I'd release it as a convenience column.
+
+    '''
+
+    def __init__(self, column, keygen, unique=False, prefix=False, suffix=False):
+        '''
+        Standard Arguments:
+
+            * *column* - column with the data you want to index
+            * *keygen* - passed through, see ``Column`` docs for more information
+            * *unique* - passed through, see ``Column`` docs for more information
+            * *prefix* - passed through, see ``Column`` docs for more information
+            * *suffix* - passed through, see ``Column`` docs for more information
+        '''
+        Column.__init__(self, keygen2=(lambda _,dct: keygen(dct.get(column))),
+            unique=unique, prefix=prefix, suffix=suffix)
+
+    def _validate(self, value):
+        if value is not None:
+            raise InvalidColumnValue("%s.%s has type %r but column cannot hold data"%(
+                self._model, self._attr, type(value)))
+
+    def _from_redis(self, value):
+        return
+
+    def _to_redis(self, value):
+        return
+
+twrap = (lambda x: (x,))
+
+@twrap
+class DoesntMatterInThisContext:
+    pass
 
 class ManyToOne(Column):
     '''
@@ -702,6 +761,7 @@ class ManyToOne(Column):
 
     '''
     __slots__ = Column.__slots__ + ['_ftable', '_on_delete']
+    _allowed = DoesntMatterInThisContext
     def __init__(self, ftable, on_delete=NO_ACTION_DEFAULT, required=False, default=NULL):
         exc = _check_on_delete(on_delete, required, default)
         if exc:
@@ -772,6 +832,7 @@ class OneToOne(ManyToOne):
 
     '''
     __slots__ = Column.__slots__ + ['_ftable', '_on_delete']
+    _allowed = DoesntMatterInThisContext
     def __init__(self, ftable, on_delete=NO_ACTION_DEFAULT, required=False, default=NULL, unique=False):
         exc = _check_on_delete(on_delete, required, default)
         if exc:
@@ -803,6 +864,7 @@ class ForeignModel(Column):
         x.save()
     '''
     __slots__ = Column.__slots__ + ['_fmodel']
+    _allowed = DoesntMatterInThisContext
     def __init__(self, fmodel, required=False, default=NULL):
         self._fmodel = fmodel
         Column.__init__(self, required, default, index=True, keygen=_many_to_one_keygen)
@@ -848,6 +910,7 @@ class OneToMany(Column):
             ocol = OneToMany('ModelName')
     '''
     __slots__ = '_model _attr _ftable _required _unique _index _prefix _suffix _keygen _column'.split()
+    _allowed = DoesntMatterInThisContext
     def __init__(self, ftable, column=None):
         if column in ON_DELETE or column is NO_ACTION_DEFAULT:
             raise ColumnError("OneToMany lost its on_delete argument - pass it to the ManyToOne instead")

@@ -1,3 +1,24 @@
+#---------------------------------- 0.41.0 -----------------------------------
+[fixed] in some cases, bad column metadata could get left in the foreign key
+    column metadata in rom internals. Shouldn't have affected anything, except
+    some extra memory being used unnecessarily.
+[added] Model.query.delete(blocksize=100) - for deleting models that match a
+    query. Requires that the model not have any ManyToOne, OneToMany, or
+    OneToOne columns or other foreign-key relationships. This should speed up
+    common deletion/cleanup tasks.
+[added] util.session.delete(...) - for deleting a list of arbitrary models in
+    one round trip to Redis, if possible (if all entites are of one type, and
+    you haven't done anything strange with per-entity connections). Same no
+    foreign-key relationships limitation exists here.
+[fixed] a few misspellings in the docs (there are probably more).
+[added] columns.IndexOnly() - allowing multiple indexes and index types over
+    columns, without explicitly duplicating the column data. Each column index
+    can be queried by name using the standard
+    Model.query.filter(index_only_column=value),
+    Model.query.startswith(index_only_column=value),
+    Model.query.endswith(index_only_column=value), and/or
+    Model.query.near(index_only_column=value) - depending on the type of
+    index created.
 #---------------------------------- 0.40.2 -----------------------------------
 [fixed] rom had an issue with some types of binary data not being restored
     during query (users may receive UnicodeEncodeError). Thanks to github user
@@ -6,9 +27,9 @@
 [fixed] this was the actual fix described for 0.40.0, actually here.
 #---------------------------------- 0.40.0 -----------------------------------
 [fixed] Python 3.x+ rom had an issue where some unique binary String indexes
-    (the String column in Python 3.x, Text was fine), where in some cases, the
-    unique index would be unfilled - depending on the data that was passed to
-    the initial object. Thanks to Gitub user https://github.com/sreecodeslayer
+    (the String column in Python 3.x, Text was fine) the unique index would be
+    unfilled - depending on the data that was passed to the initial object.
+    Thanks to Gitub user https://github.com/sreecodeslayer
     for the bug report; see issue #113 for details.
 #---------------------------------- 0.39.5 -----------------------------------
 [fixed] When using Model.query.select(...), you are no longer required to

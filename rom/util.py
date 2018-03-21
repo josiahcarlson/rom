@@ -547,6 +547,77 @@ class Session(threading.local):
 
         return changes
 
+    def delete(self, *objects, **kwargs):
+        '''
+        This method offers the ability to delete multiple entities in a single
+        round trip to Redis (assuming your models are all stored on the same
+        server). You can call::
+
+
+            session.delete(obj)
+            session.delete(obj1, obj2, ...)
+            session.delete([obj1, obj2, ...])
+
+        The keyword argument ``force=True`` can be provided, which can force
+        the deletion of an entitiy again, even if we believe it to already be
+        deleted.
+
+        If ``force=True``, we won't re-call the object's ``_before_delete()``
+        method, but we will re-call ``_after_delete()``.
+
+        .. note:: Objects are automatically dropped from the session after
+            delete for the sake of cache coherency.
+        '''
+        force = kwargs.get('force')
+        from .model import Model, SKIP_ON_DELETE
+
+        flat = []
+        items = deque()
+        items.extend(objects)
+        types = set()
+        # flatten what was passed in, more or less arbitrarily deep
+        while items:
+            o = items.popleft()
+            if isinstance(o, (list, tuple)):
+                items.extendleft(reversed(o))
+            elif isinstance(o, Model):
+                if force or not o._deleted:
+                    flat.append(o)
+                    types.add(type(o))
+
+        # make sure we can bulk delete everything we've been requested to
+        from .columns import MODELS_REFERENCED
+        for t in types:
+            if not t._no_fk or t._namespace in MODELS_REFERENCED:
+                raise ORMError("Can't bulk delete entities of models with foreign key relationships")
+
+        c2p = {}
+        for o in flat:
+            # prepare delete
+            if not o._deleted:
+                o._before_delete()
+
+            # make sure we've got connections
+            c = o._connection
+            if c not in c2p:
+                c2p[c] = c.pipeline()
+
+            # use our existing delete, and pass through a pipeline :P
+            o.delete(_conn=c2p[c],
+                skip_on_delete_i_really_mean_it=SKIP_ON_DELETE)
+
+        # actually delete the data in Redis
+        for p in c2p.values():
+            p.execute()
+
+        # remove the objects from the session
+        forget = self.forget
+        for o in flat:
+            if o._deleted == 1:
+                o._after_delete()
+                o._deleted = 2
+            forget(o)
+
     def refresh(self, *objects, **kwargs):
         '''
         This method is an alternate API for refreshing many entities (possibly

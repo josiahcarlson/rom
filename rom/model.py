@@ -9,6 +9,7 @@ Released under the LGPL license version 2.1 and version 3 (you can choose
 which you'd like to be bound under).
 '''
 
+from __future__ import print_function
 from collections import defaultdict
 import json
 import warnings
@@ -103,7 +104,6 @@ class _ModelMetaclass(type):
 
             if isinstance(col, (ManyToOne, OneToOne)):
                 many_to_one[col._ftable].append((attr, col))
-                MODELS_REFERENCED.setdefault(col._ftable, []).append((dict['_namespace'], attr, col._on_delete))
 
             if attr == 'unique_together':
                 composite_unique = col
@@ -149,6 +149,11 @@ class _ModelMetaclass(type):
 
         dict['_pkey'] = pkey
         dict['_gindex'] = GeneralIndex(dict['_namespace'])
+        for cols in many_to_one.values():
+            for attr, col in cols:
+                MODELS_REFERENCED.setdefault(col._ftable, []).append((dict['_namespace'], attr, col._on_delete))
+
+        dict['_no_fk'] = not many_to_one
 
         MODELS[dict['_namespace']] = MODELS[name] = model = type.__new__(cls, name, bases, dict)
         return model
@@ -282,8 +287,8 @@ class Model(six.with_metaclass(_ModelMetaclass, object)):
         return '%s:%s'%(self._namespace, getattr(self, self._pkey))
 
     @classmethod
-    def _apply_changes(cls, old, new, full=False, delete=False, is_new=False):
-        conn = _connect(cls)
+    def _apply_changes(cls, old, new, full=False, delete=False, is_new=False, _conn=None):
+        conn = _conn if _conn is not None else _connect(cls)
         pk = old.get(cls._pkey) or new.get(cls._pkey)
         if not pk:
             raise ColumnError("Missing primary key value")
@@ -318,7 +323,7 @@ class Model(six.with_metaclass(_ModelMetaclass, object)):
                 redis_data[attr] = rnval
 
             # Add/update standard index
-            if ca._keygen and not delete and nval is not None and (ca._index or ca._prefix or ca._suffix):
+            if ca._keygen and not delete and (nval is not None or not ca._allowed) and (ca._index or ca._prefix or ca._suffix):
                 generated = ca._keygen(attr, new)
                 if not generated:
                     # No index entries, we'll clean out old entries later
@@ -483,7 +488,7 @@ class Model(six.with_metaclass(_ModelMetaclass, object)):
             _on_delete(self)
 
         session.forget(self)
-        self._apply_changes(self._last, {}, delete=True)
+        self._apply_changes(self._last, {}, delete=True, _conn=kwargs.get('_conn'))
         self._modified = True
         self._deleted = True
         # handle the post-commit hooks
@@ -827,7 +832,7 @@ def redis_writer_lua(conn, pkey, namespace, id, unique, udelete, delete,
             (unique, udelete, delete, ldata, keys, scored, prefix, suffix, geo, is_delete, old_data)]
     result = _redis_writer_lua(conn, [], [namespace, id] + data)
 
-    if isinstance(result, client.BasePipeline):
+    if isinstance(conn, client.BasePipeline):
         # we're in a pipelined write situation, don't parse the pipeline :P
         return
 

@@ -238,12 +238,14 @@ class TestORM(unittest.TestCase):
         self.assertTrue(x is RomTestNormal.get(x.id))
 
     def test_index(self):
+        plain = lambda x: [x.lower()] if x else None
         class RomTestIndexedModel(Model):
             attr = Text(index=True, keygen=FULL_TEXT)
             attr2 = Text(index=True, keygen=FULL_TEXT)
             attr3 = Integer(index=True)
             attr4 = Float(index=True)
             attr5 = Decimal(index=True)
+            attr6 = IndexOnly('attr', keygen=plain, suffix=True)
 
         x = RomTestIndexedModel(
             attr='hello world',
@@ -292,13 +294,18 @@ class TestORM(unittest.TestCase):
         self.assertTrue(conn.ttl(key) <= 30)
         self.assertEqual(conn.zcard(key), 1)
         conn.delete(key)
-        self.assertRaises(QueryError, lambda: RomTestIndexedModel.query.order_by('attr6'))
+        self.assertRaises(QueryError, lambda: RomTestIndexedModel.query.order_by('attr7'))
 
         # Only the first call raises the warning, so only bother to call it
         # for our first pass through tests (non-Lua case).
         with warnings.catch_warnings(record=True) as w:
             RomTestIndexedModel.query.order_by('attr')
             self.assertEqual(len(w), 1)
+
+        self.assertEqual(RomTestIndexedModel.query.endswith(attr6='world').count(), 2)
+        self.assertEqual(RomTestIndexedModel.query.endswith(attr6=' world').count(), 1)
+        self.assertRaises(InvalidColumnValue, lambda: RomTestIndexedModel(attr6='hello'))
+        RomTestIndexedModel(attr6=None)
 
     def test_alternate_models(self):
         ctr = [0]
@@ -1495,31 +1502,49 @@ class TestORM(unittest.TestCase):
                 GeoIndex('basic', lambda x: {'lat':x.lat, 'lon':x['lon']})
             ]
 
-        a = RomTestGeo(lat=0, lon=0, tags='restaurant')
+        a = RomTestGeo(lat=50, lon=0, tags='channel')
         a.save()
-        self.assertEqual(a.query.filter(tags='restaurant').near('basic', .5, 0, 60, 'km').count(), 1)
-        self.assertEqual(a.query.filter(tags='gasoline').near('basic', .5, 0, 60, 'km').count(), 0)
-        self.assertEqual(a.query.filter(tags='restaurant').near('basic', 0, .5, 60, 'km').count(), 1)
-        self.assertEqual(a.query.filter(tags='gasoline').near('basic', 0, .5, 60, 'km').count(), 0)
-        self.assertEqual(a.query.filter(tags='restaurant').near('basic', 1, 0, 60, 'km').count(), 0)
-        self.assertEqual(a.query.filter(tags='restaurant').near('basic', 0, 1, 60, 'km').count(), 0)
+        self.assertEqual(a.query.filter(tags='channel').near('basic', .5, 50, 60, 'km').count(), 1)
+        self.assertEqual(a.query.filter(tags='park').near('basic', .5, 50, 60, 'km').count(), 0)
+        self.assertEqual(a.query.filter(tags='channel').near('basic', 0, 50.5, 60, 'km').count(), 1)
+        self.assertEqual(a.query.filter(tags='park').near('basic', 0, 50.5, 60, 'km').count(), 0)
+        self.assertEqual(a.query.filter(tags='channel').near('basic', 1, 50, 60, 'km').count(), 0)
+        self.assertEqual(a.query.filter(tags='channel').near('basic', 0, 51, 60, 'km').count(), 0)
 
-    def _test_filter_performance(self):
-        import time
+        RomTestGeo(lat=50.99476, lon=0, tags='park').save()
+        self.assertEqual(a.query.filter(tags='park').near('basic', 0, 51, 60, 'km').count(), 1)
+        a.query.filter(tags='park').near('basic', 0, 50, 100, 'km').delete()
+        self.assertEqual(a.query.filter(tags='park').near('basic', 0, 50, 60, 'km').count(), 0)
+
+    def test_filter_delete(self):
         class RomTestFilterPerformance(Model):
             id = PrimaryKey(index=True)
 
+        TEST_PERF = 0
+
         ids = []
-        for i in range(10000):
+        for i in range(10000 if TEST_PERF else 100):
             a = RomTestFilterPerformance()
             a.save()
             ids.append(a.id)
         session.rollback()
 
+        if TEST_PERF:
+            t = time.time()
+            for i in range(100):
+                RomTestFilterPerformance.query.filter(id=(1, 1)).cached_result(30)
+            ela = time.time()-t
+            print("\nelapsed: ", ela)
+            print("qps: ", 100 / ela)
+
+        self.assertEqual(RomTestFilterPerformance.query.filter(id=(ids[0], ids[-1])).count(), len(ids))
         t = time.time()
-        for i in range(100):
-            RomTestFilterPerformance.query.filter(id=(1, 1)).cached_result(30)
-        print("\nelapsed: ", time.time()-t)
+        RomTestFilterPerformance.query.filter(id=(ids[0], ids[-1])).delete(blocksize=len(ids))
+        delta = time.time() - t
+        self.assertEqual(RomTestFilterPerformance.query.filter(id=(ids[0], ids[-1])).count(), 0)
+
+        if TEST_PERF:
+            print('delete items in', delta, len(ids) / delta)
 
     def test_recursive_model(self):
         class RomTestRecursiveModel(Model):

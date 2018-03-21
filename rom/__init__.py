@@ -4,7 +4,7 @@
 
 Rom - the Redis object mapper for Python
 
-Copyright 2013-2016 Josiah Carlson
+Copyright 2013-2018 Josiah Carlson
 
 Released under the LGPL license version 2.1 and version 3 (you can choose
 which you'd like to be bound under).
@@ -150,7 +150,7 @@ example) get up to the 10 oldest entites that need to be expired.
 Now, I know what you are thinking. You are thinking, "but I wish the data would
 just go away on its own." And I don't disagree. But for that to happen, Redis
 needs to grow Lua-script triggers, or you need to run a separate daemon to
-periodically clean up lef-over data. But ... if you need to run a separate
+periodically clean up left-over data. But ... if you need to run a separate
 daemon to clean up left-over data by scanning all of your rom entities,
 wouldn't it just be better/faster in every way to keep an explicit column and do
 it efficiently? I think so, and you should too.
@@ -167,7 +167,8 @@ _skip = set(globals()) - set('__doc__')
 
 from .columns import (Column, Integer, Boolean, Float, Decimal, DateTime,
     SaferDateTime, Date, Time, String, Text, Json, PrimaryKey, ManyToOne,
-    OneToOne, ForeignModel, OneToMany, MODELS, MODELS_REFERENCED, SKIP_ON_DELETE)
+    OneToOne, ForeignModel, OneToMany, IndexOnly, MODELS, MODELS_REFERENCED,
+    SKIP_ON_DELETE)
 from .exceptions import (ORMError, UniqueKeyViolation, InvalidOperation,
     QueryError, ColumnError, MissingColumn, InvalidColumnValue, RestrictError,
     DataRaceError, EntityDeletedError)
@@ -178,11 +179,11 @@ from .util import (ClassProperty, _connect, session,
     _prefix_score, _script_load, _encode_unique_constraint,
     FULL_TEXT, CASE_INSENSITIVE, SIMPLE, SIMPLE_CI, IDENTITY, IDENTITY_CI)
 
-VERSION = '0.40.2'
+VERSION = '0.41.0'
 
 COLUMN_TYPES = [Column, Integer, Boolean, Float, Decimal, DateTime, Date,
 Time, String, Text, Json, PrimaryKey, ManyToOne, ForeignModel, OneToMany,
-OneToOne]
+OneToOne, IndexOnly]
 
 NUMERIC_TYPES = six.integer_types + (float, _Decimal, datetime, date, dtime)
 

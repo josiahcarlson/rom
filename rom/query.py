@@ -182,7 +182,8 @@ class Query(object):
     def replace(self, **kwargs):
         '''
         Copy the Query object, optionally replacing the filters, order_by, or
-        limit information on the copy.
+        limit information on the copy. This is mostly an internal detail that
+        you can ignore.
         '''
         data = {
             'model': self._model,
@@ -200,7 +201,8 @@ class Query(object):
         the ``index=True`` option on the column definition can be filtered with
         this method. Prefix, suffix, and pattern match filters must be provided
         using the ``.startswith()``, ``.endswith()``, and the ``.like()``
-        methods on the query object, respectively.
+        methods on the query object, respectively. Geo location queries should
+        be performed using the ``.near()`` method.
 
         Filters should be of the form::
 
@@ -691,6 +693,36 @@ class Query(object):
         if ids:
             return self._model.get(ids[0])
         return None
+
+    def delete(self, blocksize=100):
+        '''
+        Will delete the entities that match at the time the query is executed.
+
+        Used like::
+
+            MyModel.query.filter(email=...).delete()
+            MyModel.query.endswith(email='@host.com').delete()
+
+        .. warning:: can't be used on models on either side of a ``OneToMany``,
+            ``ManyToOne``, or ``OneToOne`` relationship.
+        '''
+
+        from .columns import MODELS_REFERENCED
+        if not self._model._no_fk or self._model._namespace in MODELS_REFERENCED:
+            raise QueryError("Can't delete entities of models with foreign key relationships")
+
+        de = []
+        i = 0
+        for result in self.iter_result(pagesize=blocksize):
+            de.append(result)
+            i += 1
+            if i >= blocksize:
+                session.delete(de) # one round-trip to delete "chunk" items
+                del de[:]
+                i = 0
+
+        if de:
+            session.delete(de)
 
 def _select_generator(lst, model, cols, decode, remove_last, factory):
     final = factory(cols[:-1]) if remove_last else factory(cols)
