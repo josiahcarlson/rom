@@ -311,7 +311,6 @@ class TestORM(unittest.TestCase):
         a.update(attr='another world').save()
         self.assertEqual(RomTestIndexedModel.query.endswith(attr6=' world').count(), 2)
         if sys.version_info >= (3,6):
-            print("key order", list(RomTestIndexedModel._columns))
             a.update('different world').save()
             self.assertEqual(RomTestIndexedModel.query.endswith(attr6='different world').count(), 1)
             a.update('overwritten', attr='kept').save()
@@ -1023,8 +1022,11 @@ class TestORM(unittest.TestCase):
             col1 = Integer(index=True)
             alternate = Integer(required=True)
 
+        ids = []
         for i in range(1, 51):
-            RomTestIterResult(col1=i, alternate=1).save()
+            a = RomTestIterResult(col1=i, alternate=1)
+            a.save()
+            ids.append(a._id)
 
         session.rollback()
         total = 0
@@ -1269,6 +1271,7 @@ class TestORM(unittest.TestCase):
 
         a = TestNamespace(test_i=4, test_s='hello', test_t='this is a test')
         a.save()
+        session.add(a)
 
         # make sure no strange keys make it through
         self.assertEqual(util.CONNECTION.keys('TestNamespace*'), [])
@@ -1626,6 +1629,30 @@ class TestORM(unittest.TestCase):
         self.assertRaises(UnicodeEncodeError, lambda: RomTestCategory(name=u'D\ufffdcor'))
         self.assertEqual(len(RomTestCategory.query.execute()), 1)
         self.assertEqual(len(RomTestCategory.query.execute()), 1)
+
+    def test_issue_118(self):
+        class RomTestUndxModel(Model):
+            txtkey = Text(required=True, unique=True)
+            intkey = Integer(unique=True)
+
+        self.assertRaises(MissingColumn, RomTestUndxModel)
+
+        self.assertRaises(InvalidColumnValue, lambda: RomTestUndxModel(txtkey='hello', foo='bar'))
+        item = RomTestUndxModel(txtkey='hello')
+        item.save()
+        a = item.to_dict()
+        a.pop('id')
+        self.assertEqual(a, {'txtkey': 'hello', 'intkey': None})
+
+        self.assertRaises(AttributeError, lambda: item.foo)
+
+        self.assertRaises(MissingColumn, lambda: RomTestUndxModel(intkey=20))
+        item = None
+        session.rollback()
+
+        self.assertEqual(RomTestUndxModel.query.all()[0].intkey, None)
+
+        self.assertEqual(RomTestUndxModel.query.select('txtkey', 'intkey').all(), [{'txtkey': 'hello', 'intkey': None}])
 
 
 def main():

@@ -179,7 +179,7 @@ from .util import (ClassProperty, _connect, session,
     _prefix_score, _script_load, _encode_unique_constraint,
     FULL_TEXT, CASE_INSENSITIVE, SIMPLE, SIMPLE_CI, IDENTITY, IDENTITY_CI)
 
-VERSION = '0.41.2'
+VERSION = '0.42.0'
 
 COLUMN_TYPES = [Column, Integer, Boolean, Float, Decimal, DateTime, Date,
 Time, String, Text, Json, PrimaryKey, ManyToOne, ForeignModel, OneToMany,
@@ -188,6 +188,8 @@ OneToOne, IndexOnly]
 NUMERIC_TYPES = six.integer_types + (float, _Decimal, datetime, date, dtime)
 
 __all__ = [x for x in set(globals()) if x not in _skip and not x.startswith('_')]
+# could use a better order here; model, columns, query, util, index, exceptions
+__all__.sort()
 
 # silence pyflakes
 MODELS, MODELS_REFERENCED

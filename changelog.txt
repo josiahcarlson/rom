@@ -1,3 +1,16 @@
+#---------------------------------- 0.42.0 -----------------------------------
+[changed] Attributes passed on object creation that don't exist will now raise
+    an exception, unless you explicitly pass _extra_ok=True.
+[fixed] a fix from bugs 108/109 where objects wouldn't be added to the session
+    when they should be, and would when they shouldn't be.
+[fixed] potential issue when using select and order_by; could have returned
+    model entities instead of columns selected.
+[fixed] issue with iterators over select queries possibly returning bad data
+    silently (columns would all be 'False').
+[fixed] issue with entities going into the session during arbitrary queries
+    where they shouldn't have.
+[fixed] hopefully got sphinx docs to generate consistent order, so subsequent
+    commits don't result in rewriting it all for every commit :/
 #---------------------------------- 0.41.2 -----------------------------------
 [added] Model.update(*args, **kwargs) as a convenience method per requset from
     github user https://github.com/61t

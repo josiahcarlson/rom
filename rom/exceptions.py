@@ -1,8 +1,9 @@
 
 __all__ = '''
     ORMError UniqueKeyViolation InvalidOperation
-    QueryError ColumnError MissingColumn
+    QueryError ColumnError MissingColumn BulkError
     InvalidColumnValue RestrictError DataRaceError EntityDeletedError'''.split()
+__all__.sort()
 
 class ORMError(Exception):
     'Base class for all ORM-related errors'

@@ -486,3 +486,4 @@ def estimate_work_lua(conn, index, prefix):
     return _estimate_work_lua(conn, [index], [start, '(' + end], force_eval=True)
 
 __all__ = [k for k, v in globals().items() if getattr(v, '__doc__', None) and k not in _skip]
+__all__.sort()

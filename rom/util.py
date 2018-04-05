@@ -452,8 +452,10 @@ class Session(threading.local):
         if self.null_session:
             return
         self._init()
-        self.known[obj._pk] = obj
-        self.wknown[obj._pk] = obj
+        pk = obj._pk
+        if not pk.endswith(':None'):
+            self.known[pk] = obj
+            self.wknown[pk] = obj
 
     def forget(self, obj):
         '''
@@ -1025,3 +1027,4 @@ end
 ''')
 
 __all__ = [k for k, v in globals().items() if getattr(v, '__doc__', None) and k not in _skip]
+__all__.sort()

@@ -146,6 +146,10 @@ class _ModelMetaclass(type):
                 if col not in columns:
                     raise ColumnError("Multi-column unique index %r references non-existant column %r"%(
                         comp, col))
+                if pkey == col:
+                    raise ColumnError("Multi-column unique index %r references primary key column %r"%(
+                        comp, col))
+
             seen[key] = comp
             cunique.add(key)
 
@@ -229,6 +233,9 @@ class Model(six.with_metaclass(_ModelMetaclass, object)):
     '''
     def __init__(self, **kwargs):
         self._new = not kwargs.pop('_loading', False)
+        loading = not self._new
+        extra_ok = kwargs.pop('_extra_ok', False)
+        use_session = not kwargs.pop('_bypass_session_entirely', False)
         model = self._namespace
         self._data = {}
         self._last = {}
@@ -237,17 +244,25 @@ class Model(six.with_metaclass(_ModelMetaclass, object)):
         self._init = False
         for attr in self._columns:
             cval = kwargs.get(attr, None)
-            data = (model, attr, cval, not self._new)
+            if loading and cval is False:
+                # Weird Redis' JSON nil -> False thing
+                cval = None
             if self._new and attr == self._pkey and cval:
                 raise InvalidColumnValue("Cannot pass primary key on object creation")
+            data = (model, attr, cval, not self._new)
             setattr(self, attr, data)
             if cval != None:
                 if not isinstance(cval, six.string_types):
                     cval = self._columns[attr]._to_redis(cval)
                 self._last[attr] = cval
+
+        if use_session and self._new and not extra_ok:
+            delta = set(kwargs) - set(self._columns)
+            if delta:
+                raise InvalidColumnValue("Extra columns passed but not valid: %r, pass '_extra_ok=True` to ignore them"%(list(delta),))
         self._init = True
         # note: this is a lie, don't use it outside of query.py
-        if kwargs.pop('_bypass_session_entirely', False):
+        if use_session:
             session.add(self)
 
     def _before_insert(self):
@@ -883,3 +898,4 @@ def redis_writer_lua(conn, pkey, namespace, id, unique, udelete, delete,
             namespace, id)
 
 __all__ = [k for k, v in globals().items() if getattr(v, '__doc__', None) and k not in _skip]
+__all__.sort()

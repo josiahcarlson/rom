@@ -483,10 +483,11 @@ class Query(object):
 
             else:
                 # No need to fill up memory with paginated items hanging around the
-                # session. Remove all entities from the session that are not
-                # already modified (were already in the session and modified).
+                # session. Remove entities from the session as they come in, if they
+                # weren't already in the session.
+                isk = set(session.known.keys())
                 for ent in self._model.get(ids):
-                    if not ent._modified:
+                    if ent._pk not in isk:
                         session.forget(ent)
                     yield ent
                     remaining -= 1
@@ -523,9 +524,10 @@ class Query(object):
                         yield data_gen.send(data)
 
             else:
+                isk = set(session.known.keys())
                 for ent in self._model.get(ids):
-                    # Same session comment as from _iter_results()
-                    if not ent._modified:
+                    if ent._pk not in isk:
+                        # Same session comment as from _iter_results()
                         session.forget(ent)
                     if start:
                         start -= 1
@@ -567,6 +569,8 @@ class Query(object):
                     elif remaining > 0:
                         remaining -= 1
                         yield d
+                    else:
+                        break
 
                 else:
                     # Turn the flattened data into a dict so we can instantiate the
@@ -580,15 +584,19 @@ class Query(object):
                     ent = session.get(ns + id)
                     if not ent:
                         ent = self._model(_loading=True, **mdata)
-
-                    # Same session comment as from _iter_results()
-                    if not ent._modified:
+                        # Same session comment as from _iter_results()
                         session.forget(ent)
+                    else:
+                        # do a refresh...
+                        ent.__init__(_loading=True, **mdata)
+
                     if start:
                         start -= 1
                     elif remaining > 0:
                         remaining -= 1
                         yield ent
+                    else:
+                        break
 
     def _iter_all_pkey(self):
         conn = _connect(self._model)
@@ -620,11 +628,14 @@ class Query(object):
                     if remaining > 0:
                         remaining -= 1
                         yield data_gen.send(data)
+                    else:
+                        break
 
             else:
+                isk = set(session.known.keys())
                 for ent in self._model.get(ids):
                     # Same session comment as from _iter_results()
-                    if not ent._modified:
+                    if ent._pk not in isk:
                         session.forget(ent)
                     if remaining > 0:
                         remaining -= 1
@@ -668,9 +679,7 @@ class Query(object):
         filters, ordered by the specified ordering (if any), limited by any
         earlier limit calls.
         '''
-        if not self._filters and not self._order_by:
-            return list(self)
-        return self._model.get(self._search())
+        return list(self)
 
     def all(self):
         '''
@@ -725,6 +734,7 @@ class Query(object):
             session.delete(de)
 
 def _select_generator(lst, model, cols, decode, remove_last, factory):
+    from itertools import islice
     final = factory(cols[:-1]) if remove_last else factory(cols)
     if decode:
         inter = final
@@ -736,17 +746,24 @@ def _select_generator(lst, model, cols, decode, remove_last, factory):
     wanted = len(cols) - remove_last
 
     data = yield
-    while 1:
-        # We know which column is the primary key, so can just access it
-        # directly.
-        if lst is not None:
-            lst.append(int(data[pki]))
-        if decode:
+    if decode:
+        while 1:
+            # We know which column is the primary key, so can just access it
+            # directly.
+            if lst is not None:
+                lst.append(int(data[pki]))
             # we need to decode, so use both the intermediate and final factories
             inst = model(_loading=True, _bypass_session_entirely=True, **inter(data))
-            data = yield final([getattr(inst, c) for c in cols[:wanted]])
-        else:
-            data = yield final(data[:wanted])
+            data = yield final([getattr(inst, c) for c in islice(cols, wanted)])
+
+    else:
+        while 1:
+            # We know which column is the primary key, so can just access it
+            # directly.
+            if lst is not None:
+                lst.append(int(data[pki]))
+            # Fix for Redis' weird JSON null handling.
+            data = yield final([None if c is False else c for c in islice(data, wanted)])
 
 def _json_loads(data):
     if six.PY3 and isinstance(data, six.binary_type):
@@ -761,9 +778,12 @@ local cols = cjson.decode(ARGV[2])
 local results = {}
 local result
 for _, id in ipairs(ids) do
-    result = redis.call('HMGET', namespace .. id, unpack(cols))
-    if #result > 0 then
-        table.insert(results, result)
+    id = namespace .. id
+    if redis.call('EXISTS', id) == 1 then
+        result = redis.call('HMGET', id, unpack(cols))
+        if #result > 0 then
+            table.insert(results, result)
+        end
     end
 end
 return cjson.encode(results)
@@ -779,7 +799,7 @@ local cols, result
 -- Keep track of ids we've already returned. We need to write here because
 -- we can't write after the HSCAN call below.
 if #ARGV[2] > 2 then
-    redis.call('SADD', KEYS[2], unpack(cjson.decode(ARGV[2])))
+    redis.call('SADD', tkey, unpack(cjson.decode(ARGV[2])))
 end
 if #ARGV[3] > 2 then
     has_cols = true
@@ -787,7 +807,7 @@ if #ARGV[3] > 2 then
 end
 
 -- Make sure the temporary set goes away.
-redis.call('EXPIRE', KEYS[2], 30)
+redis.call('EXPIRE', tkey, 30)
 
 local results = {}
 local pair = redis.call('HSCAN', hkey, ARGV[1])
@@ -814,3 +834,4 @@ return cjson.encode({cursor, results})
 ''')
 
 __all__ = [k for k, v in globals().items() if getattr(v, '__doc__', None) and k not in _skip]
+__all__.sort()
