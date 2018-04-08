@@ -1,0 +1,633 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>util Module &#8212; rom 0.42.0 documentation</title>
+    
+    <link rel="stylesheet" href="_static/classic.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '0.42.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true,
+        SOURCELINK_SUFFIX: '.txt'
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" /> 
+  </head>
+  <body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">rom 0.42.0 documentation</a> &#187;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="module-rom.util">
+<span id="util-module"></span><h1><code class="xref py py-mod docutils literal"><span class="pre">util</span></code> Module<a class="headerlink" href="#module-rom.util" title="Permalink to this headline">¶</a></h1>
+<p>Rom - the Redis object mapper for Python</p>
+<p>Copyright 2013-2016 Josiah Carlson</p>
+<p>Released under the LGPL license version 2.1 and version 3 (you can choose
+which you’d like to be bound under).</p>
+<div class="section" id="changing-connection-settings">
+<h2>Changing connection settings<a class="headerlink" href="#changing-connection-settings" title="Permalink to this headline">¶</a></h2>
+<p>There are four ways to change the way that <code class="docutils literal"><span class="pre">rom</span></code> connects to Redis.</p>
+<ol class="arabic">
+<li><p class="first">Set the global default connection settings by calling
+<code class="docutils literal"><span class="pre">rom.util.set_connection_settings()</span></code> with the same arguments you would
+pass to the redis.Redis() constructor:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">rom.util</span>
+
+<span class="n">rom</span><span class="o">.</span><span class="n">util</span><span class="o">.</span><span class="n">set_connection_settings</span><span class="p">(</span><span class="n">host</span><span class="o">=</span><span class="s1">&#39;myhost&#39;</span><span class="p">,</span> <span class="n">db</span><span class="o">=</span><span class="mi">7</span><span class="p">)</span>
+</pre></div>
+</div>
+</li>
+<li><p class="first">Give each model its own Redis connection on creation, called _conn, which
+will be used whenever any Redis-related calls are made on instances of that
+model:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">rom</span>
+
+<span class="k">class</span> <span class="nc">MyModel</span><span class="p">(</span><span class="n">rom</span><span class="o">.</span><span class="n">Model</span><span class="p">):</span>
+    <span class="n">_conn</span> <span class="o">=</span> <span class="n">redis</span><span class="o">.</span><span class="n">Redis</span><span class="p">(</span><span class="n">host</span><span class="o">=</span><span class="s1">&#39;myhost&#39;</span><span class="p">,</span> <span class="n">db</span><span class="o">=</span><span class="mi">7</span><span class="p">)</span>
+
+    <span class="n">attribute</span> <span class="o">=</span> <span class="n">rom</span><span class="o">.</span><span class="n">String</span><span class="p">()</span>
+    <span class="n">other_attribute</span> <span class="o">=</span> <span class="n">rom</span><span class="o">.</span><span class="n">String</span><span class="p">()</span>
+</pre></div>
+</div>
+</li>
+<li><p class="first">Replace the <code class="docutils literal"><span class="pre">CONNECTION</span></code> object in <code class="docutils literal"><span class="pre">rom.util</span></code>:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">rom.util</span>
+
+<span class="n">rom</span><span class="o">.</span><span class="n">util</span><span class="o">.</span><span class="n">CONNECTION</span> <span class="o">=</span> <span class="n">redis</span><span class="o">.</span><span class="n">Redis</span><span class="p">(</span><span class="n">host</span><span class="o">=</span><span class="s1">&#39;myhost&#39;</span><span class="p">,</span> <span class="n">db</span><span class="o">=</span><span class="mi">7</span><span class="p">)</span>
+</pre></div>
+</div>
+</li>
+<li><p class="first">Monkey-patch <code class="docutils literal"><span class="pre">rom.util.get_connection</span></code> with a function that takes no
+arguments and returns a Redis connection:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">rom.util</span>
+
+<span class="k">def</span> <span class="nf">my_connection</span><span class="p">():</span>
+    <span class="c1"># Note that this function doesn&#39;t use connection pooling,</span>
+    <span class="c1"># you would want to instantiate and cache a real connection</span>
+    <span class="c1"># as necessary.</span>
+    <span class="k">return</span> <span class="n">redis</span><span class="o">.</span><span class="n">Redis</span><span class="p">(</span><span class="n">host</span><span class="o">=</span><span class="s1">&#39;myhost&#39;</span><span class="p">,</span> <span class="n">db</span><span class="o">=</span><span class="mi">7</span><span class="p">)</span>
+
+<span class="n">rom</span><span class="o">.</span><span class="n">util</span><span class="o">.</span><span class="n">get_connection</span> <span class="o">=</span> <span class="n">my_connection</span>
+</pre></div>
+</div>
+</li>
+</ol>
+</div>
+<div class="section" id="using-a-non-caching-session-object">
+<h2>Using a non-caching session object<a class="headerlink" href="#using-a-non-caching-session-object" title="Permalink to this headline">¶</a></h2>
+<p>If you would like to stop <code class="docutils literal"><span class="pre">rom</span></code> from caching your data for later
+<code class="docutils literal"><span class="pre">session.commit()</span></code> or faster data fetching (and there are several reasons for
+doing this), <code class="docutils literal"><span class="pre">rom</span></code> offers two methods to enable or disable caching on either a
+global or per-thread basis.</p>
+<ol class="arabic">
+<li><p class="first">To set the global default behavior as not caching anything, you can:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">rom.util</span>
+<span class="n">rom</span><span class="o">.</span><span class="n">util</span><span class="o">.</span><span class="n">use_null_session</span><span class="p">()</span>
+</pre></div>
+</div>
+<p>From the point that <code class="docutils literal"><span class="pre">rom.util.use_null_session()</span></code> is called, no additional
+caching will be performed. You must explicitly <code class="docutils literal"><span class="pre">.save()</span></code> any newly created
+entities, and <code class="docutils literal"><span class="pre">session.commit()</span></code> will only save those objects that had been
+cached prior to the <code class="docutils literal"><span class="pre">rom.util.use_null_session()</span></code> call.</p>
+<p>You can switch back to the standard <code class="docutils literal"><span class="pre">rom</span></code> behavior by calling
+<code class="docutils literal"><span class="pre">rom.util.use_rom_session()</span></code>.</p>
+</li>
+<li><p class="first">To override behavior on a per-thread basis, you can set the attribute
+<code class="docutils literal"><span class="pre">null_session</span></code> on the <code class="docutils literal"><span class="pre">session</span></code> object (which is available as
+<code class="docutils literal"><span class="pre">rom.session</span></code>, <code class="docutils literal"><span class="pre">rom.columns.session</span></code>, or <code class="docutils literal"><span class="pre">rom.util.session</span></code>), which
+will set the thread’s behavior to be uncached (<code class="docutils literal"><span class="pre">session.null_session</span> <span class="pre">=</span>
+<span class="pre">True</span></code>), cached (<code class="docutils literal"><span class="pre">session.null_session</span> <span class="pre">=</span> <span class="pre">False</span></code>), or the global default
+(<code class="docutils literal"><span class="pre">del</span> <span class="pre">session.null_session</span></code>).</p>
+</li>
+</ol>
+</div>
+<div class="section" id="using-a-geo-index">
+<h2>Using a geo index<a class="headerlink" href="#using-a-geo-index" title="Permalink to this headline">¶</a></h2>
+<p>Your model must have an attribute called <code class="docutils literal"><span class="pre">geo_index</span></code>, and that attribute must
+be a list of <code class="docutils literal"><span class="pre">GeoIndex()</span></code> objects. Names for <code class="docutils literal"><span class="pre">GeoIndex</span></code> items must be unique
+per model.:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">rom</span>
+
+<span class="k">def</span> <span class="nf">cb</span><span class="p">(</span><span class="n">data</span><span class="p">):</span>
+    <span class="c1"># ``data`` can act as an object or dictionary. This function could have</span>
+    <span class="c1"># actually just read::</span>
+    <span class="c1">#     return data</span>
+    <span class="c1"># ... but we will be explicit in what we return... yes this works!</span>
+    <span class="k">return</span> <span class="p">{</span><span class="s1">&#39;lon&#39;</span><span class="p">:</span> <span class="n">data</span><span class="p">[</span><span class="s1">&#39;lon&#39;</span><span class="p">],</span> <span class="s1">&#39;lat&#39;</span><span class="p">:</span> <span class="n">data</span><span class="o">.</span><span class="n">lat</span><span class="p">}</span>
+
+<span class="k">class</span> <span class="nc">PointOfInterest</span><span class="p">(</span><span class="n">rom</span><span class="o">.</span><span class="n">Model</span><span class="p">):</span>
+    <span class="o">...</span>
+    <span class="n">tags</span> <span class="o">=</span> <span class="n">rom</span><span class="o">.</span><span class="n">String</span><span class="p">(</span><span class="n">index</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">keygen</span><span class="o">=</span><span class="n">rom</span><span class="o">.</span><span class="n">FULL_TEXT</span><span class="p">)</span>
+    <span class="n">avg_rating</span> <span class="o">=</span> <span class="n">rom</span><span class="o">.</span><span class="n">Float</span><span class="p">(</span><span class="n">index</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="n">lon</span> <span class="o">=</span> <span class="n">rom</span><span class="o">.</span><span class="n">Float</span><span class="p">()</span>
+    <span class="n">lat</span> <span class="o">=</span> <span class="n">rom</span><span class="o">.</span><span class="n">Float</span><span class="p">()</span>
+    <span class="n">geo_index</span> <span class="o">=</span> <span class="p">[</span>
+        <span class="c1"># callback function passed to GeoIndex as the 2nd argument *must*</span>
+        <span class="c1"># return a dictionary containing &#39;lon&#39; and &#39;lat&#39; values, as degrees</span>
+        <span class="n">rom</span><span class="o">.</span><span class="n">GeoIndex</span><span class="p">(</span><span class="s1">&#39;geo_index&#39;</span><span class="p">,</span> <span class="n">cb</span><span class="p">),</span>
+        <span class="o">...</span>
+    <span class="p">]</span>
+
+
+<span class="c1"># Gets the 50 *best* restaurants, up to 25 miles away, from a given point,</span>
+<span class="c1"># ordered by highest to lowest rating</span>
+<span class="n">points</span> <span class="o">=</span> <span class="n">PointOfInterest</span><span class="o">.</span><span class="n">query</span> \
+    <span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">tags</span><span class="o">=</span><span class="s1">&#39;restaurant&#39;</span><span class="p">)</span> \
+    <span class="o">.</span><span class="n">near</span><span class="p">(</span><span class="s1">&#39;geo_index&#39;</span><span class="p">,</span> <span class="o">&lt;</span><span class="n">lon</span><span class="o">&gt;</span><span class="p">,</span> <span class="o">&lt;</span><span class="n">lat</span><span class="o">&gt;</span><span class="p">,</span> <span class="mi">25</span><span class="p">,</span> <span class="s1">&#39;mi&#39;</span><span class="p">)</span> \
+    <span class="o">.</span><span class="n">order_by</span><span class="p">(</span><span class="s1">&#39;-avg_rating&#39;</span><span class="p">)</span> \
+    <span class="o">.</span><span class="n">limit</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">50</span><span class="p">)</span> \
+    <span class="o">.</span><span class="n">all</span><span class="p">()</span>
+
+<span class="c1"># geo queries can also independently have their own counts, which can offer</span>
+<span class="c1"># performance improvements for some queries (filtering earlier rather than</span>
+<span class="c1"># later), for slightly different semantics...</span>
+
+<span class="c1"># Gets the 50 *closest* restaurants, up to 25 miles away, from a given point,</span>
+<span class="c1"># ordered by highest to lowest rating.</span>
+<span class="n">points</span> <span class="o">=</span> <span class="n">PointOfInterest</span><span class="o">.</span><span class="n">query</span> \
+    <span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">tags</span><span class="o">=</span><span class="s1">&#39;restaurant&#39;</span><span class="p">)</span> \
+    <span class="o">.</span><span class="n">near</span><span class="p">(</span><span class="s1">&#39;geo_index&#39;</span><span class="p">,</span> <span class="o">&lt;</span><span class="n">lon</span><span class="o">&gt;</span><span class="p">,</span> <span class="o">&lt;</span><span class="n">lat</span><span class="o">&gt;</span><span class="p">,</span> <span class="mi">25</span><span class="p">,</span> <span class="s1">&#39;mi&#39;</span><span class="p">,</span> <span class="mi">50</span><span class="p">)</span> \
+    <span class="o">.</span><span class="n">order_by</span><span class="p">(</span><span class="s1">&#39;-avg_rating&#39;</span><span class="p">)</span> \
+    <span class="o">.</span><span class="n">all</span><span class="p">()</span>
+</pre></div>
+</div>
+<dl class="function">
+<dt id="rom.util.CASE_INSENSITIVE">
+<code class="descclassname">rom.util.</code><code class="descname">CASE_INSENSITIVE</code><span class="sig-paren">(</span><em>val</em><span class="sig-paren">)</span><a class="headerlink" href="#rom.util.CASE_INSENSITIVE" title="Permalink to this definition">¶</a></dt>
+<dd><p>Old alias for SIMPLE_CI</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="rom.util.ClassProperty">
+<em class="property">class </em><code class="descclassname">rom.util.</code><code class="descname">ClassProperty</code><span class="sig-paren">(</span><em>get</em>, <em>set=None</em>, <em>delete=None</em><span class="sig-paren">)</span><a class="headerlink" href="#rom.util.ClassProperty" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">object</span></code></p>
+<p>Borrowed from: <a class="reference external" href="https://gist.github.com/josiahcarlson/1561563">https://gist.github.com/josiahcarlson/1561563</a></p>
+<dl class="method">
+<dt id="rom.util.ClassProperty.deleter">
+<code class="descname">deleter</code><span class="sig-paren">(</span><em>delete</em><span class="sig-paren">)</span><a class="headerlink" href="#rom.util.ClassProperty.deleter" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="rom.util.ClassProperty.getter">
+<code class="descname">getter</code><span class="sig-paren">(</span><em>get</em><span class="sig-paren">)</span><a class="headerlink" href="#rom.util.ClassProperty.getter" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="rom.util.ClassProperty.setter">
+<code class="descname">setter</code><span class="sig-paren">(</span><em>set</em><span class="sig-paren">)</span><a class="headerlink" href="#rom.util.ClassProperty.setter" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="function">
+<dt id="rom.util.EntityLock">
+<code class="descclassname">rom.util.</code><code class="descname">EntityLock</code><span class="sig-paren">(</span><em>entity</em>, <em>acquire_timeout</em>, <em>lock_timeout</em><span class="sig-paren">)</span><a class="headerlink" href="#rom.util.EntityLock" title="Permalink to this definition">¶</a></dt>
+<dd><p>Useful when you want exclusive access to an entity across all writers.:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="c1"># example</span>
+<span class="kn">import</span> <span class="nn">rom</span>
+
+<span class="k">class</span> <span class="nc">Document</span><span class="p">(</span><span class="n">rom</span><span class="o">.</span><span class="n">Model</span><span class="p">):</span>
+    <span class="n">owner</span> <span class="o">=</span> <span class="n">rom</span><span class="o">.</span><span class="n">ManyToOne</span><span class="p">(</span><span class="s1">&#39;User&#39;</span><span class="p">,</span> <span class="n">on_delete</span><span class="o">=</span><span class="s1">&#39;restrict&#39;</span><span class="p">)</span>
+    <span class="o">...</span>
+
+<span class="k">def</span> <span class="nf">change_owner</span><span class="p">(</span><span class="n">document</span><span class="p">,</span> <span class="n">new_owner</span><span class="p">):</span>
+    <span class="k">with</span> <span class="n">rom</span><span class="o">.</span><span class="n">util</span><span class="o">.</span><span class="n">EntityLock</span><span class="p">(</span><span class="n">document</span><span class="p">,</span> <span class="mi">5</span><span class="p">,</span> <span class="mi">90</span><span class="p">):</span>
+        <span class="n">document</span><span class="o">.</span><span class="n">owner</span> <span class="o">=</span> <span class="n">new_owner</span>
+        <span class="n">document</span><span class="o">.</span><span class="n">save</span><span class="p">()</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="rom.util.FULL_TEXT">
+<code class="descclassname">rom.util.</code><code class="descname">FULL_TEXT</code><span class="sig-paren">(</span><em>val</em><span class="sig-paren">)</span><a class="headerlink" href="#rom.util.FULL_TEXT" title="Permalink to this definition">¶</a></dt>
+<dd><p>This is a basic full-text index keygen function. Words are lowercased, split
+by whitespace, and stripped of punctuation from both ends before an inverted
+index is created for term searching.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="rom.util.IDENTITY">
+<code class="descclassname">rom.util.</code><code class="descname">IDENTITY</code><span class="sig-paren">(</span><em>val</em><span class="sig-paren">)</span><a class="headerlink" href="#rom.util.IDENTITY" title="Permalink to this definition">¶</a></dt>
+<dd><p>This is a basic “equality” index keygen, primarily meant to be used for
+things like:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">Model</span><span class="o">.</span><span class="n">query</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">col</span><span class="o">=</span><span class="s1">&#39;value&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Where <code class="docutils literal"><span class="pre">FULL_TEXT</span></code> would transform a sentence like “A Simple Sentence” into
+an inverted index searchable by the words “a”, “simple”, and/or “sentence”,
+<code class="docutils literal"><span class="pre">IDENTITY</span></code> will only be searchable by the orginal full sentence with the
+same capitalization - “A Simple Sentence”. See <code class="docutils literal"><span class="pre">IDENTITY_CI</span></code> for the
+same function, only case-insensitive.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="rom.util.IDENTITY_CI">
+<code class="descclassname">rom.util.</code><code class="descname">IDENTITY_CI</code><span class="sig-paren">(</span><em>val</em><span class="sig-paren">)</span><a class="headerlink" href="#rom.util.IDENTITY_CI" title="Permalink to this definition">¶</a></dt>
+<dd><p>Case-insensitive version of IDENTITY</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="rom.util.Lock">
+<em class="property">class </em><code class="descclassname">rom.util.</code><code class="descname">Lock</code><span class="sig-paren">(</span><em>conn</em>, <em>lockname</em>, <em>acquire_timeout</em>, <em>lock_timeout</em><span class="sig-paren">)</span><a class="headerlink" href="#rom.util.Lock" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">object</span></code></p>
+<p>Borrowed/modified from my book, Redis in Action:
+<a class="reference external" href="https://github.com/josiahcarlson/redis-in-action/blob/master/python/ch11_listing_source.py">https://github.com/josiahcarlson/redis-in-action/blob/master/python/ch11_listing_source.py</a></p>
+<p>Useful for locking over a string key in Redis. Minimally correct for the
+required semantics. Mostly intended as a general building block for use by
+EntityLock.</p>
+<dl class="method">
+<dt id="rom.util.Lock.acquire">
+<code class="descname">acquire</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#rom.util.Lock.acquire" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="rom.util.Lock.acquire_timeout">
+<code class="descname">acquire_timeout</code><a class="headerlink" href="#rom.util.Lock.acquire_timeout" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="rom.util.Lock.conn">
+<code class="descname">conn</code><a class="headerlink" href="#rom.util.Lock.conn" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="rom.util.Lock.identifier">
+<code class="descname">identifier</code><a class="headerlink" href="#rom.util.Lock.identifier" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="rom.util.Lock.lock_timeout">
+<code class="descname">lock_timeout</code><a class="headerlink" href="#rom.util.Lock.lock_timeout" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="rom.util.Lock.lockname">
+<code class="descname">lockname</code><a class="headerlink" href="#rom.util.Lock.lockname" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="rom.util.Lock.refresh">
+<code class="descname">refresh</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#rom.util.Lock.refresh" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="rom.util.Lock.release">
+<code class="descname">release</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#rom.util.Lock.release" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="function">
+<dt id="rom.util.SIMPLE">
+<code class="descclassname">rom.util.</code><code class="descname">SIMPLE</code><span class="sig-paren">(</span><em>val</em><span class="sig-paren">)</span><a class="headerlink" href="#rom.util.SIMPLE" title="Permalink to this definition">¶</a></dt>
+<dd><p>This is a basic case-sensitive “sorted order” index keygen function for
+strings. This will return a value that is suitable to be used for ordering
+by a 7-byte prefix of a string (that is 7 characters from a byte-string, and
+1.75-7 characters from a unicode string, depending on character -&gt; encoding
+length).</p>
+<div class="admonition warning">
+<p class="first admonition-title">Warning</p>
+<p class="last">Case sensitivity is based on the (encoded) byte prefixes of the
+strings/text being indexed, so ordering <em>may be different</em> than a native
+comparison ordering (especially if an order is different based on
+characters past the 7th encoded byte).</p>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="rom.util.SIMPLE_CI">
+<code class="descclassname">rom.util.</code><code class="descname">SIMPLE_CI</code><span class="sig-paren">(</span><em>val</em><span class="sig-paren">)</span><a class="headerlink" href="#rom.util.SIMPLE_CI" title="Permalink to this definition">¶</a></dt>
+<dd><p>The same as SIMPLE, only case-insensitive.</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="rom.util.Session">
+<em class="property">class </em><code class="descclassname">rom.util.</code><code class="descname">Session</code><a class="headerlink" href="#rom.util.Session" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">_thread._local</span></code></p>
+<p>This is a very dumb session. All it tries to do is to keep a cache of
+loaded entities, offering the ability to call <code class="docutils literal"><span class="pre">.save()</span></code> on modified (or
+all) entities with <code class="docutils literal"><span class="pre">.flush()</span></code> or <code class="docutils literal"><span class="pre">.commit()</span></code>.</p>
+<p>This is exposed via the <code class="docutils literal"><span class="pre">session</span></code> global variable, which is available
+when you <code class="docutils literal"><span class="pre">import</span> <span class="pre">rom</span></code> as <code class="docutils literal"><span class="pre">rom.session</span></code>.</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">calling <code class="docutils literal"><span class="pre">.flush()</span></code> or <code class="docutils literal"><span class="pre">.commit()</span></code> doesn’t cause all objects
+to be written simultanously. They are written one-by-one, with any
+error causing the call to fail.</p>
+</div>
+<dl class="method">
+<dt id="rom.util.Session.add">
+<code class="descname">add</code><span class="sig-paren">(</span><em>obj</em><span class="sig-paren">)</span><a class="headerlink" href="#rom.util.Session.add" title="Permalink to this definition">¶</a></dt>
+<dd><p>Adds an entity to the session.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="rom.util.Session.commit">
+<code class="descname">commit</code><span class="sig-paren">(</span><em>full=False</em>, <em>all=False</em>, <em>force=False</em><span class="sig-paren">)</span><a class="headerlink" href="#rom.util.Session.commit" title="Permalink to this definition">¶</a></dt>
+<dd><p>Call <code class="docutils literal"><span class="pre">.save()</span></code> on all modified entities in the session. Also forgets
+all known entities in the session, so this should only be called at
+the end of a request.</p>
+<p>Arguments:</p>
+<blockquote>
+<div><ul class="simple">
+<li><em>full</em> - pass <code class="docutils literal"><span class="pre">True</span></code> to force save full entities, not only
+changes</li>
+<li><em>all</em> - pass <code class="docutils literal"><span class="pre">True</span></code> to save all entities known, not only those
+entities that have been modified.</li>
+<li><em>full</em> - pass <code class="docutils literal"><span class="pre">True</span></code> to force-save all entities known, ignoring
+DataRaceError and EntityDeletedError exceptions</li>
+</ul>
+</div></blockquote>
+</dd></dl>
+
+<dl class="method">
+<dt id="rom.util.Session.delete">
+<code class="descname">delete</code><span class="sig-paren">(</span><em>*objects</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#rom.util.Session.delete" title="Permalink to this definition">¶</a></dt>
+<dd><p>This method offers the ability to delete multiple entities in a single
+round trip to Redis (assuming your models are all stored on the same
+server). You can call:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">session</span><span class="o">.</span><span class="n">delete</span><span class="p">(</span><span class="n">obj</span><span class="p">)</span>
+<span class="n">session</span><span class="o">.</span><span class="n">delete</span><span class="p">(</span><span class="n">obj1</span><span class="p">,</span> <span class="n">obj2</span><span class="p">,</span> <span class="o">...</span><span class="p">)</span>
+<span class="n">session</span><span class="o">.</span><span class="n">delete</span><span class="p">([</span><span class="n">obj1</span><span class="p">,</span> <span class="n">obj2</span><span class="p">,</span> <span class="o">...</span><span class="p">])</span>
+</pre></div>
+</div>
+<p>The keyword argument <code class="docutils literal"><span class="pre">force=True</span></code> can be provided, which can force
+the deletion of an entitiy again, even if we believe it to already be
+deleted.</p>
+<p>If <code class="docutils literal"><span class="pre">force=True</span></code>, we won’t re-call the object’s <code class="docutils literal"><span class="pre">_before_delete()</span></code>
+method, but we will re-call <code class="docutils literal"><span class="pre">_after_delete()</span></code>.</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">Objects are automatically dropped from the session after
+delete for the sake of cache coherency.</p>
+</div>
+</dd></dl>
+
+<dl class="method">
+<dt id="rom.util.Session.flush">
+<code class="descname">flush</code><span class="sig-paren">(</span><em>full=False</em>, <em>all=False</em>, <em>force=False</em><span class="sig-paren">)</span><a class="headerlink" href="#rom.util.Session.flush" title="Permalink to this definition">¶</a></dt>
+<dd><p>Call <code class="docutils literal"><span class="pre">.save()</span></code> on all modified entities in the session. Use when you
+want to flush changes to Redis, but don’t want to lose your local
+session cache.</p>
+<p>See the <code class="docutils literal"><span class="pre">.commit()</span></code> method for arguments and their meanings.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="rom.util.Session.forget">
+<code class="descname">forget</code><span class="sig-paren">(</span><em>obj</em><span class="sig-paren">)</span><a class="headerlink" href="#rom.util.Session.forget" title="Permalink to this definition">¶</a></dt>
+<dd><p>Forgets about an entity (automatically called when an entity is
+deleted). Call this to ensure that an entity that you’ve modified is
+not automatically saved on <code class="docutils literal"><span class="pre">session.commit()</span></code> .</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="rom.util.Session.get">
+<code class="descname">get</code><span class="sig-paren">(</span><em>pk</em><span class="sig-paren">)</span><a class="headerlink" href="#rom.util.Session.get" title="Permalink to this definition">¶</a></dt>
+<dd><p>Fetches an entity from the session based on primary key.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="rom.util.Session.null_session">
+<code class="descname">null_session</code><a class="headerlink" href="#rom.util.Session.null_session" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="rom.util.Session.refresh">
+<code class="descname">refresh</code><span class="sig-paren">(</span><em>*objects</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#rom.util.Session.refresh" title="Permalink to this definition">¶</a></dt>
+<dd><p>This method is an alternate API for refreshing many entities (possibly
+not tracked by the session). You can call:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">session</span><span class="o">.</span><span class="n">refresh</span><span class="p">(</span><span class="n">obj</span><span class="p">)</span>
+<span class="n">session</span><span class="o">.</span><span class="n">refresh</span><span class="p">(</span><span class="n">obj1</span><span class="p">,</span> <span class="n">obj2</span><span class="p">,</span> <span class="o">...</span><span class="p">)</span>
+<span class="n">session</span><span class="o">.</span><span class="n">refresh</span><span class="p">([</span><span class="n">obj1</span><span class="p">,</span> <span class="n">obj2</span><span class="p">,</span> <span class="o">...</span><span class="p">])</span>
+</pre></div>
+</div>
+<p>And all provided entities will be reloaded from Redis.</p>
+<p>To force reloading for modified entities, you can pass <code class="docutils literal"><span class="pre">force=True</span></code>.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="rom.util.Session.refresh_all">
+<code class="descname">refresh_all</code><span class="sig-paren">(</span><em>*objects</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#rom.util.Session.refresh_all" title="Permalink to this definition">¶</a></dt>
+<dd><p>This method is an alternate API for refreshing all entities tracked
+by the session. You can call:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">session</span><span class="o">.</span><span class="n">refresh_all</span><span class="p">()</span>
+<span class="n">session</span><span class="o">.</span><span class="n">refresh_all</span><span class="p">(</span><span class="n">force</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>And all entities known by the session will be reloaded from Redis.</p>
+<p>To force reloading for modified entities, you can pass <code class="docutils literal"><span class="pre">force=True</span></code>.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="rom.util.Session.rollback">
+<code class="descname">rollback</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#rom.util.Session.rollback" title="Permalink to this definition">¶</a></dt>
+<dd><p>Forget about all entities in the session (<code class="docutils literal"><span class="pre">.commit()</span></code> will do
+nothing).</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="rom.util.Session.save">
+<code class="descname">save</code><span class="sig-paren">(</span><em>*objects</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#rom.util.Session.save" title="Permalink to this definition">¶</a></dt>
+<dd><p>This method is an alternate API for saving many entities (possibly not
+tracked by the session). You can call:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">session</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="n">obj</span><span class="p">)</span>
+<span class="n">session</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="n">obj1</span><span class="p">,</span> <span class="n">obj2</span><span class="p">,</span> <span class="o">...</span><span class="p">)</span>
+<span class="n">session</span><span class="o">.</span><span class="n">save</span><span class="p">([</span><span class="n">obj1</span><span class="p">,</span> <span class="n">obj2</span><span class="p">,</span> <span class="o">...</span><span class="p">])</span>
+</pre></div>
+</div>
+<p>And the entities will be flushed to Redis.</p>
+<p>You can pass the keyword arguments <code class="docutils literal"><span class="pre">full</span></code>, <code class="docutils literal"><span class="pre">all</span></code>, and <code class="docutils literal"><span class="pre">force</span></code> with
+the same meaning and semantics as the <code class="docutils literal"><span class="pre">.commit()</span></code> method.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="function">
+<dt id="rom.util.clean_old_index">
+<code class="descclassname">rom.util.</code><code class="descname">clean_old_index</code><span class="sig-paren">(</span><em>model</em>, <em>block_size=100</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#rom.util.clean_old_index" title="Permalink to this definition">¶</a></dt>
+<dd><p>This utility function will clean out old index data that was accidentally
+left during item deletion in rom versions &lt;= 0.27.0 . You should run this
+after you have upgraded all of your clients to version 0.28.0 or later.</p>
+<p>Arguments:</p>
+<blockquote>
+<div><ul class="simple">
+<li><em>model</em> - the model whose entities you want to reindex</li>
+<li><em>block_size</em> - the maximum number of items to check at a time
+defaulting to 100</li>
+</ul>
+</div></blockquote>
+<p>This function will yield its progression through re-checking all of the
+data that could be left over.</p>
+<p>Example use:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="k">for</span> <span class="n">progress</span><span class="p">,</span> <span class="n">total</span> <span class="ow">in</span> <span class="n">clean_old_index</span><span class="p">(</span><span class="n">MyModel</span><span class="p">,</span> <span class="n">block_size</span><span class="o">=</span><span class="mi">200</span><span class="p">):</span>
+    <span class="nb">print</span> <span class="s2">&quot;</span><span class="si">%s</span><span class="s2"> of </span><span class="si">%s</span><span class="s2">&quot;</span><span class="o">%</span><span class="p">(</span><span class="n">progress</span><span class="p">,</span> <span class="n">total</span><span class="p">)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="rom.util.get_connection">
+<code class="descclassname">rom.util.</code><code class="descname">get_connection</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#rom.util.get_connection" title="Permalink to this definition">¶</a></dt>
+<dd><p>Override me for one of the ways to change the way I connect to Redis.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="rom.util.refresh_indices">
+<code class="descclassname">rom.util.</code><code class="descname">refresh_indices</code><span class="sig-paren">(</span><em>model</em>, <em>block_size=100</em><span class="sig-paren">)</span><a class="headerlink" href="#rom.util.refresh_indices" title="Permalink to this definition">¶</a></dt>
+<dd><p>This utility function will iterate over all entities of a provided model,
+refreshing their indices. This is primarily useful after adding an index
+on a column.</p>
+<p>Arguments:</p>
+<blockquote>
+<div><ul class="simple">
+<li><em>model</em> - the model whose entities you want to reindex</li>
+<li><em>block_size</em> - the maximum number of entities you want to fetch from
+Redis at a time, defaulting to 100</li>
+</ul>
+</div></blockquote>
+<p>This function will yield its progression through re-indexing all of your
+entities.</p>
+<p>Example use:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="k">for</span> <span class="n">progress</span><span class="p">,</span> <span class="n">total</span> <span class="ow">in</span> <span class="n">refresh_indices</span><span class="p">(</span><span class="n">MyModel</span><span class="p">,</span> <span class="n">block_size</span><span class="o">=</span><span class="mi">200</span><span class="p">):</span>
+    <span class="nb">print</span> <span class="s2">&quot;</span><span class="si">%s</span><span class="s2"> of </span><span class="si">%s</span><span class="s2">&quot;</span><span class="o">%</span><span class="p">(</span><span class="n">progress</span><span class="p">,</span> <span class="n">total</span><span class="p">)</span>
+</pre></div>
+</div>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">This uses the session object to handle index refresh via calls to
+<code class="docutils literal"><span class="pre">.commit()</span></code>. If you have any outstanding entities known in the
+session, they will be committed.</p>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="rom.util.set_connection_settings">
+<code class="descclassname">rom.util.</code><code class="descname">set_connection_settings</code><span class="sig-paren">(</span><em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#rom.util.set_connection_settings" title="Permalink to this definition">¶</a></dt>
+<dd><p>Update the global connection settings for models that don’t have
+model-specific connections.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="rom.util.show_progress">
+<code class="descclassname">rom.util.</code><code class="descname">show_progress</code><span class="sig-paren">(</span><em>job</em><span class="sig-paren">)</span><a class="headerlink" href="#rom.util.show_progress" title="Permalink to this definition">¶</a></dt>
+<dd><p>This utility function will print the progress of a passed iterator job as
+started by <code class="docutils literal"><span class="pre">refresh_indices()</span></code> and <code class="docutils literal"><span class="pre">clean_old_index()</span></code>.</p>
+<p>Usage example:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="k">class</span> <span class="nc">RomTest</span><span class="p">(</span><span class="n">Model</span><span class="p">):</span>
+    <span class="k">pass</span>
+
+<span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">xrange</span><span class="p">(</span><span class="mi">1000</span><span class="p">):</span>
+    <span class="n">RomTest</span><span class="p">()</span><span class="o">.</span><span class="n">save</span><span class="p">()</span>
+
+<span class="n">util</span><span class="o">.</span><span class="n">show_progress</span><span class="p">(</span><span class="n">util</span><span class="o">.</span><span class="n">clean_old_index</span><span class="p">(</span><span class="n">RomTest</span><span class="p">))</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="rom.util.use_null_session">
+<code class="descclassname">rom.util.</code><code class="descname">use_null_session</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#rom.util.use_null_session" title="Permalink to this definition">¶</a></dt>
+<dd><p>If you call <code class="docutils literal"><span class="pre">use_null_session()</span></code>, you will change the default session for
+all threads to <em>not cache</em>. You can override the default on a per-thread
+basis by manipulating <code class="docutils literal"><span class="pre">session.null_session</span></code> (set to <code class="docutils literal"><span class="pre">True</span></code>, <code class="docutils literal"><span class="pre">False</span></code>,
+or delete the attribute to not cache, cache, or use the global default,
+respectively).</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="rom.util.use_rom_session">
+<code class="descclassname">rom.util.</code><code class="descname">use_rom_session</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#rom.util.use_rom_session" title="Permalink to this definition">¶</a></dt>
+<dd><p>If you call <code class="docutils literal"><span class="pre">use_rom_session()</span></code>, you will change the default session for
+all threads to <em>cache</em>. You can override the default on a per-thread basis
+by manipulating <code class="docutils literal"><span class="pre">session.null_session</span></code> (set to <code class="docutils literal"><span class="pre">True</span></code>, <code class="docutils literal"><span class="pre">False</span></code>, or
+delete the attribute to not cache, cache, or use the global default,
+respectively).</p>
+</dd></dl>
+
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#"><code class="docutils literal"><span class="pre">util</span></code> Module</a><ul>
+<li><a class="reference internal" href="#changing-connection-settings">Changing connection settings</a></li>
+<li><a class="reference internal" href="#using-a-non-caching-session-object">Using a non-caching session object</a></li>
+<li><a class="reference internal" href="#using-a-geo-index">Using a geo index</a></li>
+</ul>
+</li>
+</ul>
+
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/util.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">rom 0.42.0 documentation</a> &#187;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2013-2015, Josiah Carlson.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.6.2.
+    </div>
+  </body>
+</html>

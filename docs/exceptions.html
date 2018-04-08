@@ -1,0 +1,174 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>exceptions Module &#8212; rom 0.42.0 documentation</title>
+    
+    <link rel="stylesheet" href="_static/classic.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '0.42.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true,
+        SOURCELINK_SUFFIX: '.txt'
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" /> 
+  </head>
+  <body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">rom 0.42.0 documentation</a> &#187;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="module-rom.exceptions">
+<span id="exceptions-module"></span><h1><code class="xref py py-mod docutils literal"><span class="pre">exceptions</span></code> Module<a class="headerlink" href="#module-rom.exceptions" title="Permalink to this headline">¶</a></h1>
+<dl class="exception">
+<dt id="rom.exceptions.BulkError">
+<em class="property">exception </em><code class="descclassname">rom.exceptions.</code><code class="descname">BulkError</code><a class="headerlink" href="#rom.exceptions.BulkError" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#rom.exceptions.ORMError" title="rom.exceptions.ORMError"><code class="xref py py-class docutils literal"><span class="pre">rom.exceptions.ORMError</span></code></a></p>
+<p>Raised when using session.commit(fast=True) or equivalent, and there is at least one error.</p>
+</dd></dl>
+
+<dl class="exception">
+<dt id="rom.exceptions.ColumnError">
+<em class="property">exception </em><code class="descclassname">rom.exceptions.</code><code class="descname">ColumnError</code><a class="headerlink" href="#rom.exceptions.ColumnError" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#rom.exceptions.ORMError" title="rom.exceptions.ORMError"><code class="xref py py-class docutils literal"><span class="pre">rom.exceptions.ORMError</span></code></a></p>
+<p>Raised when your column definitions are not correct</p>
+</dd></dl>
+
+<dl class="exception">
+<dt id="rom.exceptions.DataRaceError">
+<em class="property">exception </em><code class="descclassname">rom.exceptions.</code><code class="descname">DataRaceError</code><a class="headerlink" href="#rom.exceptions.DataRaceError" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#rom.exceptions.InvalidOperation" title="rom.exceptions.InvalidOperation"><code class="xref py py-class docutils literal"><span class="pre">rom.exceptions.InvalidOperation</span></code></a></p>
+<p>Raised when more than one writer tries to update the same columns on the same entity</p>
+</dd></dl>
+
+<dl class="exception">
+<dt id="rom.exceptions.EntityDeletedError">
+<em class="property">exception </em><code class="descclassname">rom.exceptions.</code><code class="descname">EntityDeletedError</code><a class="headerlink" href="#rom.exceptions.EntityDeletedError" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#rom.exceptions.InvalidOperation" title="rom.exceptions.InvalidOperation"><code class="xref py py-class docutils literal"><span class="pre">rom.exceptions.InvalidOperation</span></code></a></p>
+<p>Raised when another writer deleted the entity from Redis; use .save(force=True) to re-save</p>
+</dd></dl>
+
+<dl class="exception">
+<dt id="rom.exceptions.InvalidColumnValue">
+<em class="property">exception </em><code class="descclassname">rom.exceptions.</code><code class="descname">InvalidColumnValue</code><a class="headerlink" href="#rom.exceptions.InvalidColumnValue" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#rom.exceptions.ColumnError" title="rom.exceptions.ColumnError"><code class="xref py py-class docutils literal"><span class="pre">rom.exceptions.ColumnError</span></code></a></p>
+<p>Raised when you attempt to pass a primary key on entity creation or when data assigned to a column is the wrong type</p>
+</dd></dl>
+
+<dl class="exception">
+<dt id="rom.exceptions.InvalidOperation">
+<em class="property">exception </em><code class="descclassname">rom.exceptions.</code><code class="descname">InvalidOperation</code><a class="headerlink" href="#rom.exceptions.InvalidOperation" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#rom.exceptions.ORMError" title="rom.exceptions.ORMError"><code class="xref py py-class docutils literal"><span class="pre">rom.exceptions.ORMError</span></code></a></p>
+<p>Raised when trying to delete or modify a column that cannot be deleted or modified</p>
+</dd></dl>
+
+<dl class="exception">
+<dt id="rom.exceptions.MissingColumn">
+<em class="property">exception </em><code class="descclassname">rom.exceptions.</code><code class="descname">MissingColumn</code><a class="headerlink" href="#rom.exceptions.MissingColumn" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#rom.exceptions.ColumnError" title="rom.exceptions.ColumnError"><code class="xref py py-class docutils literal"><span class="pre">rom.exceptions.ColumnError</span></code></a></p>
+<p>Raised when a model has a required column, but it is not provided on construction</p>
+</dd></dl>
+
+<dl class="exception">
+<dt id="rom.exceptions.ORMError">
+<em class="property">exception </em><code class="descclassname">rom.exceptions.</code><code class="descname">ORMError</code><a class="headerlink" href="#rom.exceptions.ORMError" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">Exception</span></code></p>
+<p>Base class for all ORM-related errors</p>
+</dd></dl>
+
+<dl class="exception">
+<dt id="rom.exceptions.QueryError">
+<em class="property">exception </em><code class="descclassname">rom.exceptions.</code><code class="descname">QueryError</code><a class="headerlink" href="#rom.exceptions.QueryError" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#rom.exceptions.InvalidOperation" title="rom.exceptions.InvalidOperation"><code class="xref py py-class docutils literal"><span class="pre">rom.exceptions.InvalidOperation</span></code></a></p>
+<p>Raised when arguments to <code class="docutils literal"><span class="pre">Model.get_by()</span></code> or <code class="docutils literal"><span class="pre">Query.filter</span></code> are not valid</p>
+</dd></dl>
+
+<dl class="exception">
+<dt id="rom.exceptions.RestrictError">
+<em class="property">exception </em><code class="descclassname">rom.exceptions.</code><code class="descname">RestrictError</code><a class="headerlink" href="#rom.exceptions.RestrictError" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#rom.exceptions.InvalidOperation" title="rom.exceptions.InvalidOperation"><code class="xref py py-class docutils literal"><span class="pre">rom.exceptions.InvalidOperation</span></code></a></p>
+<p>Raised when deleting an object referenced by other objects</p>
+</dd></dl>
+
+<dl class="exception">
+<dt id="rom.exceptions.UniqueKeyViolation">
+<em class="property">exception </em><code class="descclassname">rom.exceptions.</code><code class="descname">UniqueKeyViolation</code><a class="headerlink" href="#rom.exceptions.UniqueKeyViolation" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#rom.exceptions.ORMError" title="rom.exceptions.ORMError"><code class="xref py py-class docutils literal"><span class="pre">rom.exceptions.ORMError</span></code></a></p>
+<p>Raised when trying to save an entity without a distinct column value</p>
+</dd></dl>
+
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/exceptions.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">rom 0.42.0 documentation</a> &#187;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2013-2015, Josiah Carlson.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.6.2.
+    </div>
+  </body>
+</html>

@@ -6,13 +6,19 @@
 Welcome to the documentation for the Redis object Mapper
 ========================================================
 
-.. include modules.rst
-
+rom
+===
 
 .. toctree::
    :maxdepth: 2
 
    rom
+   columns
+   exceptions
+   indexm
+   model
+   query
+   util
 
 Indices and tables
 ==================

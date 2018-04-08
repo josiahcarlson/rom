@@ -4,52 +4,11 @@ rom Package
 .. automodule:: rom
     :members:
     :show-inheritance:
+    :noindex:
 
-:mod:`columns` Module
----------------------
-
-.. automodule:: rom.columns
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
-:mod:`exceptions` Module
-------------------------
-
-.. automodule:: rom.exceptions
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
-:mod:`index` Module
--------------------
-
-.. automodule:: rom.index
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
-:mod:`model` Module
--------------------
-
-.. automodule:: rom.model
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
-:mod:`query` Module
--------------------
-
-.. automodule:: rom.query
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
-
-:mod:`util` Module
-------------------
-
-.. automodule:: rom.util
-    :members:
-    :undoc-members:
-    :show-inheritance:
+:py:mod:`rom.columns`
+:py:mod:`rom.exceptions`
+:py:mod:`rom.index`
+:py:mod:`rom.model`
+:py:mod:`rom.query`
+:py:mod:`rom.util`

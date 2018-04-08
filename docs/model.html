@@ -1,0 +1,291 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>model Module &#8212; rom 0.42.0 documentation</title>
+    
+    <link rel="stylesheet" href="_static/classic.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '0.42.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true,
+        SOURCELINK_SUFFIX: '.txt'
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" /> 
+  </head>
+  <body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">rom 0.42.0 documentation</a> &#187;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="module-rom.model">
+<span id="model-module"></span><h1><code class="xref py py-mod docutils literal"><span class="pre">model</span></code> Module<a class="headerlink" href="#module-rom.model" title="Permalink to this headline">¶</a></h1>
+<p>Rom - the Redis object mapper for Python</p>
+<p>Copyright 2013-2016 Josiah Carlson</p>
+<p>Released under the LGPL license version 2.1 and version 3 (you can choose
+which you’d like to be bound under).</p>
+<dl class="class">
+<dt id="rom.model.Model">
+<em class="property">class </em><code class="descclassname">rom.model.</code><code class="descname">Model</code><span class="sig-paren">(</span><em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#rom.model.Model" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">object</span></code></p>
+<p>This is the base class for all models. You subclass from this base Model
+in order to create a model with columns. As an example:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="k">class</span> <span class="nc">User</span><span class="p">(</span><span class="n">Model</span><span class="p">):</span>
+    <span class="n">email_address</span> <span class="o">=</span> <span class="n">String</span><span class="p">(</span><span class="n">required</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">unique</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="n">salt</span> <span class="o">=</span> <span class="n">String</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="s1">&#39;&#39;</span><span class="p">)</span>
+    <span class="nb">hash</span> <span class="o">=</span> <span class="n">String</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="s1">&#39;&#39;</span><span class="p">)</span>
+    <span class="n">created_at</span> <span class="o">=</span> <span class="n">Float</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Which can then be used like:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">user</span> <span class="o">=</span> <span class="n">User</span><span class="p">(</span><span class="n">email_addrss</span><span class="o">=</span><span class="s1">&#39;user@domain.com&#39;</span><span class="p">)</span>
+<span class="n">user</span><span class="o">.</span><span class="n">save</span><span class="p">()</span> <span class="c1"># session.commit() or session.flush() works too</span>
+<span class="n">user</span> <span class="o">=</span> <span class="n">User</span><span class="o">.</span><span class="n">get_by</span><span class="p">(</span><span class="n">email_address</span><span class="o">=</span><span class="s1">&#39;user@domain.com&#39;</span><span class="p">)</span>
+<span class="n">user</span> <span class="o">=</span> <span class="n">User</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="mi">5</span><span class="p">)</span>
+<span class="n">users</span> <span class="o">=</span> <span class="n">User</span><span class="o">.</span><span class="n">get</span><span class="p">([</span><span class="mi">2</span><span class="p">,</span> <span class="mi">6</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">7</span><span class="p">])</span>
+</pre></div>
+</div>
+<p>To perform arbitrary queries on entities involving the indices that you
+defined (by passing <code class="docutils literal"><span class="pre">index=True</span></code> on column creation), you access the
+<code class="docutils literal"><span class="pre">.query</span></code> class property on the model:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">query</span> <span class="o">=</span> <span class="n">User</span><span class="o">.</span><span class="n">query</span>
+<span class="n">query</span> <span class="o">=</span> <span class="n">query</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">created_at</span><span class="o">=</span><span class="p">(</span><span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span><span class="o">-</span><span class="mi">86400</span><span class="p">,</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()))</span>
+<span class="n">users</span> <span class="o">=</span> <span class="n">query</span><span class="o">.</span><span class="n">execute</span><span class="p">()</span>
+</pre></div>
+</div>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">You can perform single or chained queries against any/all columns
+that were defined with <code class="docutils literal"><span class="pre">index=True</span></code>.</p>
+</div>
+<p><strong>Composite/multi-column unique constraints</strong></p>
+<p>As of version 0.28.0 and later, rom supports the ability for you to have a
+unique constraint involving multiple columns. Individual columns can be
+defined unique by passing the ‘unique=True’ specifier during column
+definition as always.</p>
+<p>The attribute <code class="docutils literal"><span class="pre">unique_together</span></code> defines those groups of columns that when
+taken together must be unique for <code class="docutils literal"><span class="pre">.save()</span></code> to complete successfully.
+This will work almost exactly the same as Django’s <code class="docutils literal"><span class="pre">unique_together</span></code>, and
+is comparable to SQLAlchemy’s <code class="docutils literal"><span class="pre">UniqueConstraint()</span></code>.</p>
+<p>Usage:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="k">class</span> <span class="nc">UniquePosition</span><span class="p">(</span><span class="n">Model</span><span class="p">):</span>
+    <span class="n">x</span> <span class="o">=</span> <span class="n">Integer</span><span class="p">()</span>
+    <span class="n">y</span> <span class="o">=</span> <span class="n">Integer</span><span class="p">()</span>
+
+    <span class="n">unique_together</span> <span class="o">=</span> <span class="p">[</span>
+        <span class="p">(</span><span class="s1">&#39;x&#39;</span><span class="p">,</span> <span class="s1">&#39;y&#39;</span><span class="p">),</span>
+    <span class="p">]</span>
+</pre></div>
+</div>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">If one or more of the column values on an entity that is part of a
+unique constrant is None in Python, the unique constraint won’t apply.
+This is the typical behavior of nulls in unique constraints inside both
+MySQL and Postgres.</p>
+</div>
+<dl class="method">
+<dt id="rom.model.Model.copy">
+<code class="descname">copy</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#rom.model.Model.copy" title="Permalink to this definition">¶</a></dt>
+<dd><p>Creates a shallow copy of the given entity (any entities that can be
+retrieved from a OneToMany relationship will not be copied).</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="rom.model.Model.delete">
+<code class="descname">delete</code><span class="sig-paren">(</span><em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#rom.model.Model.delete" title="Permalink to this definition">¶</a></dt>
+<dd><p>Deletes the entity immediately. Also performs any on_delete operations
+specified as part of column definitions.</p>
+</dd></dl>
+
+<dl class="classmethod">
+<dt id="rom.model.Model.get">
+<em class="property">classmethod </em><code class="descname">get</code><span class="sig-paren">(</span><em>ids</em><span class="sig-paren">)</span><a class="headerlink" href="#rom.model.Model.get" title="Permalink to this definition">¶</a></dt>
+<dd><p>Will fetch one or more entities of this type from the session or
+Redis.</p>
+<p>Used like:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">MyModel</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="mi">5</span><span class="p">)</span>
+<span class="n">MyModel</span><span class="o">.</span><span class="n">get</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span> <span class="mi">6</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">4</span><span class="p">])</span>
+</pre></div>
+</div>
+<p>Passing a list or a tuple will return multiple entities, in the same
+order that the ids were passed.</p>
+</dd></dl>
+
+<dl class="classmethod">
+<dt id="rom.model.Model.get_by">
+<em class="property">classmethod </em><code class="descname">get_by</code><span class="sig-paren">(</span><em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#rom.model.Model.get_by" title="Permalink to this definition">¶</a></dt>
+<dd><p>This method offers a simple query method for fetching entities of this
+type via attribute numeric ranges (such columns must be <code class="docutils literal"><span class="pre">indexed</span></code>),
+or via <code class="docutils literal"><span class="pre">unique</span></code> columns.</p>
+<p>Some examples:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">user</span> <span class="o">=</span> <span class="n">User</span><span class="o">.</span><span class="n">get_by</span><span class="p">(</span><span class="n">email_address</span><span class="o">=</span><span class="s1">&#39;user@domain.com&#39;</span><span class="p">)</span>
+<span class="c1"># gets up to 25 users created in the last 24 hours</span>
+<span class="n">users</span> <span class="o">=</span> <span class="n">User</span><span class="o">.</span><span class="n">get_by</span><span class="p">(</span>
+    <span class="n">created_at</span><span class="o">=</span><span class="p">(</span><span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span><span class="o">-</span><span class="mi">86400</span><span class="p">,</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()),</span>
+    <span class="n">_limit</span><span class="o">=</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">25</span><span class="p">))</span>
+</pre></div>
+</div>
+<p>Optional keyword-only arguments:</p>
+<blockquote>
+<div><ul class="simple">
+<li><em>_limit</em> - A 2-tuple of (offset, count) that can be used to
+paginate or otherwise limit results returned by a numeric range
+query</li>
+<li><em>_numeric</em> - An optional boolean defaulting to False that forces
+the use of a numeric index for <code class="docutils literal"><span class="pre">.get_by(col=val)</span></code> queries even
+when <code class="docutils literal"><span class="pre">col</span></code> has an existing unique index</li>
+</ul>
+</div></blockquote>
+<p>If you would like to make queries against multiple columns or with
+multiple criteria, look into the Model.query class property.</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">rom will attempt to use a unique index first, then a numeric
+index if there was no unique index. You can explicitly tell rom to
+only use the numeric index by using <code class="docutils literal"><span class="pre">.get_by(...,</span> <span class="pre">_numeric=True)</span></code>.</p>
+</div>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">Ranged queries with <cite>get_by(col=(start, end))</cite> will only work
+with columns that use a numeric index.</p>
+</div>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="rom.model.Model.id">
+<code class="descname">id</code><a class="headerlink" href="#rom.model.Model.id" title="Permalink to this definition">¶</a></dt>
+<dd><p>This is a primary key column, used when you want the primary key to be
+named something other than ‘id’. If you omit a PrimaryKey column on your
+Model classes, one will be automatically created for you.</p>
+<p>Only the <code class="docutils literal"><span class="pre">index</span></code> argument will be used. You may want to enable indexing
+on this column if you want to be able to perform queries and sort the
+results by primary key.</p>
+<p>Used via:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="k">class</span> <span class="nc">MyModel</span><span class="p">(</span><span class="n">Model</span><span class="p">):</span>
+    <span class="nb">id</span> <span class="o">=</span> <span class="n">PrimaryKey</span><span class="p">()</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="rom.model.Model.query">
+<code class="descname">query</code><em class="property"> = &lt;rom.query.Query object&gt;</em><a class="headerlink" href="#rom.model.Model.query" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="rom.model.Model.refresh">
+<code class="descname">refresh</code><span class="sig-paren">(</span><em>force=False</em><span class="sig-paren">)</span><a class="headerlink" href="#rom.model.Model.refresh" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="rom.model.Model.save">
+<code class="descname">save</code><span class="sig-paren">(</span><em>full=False</em>, <em>force=False</em><span class="sig-paren">)</span><a class="headerlink" href="#rom.model.Model.save" title="Permalink to this definition">¶</a></dt>
+<dd><p>Saves the current entity to Redis. Will only save changed data by
+default, but you can force a full save by passing <code class="docutils literal"><span class="pre">full=True</span></code>.</p>
+<p>If the underlying entity was deleted and you want to re-save the entity,
+you can pass <code class="docutils literal"><span class="pre">force=True</span></code> to force a full re-save of the entity.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="rom.model.Model.to_dict">
+<code class="descname">to_dict</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#rom.model.Model.to_dict" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns a copy of all data assigned to columns in this entity. Useful
+for returning items to JSON-enabled APIs. If you want to copy an
+entity, you should look at the <code class="docutils literal"><span class="pre">.copy()</span></code> method.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="rom.model.Model.update">
+<code class="descname">update</code><span class="sig-paren">(</span><em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#rom.model.Model.update" title="Permalink to this definition">¶</a></dt>
+<dd><p>Updates multiple attributes in a model. If <code class="docutils literal"><span class="pre">args</span></code> are provided, this
+method will assign attributes in the order returned by
+<code class="docutils literal"><span class="pre">list(self._columns)</span></code> until one or both are exhausted.</p>
+<p>If <code class="docutils literal"><span class="pre">kwargs</span></code> are provided, this method will assign attributes to the
+names provided, after <code class="docutils literal"><span class="pre">args</span></code> have been processed.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="function">
+<dt id="rom.model.redis_writer_lua">
+<code class="descclassname">rom.model.</code><code class="descname">redis_writer_lua</code><span class="sig-paren">(</span><em>conn</em>, <em>pkey</em>, <em>namespace</em>, <em>id</em>, <em>unique</em>, <em>udelete</em>, <em>delete</em>, <em>data</em>, <em>keys</em>, <em>scored</em>, <em>prefix</em>, <em>suffix</em>, <em>geo</em>, <em>old_data</em>, <em>is_delete</em><span class="sig-paren">)</span><a class="headerlink" href="#rom.model.redis_writer_lua" title="Permalink to this definition">¶</a></dt>
+<dd><p>… Actually write data to Redis. This is an internal detail. Please don’t
+call me directly.</p>
+</dd></dl>
+
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/model.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">rom 0.42.0 documentation</a> &#187;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2013-2015, Josiah Carlson.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.6.2.
+    </div>
+  </body>
+</html>
