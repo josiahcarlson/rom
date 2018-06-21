@@ -425,6 +425,10 @@ class Session(threading.local):
         to be written simultanously. They are written one-by-one, with any
         error causing the call to fail.
     '''
+    def __init__(self, *args, **kwargs):
+        threading.local.__init__(self, *args, **kwargs)
+        self._init()
+
     def _init(self):
         try:
             self.known

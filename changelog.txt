@@ -1,3 +1,6 @@
+#---------------------------------- 0.42.1 -----------------------------------
+[fixed] Session object wasn't always initialized correctly. Bug report thanks to
+    github user https://github.com/cdessez .
 #---------------------------------- 0.42.0 -----------------------------------
 [changed] Attributes passed on object creation that don't exist will now raise
     an exception, unless you explicitly pass _extra_ok=True.
