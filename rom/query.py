@@ -480,6 +480,7 @@ class Query(object):
                 _ids = json.dumps(ids)
                 for data in _json_loads(_get_column_data(conn, [ns], [_ids, dcols])):
                     yield data_gen.send(data)
+                    remaining -= 1
 
             else:
                 # No need to fill up memory with paginated items hanging around the

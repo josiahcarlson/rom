@@ -1,3 +1,9 @@
+#---------------------------------- 0.42.2 -----------------------------------
+[fixed] Model.query.select().limit() will now honor the passed-in limit. Thanks
+    to Github user https://github.com/healiseu for the bug report
+[fixed] Model.query.select() will now no longer pollute non-null session objects
+    with partial / broken objects. Thanks to Github user
+    https://github.com/healiseu for the bug report
 #---------------------------------- 0.42.1 -----------------------------------
 [fixed] Session object wasn't always initialized correctly. Bug report thanks to
     github user https://github.com/cdessez .

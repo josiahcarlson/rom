@@ -1041,6 +1041,8 @@ class TestORM(unittest.TestCase):
             total += int(it['col1'])
         self.assertEqual(total, 50 * 51 / 2)
 
+        self.assertEqual(len(RomTestIterResult.query.select('col1', decode=False).order_by('col1').limit(0, 10).all()), 10)
+
         # test with decoding
         total = 0
         for it in RomTestIterResult.query.select('col1', decode=True).order_by('col1').iter_result(30, 10):
@@ -1654,6 +1656,44 @@ class TestORM(unittest.TestCase):
 
         self.assertEqual(RomTestUndxModel.query.select('txtkey', 'intkey').all(), [{'txtkey': 'hello', 'intkey': None}])
 
+    def test_issue_125(self, null_session=True):
+        m = MODELS['Model']
+        MODELS.clear()
+        MODELS['Model'] = m
+        MODELS_REFERENCED.clear()
+        class RomTestItem(Model):
+            id = PrimaryKey(index=True)
+            hash = Text(index=True, keygen=IDENTITY, prefix=True)
+            tags = Json()
+            company = ManyToOne(ftable='RomTestCompany',  on_delete='no action')
+
+        class RomTestCompany(Model):
+            id = PrimaryKey(index=True)
+            name    = Text(index=True, keygen=IDENTITY_CI, prefix=True)
+
+            #### ONE Company manufactures MANY Items
+            items   = OneToMany(ftable='RomTestItem', column='company')
+
+        if null_session:
+            util.use_null_session()
+            c = RomTestCompany(name='test')
+            c.save()
+            RomTestItem(hash='not_a_hash', tags=['tag1', 'tag2'], company=c).save()
+        else:
+            util.use_rom_session()
+            c = RomTestCompany(name='test')
+            self.assertTrue(session.commit())
+            RomTestItem(hash='not_a_hash', tags=['tag1', 'tag2'], company=c)
+            self.assertTrue(session.commit())
+
+        i = None
+        for i in RomTestItem.query.select('id', 'hash', 'tags', 'company').limit(0, 10).all():
+            self.assertEqual(i['company'].name, 'test')
+        self.assertTrue(i != None)
+        util.use_rom_session()
+
+    def test_issue_125_2(self):
+        self.test_issue_125(False)
 
 def main():
     global_setup()

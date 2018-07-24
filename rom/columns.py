@@ -661,7 +661,8 @@ class PrimaryKey(Column):
         else:
             value = int(value)
         obj._data[attr] = value
-        session.add(obj)
+        if obj._init:
+            session.add(obj)
 
     def __set__(self, obj, value):
         if not obj._init:
