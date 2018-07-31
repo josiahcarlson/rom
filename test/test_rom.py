@@ -239,6 +239,7 @@ class TestORM(unittest.TestCase):
 
     def test_index(self):
         plain = lambda x: [x.lower()] if x else None
+        plain2 = lambda a,d: [d['attr'].lower()] if d.get('attr') else None
         class RomTestIndexedModel(Model):
             attr = Text(index=True, keygen=FULL_TEXT)
             attr2 = Text(index=True, keygen=FULL_TEXT)
@@ -246,6 +247,7 @@ class TestORM(unittest.TestCase):
             attr4 = Float(index=True)
             attr5 = Decimal(index=True)
             attr6 = IndexOnly('attr', keygen=plain, suffix=True)
+            attr7 = IndexOnly(keygen2=plain2, suffix=True)
 
         x = RomTestIndexedModel(
             attr='hello world',
@@ -294,7 +296,7 @@ class TestORM(unittest.TestCase):
         self.assertTrue(conn.ttl(key) <= 30)
         self.assertEqual(conn.zcard(key), 1)
         conn.delete(key)
-        self.assertRaises(QueryError, lambda: RomTestIndexedModel.query.order_by('attr7'))
+        self.assertRaises(QueryError, lambda: RomTestIndexedModel.query.order_by('attr8'))
 
         # Only the first call raises the warning, so only bother to call it
         # for our first pass through tests (non-Lua case).
@@ -302,19 +304,22 @@ class TestORM(unittest.TestCase):
             RomTestIndexedModel.query.order_by('attr')
             self.assertEqual(len(w), 1)
 
-        self.assertEqual(RomTestIndexedModel.query.endswith(attr6='world').count(), 2)
-        self.assertEqual(RomTestIndexedModel.query.endswith(attr6=' world').count(), 1)
-        self.assertRaises(InvalidColumnValue, lambda: RomTestIndexedModel(attr6='hello'))
-        a = RomTestIndexedModel(attr6=None)
+        for aname in ('attr6', 'attr7'):
+            self.assertEqual(RomTestIndexedModel.query.endswith(**{aname:'world'}).count(), 2)
+            self.assertEqual(RomTestIndexedModel.query.endswith(**{aname:' world'}).count(), 1)
+            self.assertRaises(InvalidColumnValue, lambda: RomTestIndexedModel(**{aname:'hello'}))
+            a = RomTestIndexedModel(**{aname:None})
 
-        self.assertRaises(InvalidColumnValue, lambda: a.update(attr6='blah'))
-        a.update(attr='another world').save()
-        self.assertEqual(RomTestIndexedModel.query.endswith(attr6=' world').count(), 2)
-        if sys.version_info >= (3,6):
-            a.update('different world').save()
-            self.assertEqual(RomTestIndexedModel.query.endswith(attr6='different world').count(), 1)
-            a.update('overwritten', attr='kept').save()
-            self.assertEqual(RomTestIndexedModel.query.endswith(attr6='kept').count(), 1)
+            self.assertRaises(InvalidColumnValue, lambda: a.update(**{aname:'blah'}))
+            a.update(attr='another world').save()
+            self.assertEqual(RomTestIndexedModel.query.endswith(**{aname:' world'}).count(), 2)
+            if sys.version_info >= (3,6):
+                a.update('different world').save()
+                self.assertEqual(RomTestIndexedModel.query.endswith(**{aname:'different world'}).count(), 1)
+                a.update('overwritten', attr='kept').save()
+                self.assertEqual(RomTestIndexedModel.query.endswith(**{aname:'kept'}).count(), 1)
+            a.delete()
+            session.rollback()
 
     def test_alternate_models(self):
         ctr = [0]

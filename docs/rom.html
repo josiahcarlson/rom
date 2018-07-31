@@ -6,7 +6,7 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>rom Package &#8212; rom 0.42.2 documentation</title>
+    <title>rom Package &#8212; rom 0.42.3 documentation</title>
     
     <link rel="stylesheet" href="_static/classic.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
@@ -14,7 +14,7 @@
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    './',
-        VERSION:     '0.42.2',
+        VERSION:     '0.42.3',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true,
@@ -45,7 +45,7 @@
         <li class="right" >
           <a href="index.html" title="Welcome to the documentation for the Redis object Mapper"
              accesskey="P">previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="index.html">rom 0.42.2 documentation</a> &#187;</li> 
+        <li class="nav-item nav-item-0"><a href="index.html">rom 0.42.3 documentation</a> &#187;</li> 
       </ul>
     </div>  
 
@@ -334,11 +334,11 @@ matches (aka: expensive)</li>
 <blockquote>
 <div><ul class="simple">
 <li><em>SIMPLE</em>/<em>SIMPLE_CI</em> - sorting only with <code class="docutils literal"><span class="pre">query.order_by('x')</span></code> -
-<a class="reference external" href="https://pythonhosted.org/rom/rom.html#rom.util.SIMPLE">https://pythonhosted.org/rom/rom.html#rom.util.SIMPLE</a></li>
+<a class="reference external" href="https://josiahcarlson.github.io/rom/util.html#rom.util.SIMPLE">https://josiahcarlson.github.io/rom/util.html#rom.util.SIMPLE</a></li>
 <li><em>IDENTITY</em>/<em>IDENTITY_CI</em> - equality only with <code class="docutils literal"><span class="pre">query.filter(x=...)</span></code> -
-<a class="reference external" href="https://pythonhosted.org/rom/rom.html#rom.util.IDENTITY">https://pythonhosted.org/rom/rom.html#rom.util.IDENTITY</a></li>
+<a class="reference external" href="https://josiahcarlson.github.io/rom/util.html#rom.util.IDENTITY">https://josiahcarlson.github.io/rom/util.html#rom.util.IDENTITY</a></li>
 <li><em>FULL_TEXT</em> - bag of words inverted index for <code class="docutils literal"><span class="pre">query.filter(x=...)</span></code> -
-<a class="reference external" href="https://pythonhosted.org/rom/rom.html#rom.util.FULL_TEXT">https://pythonhosted.org/rom/rom.html#rom.util.FULL_TEXT</a></li>
+<a class="reference external" href="https://josiahcarlson.github.io/rom/util.html#rom.util.FULL_TEXT">https://josiahcarlson.github.io/rom/util.html#rom.util.FULL_TEXT</a></li>
 </ul>
 </div></blockquote>
 <p>To each of those 3 index types, you can further add a prefix/suffix index,
@@ -625,7 +625,7 @@ same function, only case-insensitive.</p>
 
 <dl class="class">
 <dt>
-<em class="property">class </em><code class="descclassname">rom.</code><code class="descname">IndexOnly</code><span class="sig-paren">(</span><em>column</em>, <em>keygen</em>, <em>unique=False</em>, <em>prefix=False</em>, <em>suffix=False</em><span class="sig-paren">)</span></dt>
+<em class="property">class </em><code class="descclassname">rom.</code><code class="descname">IndexOnly</code><span class="sig-paren">(</span><em>column=None</em>, <em>keygen=None</em>, <em>prefix=False</em>, <em>suffix=False</em>, <em>keygen2=None</em><span class="sig-paren">)</span></dt>
 <dd><p>Bases: <a class="reference internal" href="columns.html#rom.columns.Column" title="rom.columns.Column"><code class="xref py py-class docutils literal"><span class="pre">rom.columns.Column</span></code></a></p>
 <p>This column doesn’t actually store data, except in indexes for other
 columns. Say, for example, you have an email text field that you want to
@@ -1567,7 +1567,7 @@ arguments.</p>
         <li class="right" >
           <a href="index.html" title="Welcome to the documentation for the Redis object Mapper"
              >previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="index.html">rom 0.42.2 documentation</a> &#187;</li> 
+        <li class="nav-item nav-item-0"><a href="index.html">rom 0.42.3 documentation</a> &#187;</li> 
       </ul>
     </div>
     <div class="footer" role="contentinfo">

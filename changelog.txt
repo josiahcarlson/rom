@@ -1,3 +1,9 @@
+#---------------------------------- 0.42.3 -----------------------------------
+[fixed] IndexOnly() columns no longer accept the unique parameter (was ignored
+    in effect, anyway)
+[added] IndexOnly() columns now take a keygen2 parameter in lieu of the column
+    + keygen argument.
+[fixed] Some links in the docs
 #---------------------------------- 0.42.2 -----------------------------------
 [fixed] Model.query.select().limit() will now honor the passed-in limit. Thanks
     to Github user https://github.com/healiseu for the bug report

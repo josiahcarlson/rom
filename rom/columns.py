@@ -216,11 +216,11 @@ class Column(object):
     There are 3 types of string indexes that rom currently supports:
 
         * *SIMPLE*/*SIMPLE_CI* - sorting only with ``query.order_by('x')`` -
-          https://pythonhosted.org/rom/rom.html#rom.util.SIMPLE
+          https://josiahcarlson.github.io/rom/util.html#rom.util.SIMPLE
         * *IDENTITY*/*IDENTITY_CI* - equality only with ``query.filter(x=...)`` -
-          https://pythonhosted.org/rom/rom.html#rom.util.IDENTITY
+          https://josiahcarlson.github.io/rom/util.html#rom.util.IDENTITY
         * *FULL_TEXT* - bag of words inverted index for ``query.filter(x=...)`` -
-          https://pythonhosted.org/rom/rom.html#rom.util.FULL_TEXT
+          https://josiahcarlson.github.io/rom/util.html#rom.util.FULL_TEXT
 
     To each of those 3 index types, you can further add a prefix/suffix index,
     whose semantics are as follows:
@@ -694,23 +694,37 @@ class IndexOnly(Column):
         MyModel.get_by(elookup='user')
         MyModel.query.filter(elookup=['user', 'host']).all()
 
-    .. Note:: I've been using a variation of this internally for some of my
+    .. note:: I've been using a variation of this internally for some of my
         own work, and I thought I'd release it as a convenience column.
 
     '''
 
-    def __init__(self, column, keygen, unique=False, prefix=False, suffix=False):
+    def __init__(self, column=None, keygen=None, prefix=False, suffix=False, keygen2=None):
         '''
+        Two ways to use:
+
+            * With ``column`` AND ``keygen`` - automatically index an external column
+            a second way using standard keygens
+            * With ``keygen2`` - generate an arbitrary index on arbitrary model data
+
         Standard Arguments:
 
             * *column* - column with the data you want to index
             * *keygen* - passed through, see ``Column`` docs for more information
-            * *unique* - passed through, see ``Column`` docs for more information
             * *prefix* - passed through, see ``Column`` docs for more information
             * *suffix* - passed through, see ``Column`` docs for more information
+            * *keygen2* - passed through, see ``Column`` docs for more information
+
+        .. note:: `unique` is not available or passed through, as it relies on
+            data in the column (IndexOnly columns only store data in index(es)).
         '''
-        Column.__init__(self, keygen2=(lambda _,dct: keygen(dct.get(column))),
-            unique=unique, prefix=prefix, suffix=suffix)
+        if column and keygen:
+            keygen2 = lambda _,dct: keygen(dct.get(column))
+        elif keygen2:
+            pass
+        else:
+            raise ValueError("Need both of `column` and `keygen` or just `keygen2` argument")
+        Column.__init__(self, index=True, keygen2=keygen2, prefix=prefix, suffix=suffix)
 
     def _validate(self, value):
         if value is not None:
