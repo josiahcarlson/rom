@@ -4,32 +4,22 @@
 
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    
-    <title>rom Package &#8212; rom 0.42.3 documentation</title>
-    
+    <title>rom Package &#8212; rom 0.42.4 documentation</title>
     <link rel="stylesheet" href="_static/classic.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
     
-    <script type="text/javascript">
-      var DOCUMENTATION_OPTIONS = {
-        URL_ROOT:    './',
-        VERSION:     '0.42.3',
-        COLLAPSE_INDEX: false,
-        FILE_SUFFIX: '.html',
-        HAS_SOURCE:  true,
-        SOURCELINK_SUFFIX: '.txt'
-      };
-    </script>
+    <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
     <script type="text/javascript" src="_static/jquery.js"></script>
     <script type="text/javascript" src="_static/underscore.js"></script>
     <script type="text/javascript" src="_static/doctools.js"></script>
+    
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
     <link rel="next" title="columns Module" href="columns.html" />
     <link rel="prev" title="Welcome to the documentation for the Redis object Mapper" href="index.html" /> 
-  </head>
-  <body>
+  </head><body>
     <div class="related" role="navigation" aria-label="related navigation">
       <h3>Navigation</h3>
       <ul>
@@ -45,7 +35,7 @@
         <li class="right" >
           <a href="index.html" title="Welcome to the documentation for the Redis object Mapper"
              accesskey="P">previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="index.html">rom 0.42.3 documentation</a> &#187;</li> 
+        <li class="nav-item nav-item-0"><a href="index.html">rom 0.42.4 documentation</a> &#187;</li> 
       </ul>
     </div>  
 
@@ -104,7 +94,7 @@ later</li>
 <li>Per-thread entity cache (to minimize round-trips, easy saving of all
 entities)</li>
 <li>The ability to cache query results and get the key for any other use (see:
-<code class="docutils literal"><span class="pre">Query.cached_result()</span></code>)</li>
+<code class="docutils literal notranslate"><span class="pre">Query.cached_result()</span></code>)</li>
 </ul>
 </div>
 <div class="section" id="getting-started">
@@ -123,11 +113,11 @@ installed: <a class="reference external" href="https://pypi.python.org/pypi/six"
 </li>
 <li><p class="first">Make sure that you have a Redis server installed and available remotely</p>
 </li>
-<li><p class="first">Update the Redis connection settings for <code class="docutils literal"><span class="pre">rom</span></code> via
-<code class="docutils literal"><span class="pre">rom.util.set_connection_settings()</span></code> (other connection update options,
-including per-model connections, can be read about in the <code class="docutils literal"><span class="pre">rom.util</span></code>
+<li><p class="first">Update the Redis connection settings for <code class="docutils literal notranslate"><span class="pre">rom</span></code> via
+<code class="docutils literal notranslate"><span class="pre">rom.util.set_connection_settings()</span></code> (other connection update options,
+including per-model connections, can be read about in the <code class="docutils literal notranslate"><span class="pre">rom.util</span></code>
 documentation):</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">redis</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">redis</span>
 <span class="kn">from</span> <span class="nn">rom</span> <span class="k">import</span> <span class="n">util</span>
 
 <span class="n">util</span><span class="o">.</span><span class="n">set_connection_settings</span><span class="p">(</span><span class="n">host</span><span class="o">=</span><span class="s1">&#39;myhost&#39;</span><span class="p">,</span> <span class="n">db</span><span class="o">=</span><span class="mi">7</span><span class="p">)</span>
@@ -142,7 +132,7 @@ to connect to localhost:6379 .</p>
 </div>
 <ol class="arabic" start="7">
 <li><p class="first">Create a model:</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">rom</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">rom</span>
 
 <span class="c1"># All models to be handled by rom must derived from rom.Model</span>
 <span class="k">class</span> <span class="nc">User</span><span class="p">(</span><span class="n">rom</span><span class="o">.</span><span class="n">Model</span><span class="p">):</span>
@@ -154,7 +144,7 @@ to connect to localhost:6379 .</p>
 </div>
 </li>
 <li><p class="first">Create an instance of the model and save it:</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">PASSES</span> <span class="o">=</span> <span class="mi">32768</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">PASSES</span> <span class="o">=</span> <span class="mi">32768</span>
 <span class="k">def</span> <span class="nf">gen_hash</span><span class="p">(</span><span class="n">password</span><span class="p">,</span> <span class="n">salt</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
     <span class="n">salt</span> <span class="o">=</span> <span class="n">salt</span> <span class="ow">or</span> <span class="n">os</span><span class="o">.</span><span class="n">urandom</span><span class="p">(</span><span class="mi">16</span><span class="p">)</span>
     <span class="n">comp</span> <span class="o">=</span> <span class="n">salt</span> <span class="o">+</span> <span class="n">password</span>
@@ -171,7 +161,7 @@ to connect to localhost:6379 .</p>
 </div>
 </li>
 <li><p class="first">Load and use the object later:</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">user</span> <span class="o">=</span> <span class="n">User</span><span class="o">.</span><span class="n">get_by</span><span class="p">(</span><span class="n">email</span><span class="o">=</span><span class="s1">&#39;user@host.com&#39;</span><span class="p">)</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">user</span> <span class="o">=</span> <span class="n">User</span><span class="o">.</span><span class="n">get_by</span><span class="p">(</span><span class="n">email</span><span class="o">=</span><span class="s1">&#39;user@host.com&#39;</span><span class="p">)</span>
 <span class="n">at_gmail</span> <span class="o">=</span> <span class="n">User</span><span class="o">.</span><span class="n">query</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="n">email</span><span class="o">=</span><span class="s1">&#39;@gmail.com&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">all</span><span class="p">()</span>
 </pre></div>
 </div>
@@ -187,7 +177,7 @@ and retries. This also allows for the support of prefix, suffix, and pattern
 matching on certain column types.</p>
 <p>If you are using a version of Redis prior to 2.6, you should upgrade Redis. If
 you are unable or unwilling to upgrade Redis, but you still wish to use rom,
-you should call <code class="docutils literal"><span class="pre">rom._disable_lua_writes()</span></code>, which will prevent you from
+you should call <code class="docutils literal notranslate"><span class="pre">rom._disable_lua_writes()</span></code>, which will prevent you from
 using features that require Lua scripting support.</p>
 </div>
 <div class="section" id="expiring-models-ttls">
@@ -201,9 +191,9 @@ querying fast. When a model “expires”, that data doesn’t get deleted. To
 delete that data, you have to run a cleanup function that literally has to
 scan over every entity in order to determine if the model had been expired. That
 is a huge waste and is the antithesis of good design.</p>
-<p>Instead, if you create a new <code class="docutils literal"><span class="pre">expire_at</span></code> float column with <code class="docutils literal"><span class="pre">index=True</span></code>,
+<p>Instead, if you create a new <code class="docutils literal notranslate"><span class="pre">expire_at</span></code> float column with <code class="docutils literal notranslate"><span class="pre">index=True</span></code>,
 the column can store when the entity is to expire. Then to expire the data, you
-can use: <code class="docutils literal"><span class="pre">Model.query.filter(expire_at=(0,</span> <span class="pre">time.time())).limit(10)</span></code> to (for
+can use: <code class="docutils literal notranslate"><span class="pre">Model.query.filter(expire_at=(0,</span> <span class="pre">time.time())).limit(10)</span></code> to (for
 example) get up to the 10 oldest entites that need to be expired.</p>
 <p>Now, I know what you are thinking. You are thinking, “but I wish the data would
 just go away on its own.” And I don’t disagree. But for that to happen, Redis
@@ -215,20 +205,20 @@ it efficiently? I think so, and you should too.</p>
 <dl class="class">
 <dt>
 <em class="property">class </em><code class="descclassname">rom.</code><code class="descname">Boolean</code><span class="sig-paren">(</span><em>required=False</em>, <em>default=&lt;object object&gt;</em>, <em>unique=False</em>, <em>index=False</em>, <em>keygen=None</em>, <em>prefix=False</em>, <em>suffix=False</em>, <em>keygen2=None</em><span class="sig-paren">)</span></dt>
-<dd><p>Bases: <a class="reference internal" href="columns.html#rom.columns.Column" title="rom.columns.Column"><code class="xref py py-class docutils literal"><span class="pre">rom.columns.Column</span></code></a></p>
+<dd><p>Bases: <a class="reference internal" href="columns.html#rom.columns.Column" title="rom.columns.Column"><code class="xref py py-class docutils literal notranslate"><span class="pre">rom.columns.Column</span></code></a></p>
 <p>Used for boolean columns.</p>
-<p>All standard arguments supported. See <code class="docutils literal"><span class="pre">Column</span></code> for details on supported
+<p>All standard arguments supported. See <code class="docutils literal notranslate"><span class="pre">Column</span></code> for details on supported
 arguments.</p>
 <p>All values passed in on creation are casted via bool(), with the exception
 of None (which behaves as though the value was missing), and any existing
-data in Redis is considered <code class="docutils literal"><span class="pre">False</span></code> if empty, and <code class="docutils literal"><span class="pre">True</span></code> otherwise.</p>
+data in Redis is considered <code class="docutils literal notranslate"><span class="pre">False</span></code> if empty, and <code class="docutils literal notranslate"><span class="pre">True</span></code> otherwise.</p>
 <p>Used via:</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="k">class</span> <span class="nc">MyModel</span><span class="p">(</span><span class="n">Model</span><span class="p">):</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">class</span> <span class="nc">MyModel</span><span class="p">(</span><span class="n">Model</span><span class="p">):</span>
     <span class="n">col</span> <span class="o">=</span> <span class="n">Boolean</span><span class="p">()</span>
 </pre></div>
 </div>
-<p>Queries via <code class="docutils literal"><span class="pre">MyModel.get_by(...)</span></code> and <code class="docutils literal"><span class="pre">MyModel.query.filter(...)</span></code> work
-as expected when passed <code class="docutils literal"><span class="pre">True</span></code> or <code class="docutils literal"><span class="pre">False</span></code>.</p>
+<p>Queries via <code class="docutils literal notranslate"><span class="pre">MyModel.get_by(...)</span></code> and <code class="docutils literal notranslate"><span class="pre">MyModel.query.filter(...)</span></code> work
+as expected when passed <code class="docutils literal notranslate"><span class="pre">True</span></code> or <code class="docutils literal notranslate"><span class="pre">False</span></code>.</p>
 <div class="admonition note">
 <p class="first admonition-title">Note</p>
 <p class="last">these columns are not sortable by default.</p>
@@ -244,14 +234,14 @@ as expected when passed <code class="docutils literal"><span class="pre">True</s
 <dl class="class">
 <dt>
 <em class="property">class </em><code class="descclassname">rom.</code><code class="descname">ClassProperty</code><span class="sig-paren">(</span><em>get</em>, <em>set=None</em>, <em>delete=None</em><span class="sig-paren">)</span></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">object</span></code></p>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
 <p>Borrowed from: <a class="reference external" href="https://gist.github.com/josiahcarlson/1561563">https://gist.github.com/josiahcarlson/1561563</a></p>
 </dd></dl>
 
 <dl class="class">
 <dt>
 <em class="property">class </em><code class="descclassname">rom.</code><code class="descname">Column</code><span class="sig-paren">(</span><em>required=False</em>, <em>default=&lt;object object&gt;</em>, <em>unique=False</em>, <em>index=False</em>, <em>keygen=None</em>, <em>prefix=False</em>, <em>suffix=False</em>, <em>keygen2=None</em><span class="sig-paren">)</span></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">object</span></code></p>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
 <p>Column objects handle data conversion to/from strings, store metadata
 about indices, etc. Note that these are “heavy” columns, in that whenever
 data is read/written, it must go through descriptor processing. This is
@@ -273,7 +263,7 @@ a User model)</li>
 Will create a ZSET-based numeric index for numeric columns and a
 “full word”-based search for string/unicode columns. If enabled
 for other (or custom) columns, remember to provide the
-<code class="docutils literal"><span class="pre">keygen</span></code> argument</li>
+<code class="docutils literal notranslate"><span class="pre">keygen</span></code> argument</li>
 <li><em>keygen</em> - pass a function that takes your column’s value and
 returns the data that you want to index (see the keygen docs for
 what kinds of data to return)</li>
@@ -288,12 +278,12 @@ creating multi-column indexes</li>
 <li><em>prefix</em> - can be enabled on any column that generates a list of
 strings as a result of the default or passed <em>keygen</em> function, and
 will allow the searching of prefix matches (autocomplete) over your
-data. See <code class="docutils literal"><span class="pre">Query.startswith()</span></code> for details.</li>
+data. See <code class="docutils literal notranslate"><span class="pre">Query.startswith()</span></code> for details.</li>
 <li><em>suffix</em> - can be enabled in the same contexts as <em>prefix</em> and
 enables suffix matching over your data. Any individual string in the
 returned data will be reversed (you need to make sure this makes
 conceptual sense with your data) before being stored or used. See
-<code class="docutils literal"><span class="pre">Query.endswith()</span></code> for details.</li>
+<code class="docutils literal notranslate"><span class="pre">Query.endswith()</span></code> for details.</li>
 </ul>
 </div></blockquote>
 <div class="admonition warning">
@@ -311,12 +301,12 @@ unique column on each model</li>
 from column data (with a reasonably sensible default for numeric
 columns, and 2 convenient options for string/text columns)</li>
 <li>If you set <em>required</em> to True, then you must have the column set
-during object construction: <code class="docutils literal"><span class="pre">MyModel(col=val)</span></code></li>
+during object construction: <code class="docutils literal notranslate"><span class="pre">MyModel(col=val)</span></code></li>
 <li>If <em>index</em> and <em>prefix</em>, or <em>index</em> and <em>suffix</em> are set, the same
 keygen will be used for both the regular <em>index</em> as well as the
 <em>prefix</em> and/or <em>suffix</em> searches</li>
 <li>If <em>prefix</em> is set, you can perform pattern matches over your data.
-See documention on <code class="docutils literal"><span class="pre">Query.like()</span></code> for details.</li>
+See documention on <code class="docutils literal notranslate"><span class="pre">Query.like()</span></code> for details.</li>
 <li>Pattern matching over data is only guaranteed to be valid or correct
 for ANSI strings that do not include nulls, though we make an effort
 to support unicode strings and strings with embedded nulls</li>
@@ -325,7 +315,7 @@ script, so may have substantial execution time if there are a large
 number of matching prefix or suffix entries</li>
 <li>Whenever possible, pattern matching will attempt to use any
 non-wildcard prefixes on the pattern to limit the items to be
-scanned. A pattern starting with <code class="docutils literal"><span class="pre">?</span></code>, <code class="docutils literal"><span class="pre">*</span></code>, <code class="docutils literal"><span class="pre">+</span></code>, or <code class="docutils literal"><span class="pre">!</span></code> will
+scanned. A pattern starting with <code class="docutils literal notranslate"><span class="pre">?</span></code>, <code class="docutils literal notranslate"><span class="pre">*</span></code>, <code class="docutils literal notranslate"><span class="pre">+</span></code>, or <code class="docutils literal notranslate"><span class="pre">!</span></code> will
 not be able to use any prefix, so will scan the entire index for
 matches (aka: expensive)</li>
 </ul>
@@ -333,11 +323,11 @@ matches (aka: expensive)</li>
 <p>There are 3 types of string indexes that rom currently supports:</p>
 <blockquote>
 <div><ul class="simple">
-<li><em>SIMPLE</em>/<em>SIMPLE_CI</em> - sorting only with <code class="docutils literal"><span class="pre">query.order_by('x')</span></code> -
+<li><em>SIMPLE</em>/<em>SIMPLE_CI</em> - sorting only with <code class="docutils literal notranslate"><span class="pre">query.order_by('x')</span></code> -
 <a class="reference external" href="https://josiahcarlson.github.io/rom/util.html#rom.util.SIMPLE">https://josiahcarlson.github.io/rom/util.html#rom.util.SIMPLE</a></li>
-<li><em>IDENTITY</em>/<em>IDENTITY_CI</em> - equality only with <code class="docutils literal"><span class="pre">query.filter(x=...)</span></code> -
+<li><em>IDENTITY</em>/<em>IDENTITY_CI</em> - equality only with <code class="docutils literal notranslate"><span class="pre">query.filter(x=...)</span></code> -
 <a class="reference external" href="https://josiahcarlson.github.io/rom/util.html#rom.util.IDENTITY">https://josiahcarlson.github.io/rom/util.html#rom.util.IDENTITY</a></li>
-<li><em>FULL_TEXT</em> - bag of words inverted index for <code class="docutils literal"><span class="pre">query.filter(x=...)</span></code> -
+<li><em>FULL_TEXT</em> - bag of words inverted index for <code class="docutils literal notranslate"><span class="pre">query.filter(x=...)</span></code> -
 <a class="reference external" href="https://josiahcarlson.github.io/rom/util.html#rom.util.FULL_TEXT">https://josiahcarlson.github.io/rom/util.html#rom.util.FULL_TEXT</a></li>
 </ul>
 </div></blockquote>
@@ -345,8 +335,8 @@ matches (aka: expensive)</li>
 whose semantics are as follows:</p>
 <blockquote>
 <div><ul class="simple">
-<li><em>prefix</em> - <code class="docutils literal"><span class="pre">query.startswith(column=pfix)</span></code> and <code class="docutils literal"><span class="pre">query.like(column='stuff?*')</span></code></li>
-<li><em>suffix</em> - <code class="docutils literal"><span class="pre">query.endswith(column=sfix)</span></code></li>
+<li><em>prefix</em> - <code class="docutils literal notranslate"><span class="pre">query.startswith(column=pfix)</span></code> and <code class="docutils literal notranslate"><span class="pre">query.like(column='stuff?*')</span></code></li>
+<li><em>suffix</em> - <code class="docutils literal notranslate"><span class="pre">query.endswith(column=sfix)</span></code></li>
 <li><em>SIMPLE</em>/<em>SIMPLE_CI</em>/<em>IDENTITY</em>/<em>IDENTITY_CI</em> - <em>prefix</em>/<em>suffix</em> the
 whole string case sensitive or insensitive</li>
 <li><em>FULL_TEXT</em> - <em>prefix</em>/<em>suffix</em> on individual words parsed out of the
@@ -358,26 +348,26 @@ full text</li>
 <dl class="exception">
 <dt>
 <em class="property">exception </em><code class="descclassname">rom.</code><code class="descname">ColumnError</code></dt>
-<dd><p>Bases: <a class="reference internal" href="exceptions.html#rom.exceptions.ORMError" title="rom.exceptions.ORMError"><code class="xref py py-class docutils literal"><span class="pre">rom.exceptions.ORMError</span></code></a></p>
+<dd><p>Bases: <a class="reference internal" href="exceptions.html#rom.exceptions.ORMError" title="rom.exceptions.ORMError"><code class="xref py py-class docutils literal notranslate"><span class="pre">rom.exceptions.ORMError</span></code></a></p>
 <p>Raised when your column definitions are not correct</p>
 </dd></dl>
 
 <dl class="exception">
 <dt>
 <em class="property">exception </em><code class="descclassname">rom.</code><code class="descname">DataRaceError</code></dt>
-<dd><p>Bases: <a class="reference internal" href="exceptions.html#rom.exceptions.InvalidOperation" title="rom.exceptions.InvalidOperation"><code class="xref py py-class docutils literal"><span class="pre">rom.exceptions.InvalidOperation</span></code></a></p>
+<dd><p>Bases: <a class="reference internal" href="exceptions.html#rom.exceptions.InvalidOperation" title="rom.exceptions.InvalidOperation"><code class="xref py py-class docutils literal notranslate"><span class="pre">rom.exceptions.InvalidOperation</span></code></a></p>
 <p>Raised when more than one writer tries to update the same columns on the same entity</p>
 </dd></dl>
 
 <dl class="class">
 <dt>
 <em class="property">class </em><code class="descclassname">rom.</code><code class="descname">Date</code><span class="sig-paren">(</span><em>required=False</em>, <em>default=&lt;object object&gt;</em>, <em>unique=False</em>, <em>index=False</em>, <em>keygen=None</em>, <em>prefix=False</em>, <em>suffix=False</em>, <em>keygen2=None</em><span class="sig-paren">)</span></dt>
-<dd><p>Bases: <a class="reference internal" href="columns.html#rom.columns.Column" title="rom.columns.Column"><code class="xref py py-class docutils literal"><span class="pre">rom.columns.Column</span></code></a></p>
+<dd><p>Bases: <a class="reference internal" href="columns.html#rom.columns.Column" title="rom.columns.Column"><code class="xref py py-class docutils literal notranslate"><span class="pre">rom.columns.Column</span></code></a></p>
 <p>A date column.</p>
-<p>All standard arguments supported. See <code class="docutils literal"><span class="pre">Column</span></code> for details on supported
+<p>All standard arguments supported. See <code class="docutils literal notranslate"><span class="pre">Column</span></code> for details on supported
 arguments.</p>
 <p>Used via:</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="k">class</span> <span class="nc">MyModel</span><span class="p">(</span><span class="n">Model</span><span class="p">):</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">class</span> <span class="nc">MyModel</span><span class="p">(</span><span class="n">Model</span><span class="p">):</span>
     <span class="n">col</span> <span class="o">=</span> <span class="n">Date</span><span class="p">()</span>
 </pre></div>
 </div>
@@ -386,12 +376,12 @@ arguments.</p>
 <dl class="class">
 <dt>
 <em class="property">class </em><code class="descclassname">rom.</code><code class="descname">DateTime</code><span class="sig-paren">(</span><em>required=False</em>, <em>default=&lt;object object&gt;</em>, <em>unique=False</em>, <em>index=False</em>, <em>keygen=None</em>, <em>prefix=False</em>, <em>suffix=False</em>, <em>keygen2=None</em><span class="sig-paren">)</span></dt>
-<dd><p>Bases: <a class="reference internal" href="columns.html#rom.columns.Column" title="rom.columns.Column"><code class="xref py py-class docutils literal"><span class="pre">rom.columns.Column</span></code></a></p>
+<dd><p>Bases: <a class="reference internal" href="columns.html#rom.columns.Column" title="rom.columns.Column"><code class="xref py py-class docutils literal notranslate"><span class="pre">rom.columns.Column</span></code></a></p>
 <p>A datetime column.</p>
-<p>All standard arguments supported. See <code class="docutils literal"><span class="pre">Column</span></code> for details on supported
+<p>All standard arguments supported. See <code class="docutils literal notranslate"><span class="pre">Column</span></code> for details on supported
 arguments.</p>
 <p>Used via:</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="k">class</span> <span class="nc">MyModel</span><span class="p">(</span><span class="n">Model</span><span class="p">):</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">class</span> <span class="nc">MyModel</span><span class="p">(</span><span class="n">Model</span><span class="p">):</span>
     <span class="n">col</span> <span class="o">=</span> <span class="n">DateTime</span><span class="p">()</span>
 </pre></div>
 </div>
@@ -404,13 +394,13 @@ arguments.</p>
 <dl class="class">
 <dt>
 <em class="property">class </em><code class="descclassname">rom.</code><code class="descname">Decimal</code><span class="sig-paren">(</span><em>required=False</em>, <em>default=&lt;object object&gt;</em>, <em>unique=False</em>, <em>index=False</em>, <em>keygen=None</em>, <em>prefix=False</em>, <em>suffix=False</em>, <em>keygen2=None</em><span class="sig-paren">)</span></dt>
-<dd><p>Bases: <a class="reference internal" href="columns.html#rom.columns.Column" title="rom.columns.Column"><code class="xref py py-class docutils literal"><span class="pre">rom.columns.Column</span></code></a></p>
+<dd><p>Bases: <a class="reference internal" href="columns.html#rom.columns.Column" title="rom.columns.Column"><code class="xref py py-class docutils literal notranslate"><span class="pre">rom.columns.Column</span></code></a></p>
 <p>A Decimal-only numeric column (converts ints/longs into Decimals
 automatically). Attempts to assign Python float will fail.</p>
-<p>All standard arguments supported. See <code class="docutils literal"><span class="pre">Column</span></code> for details on supported
+<p>All standard arguments supported. See <code class="docutils literal notranslate"><span class="pre">Column</span></code> for details on supported
 arguments.</p>
 <p>Used via:</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="k">class</span> <span class="nc">MyModel</span><span class="p">(</span><span class="n">Model</span><span class="p">):</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">class</span> <span class="nc">MyModel</span><span class="p">(</span><span class="n">Model</span><span class="p">):</span>
     <span class="n">col</span> <span class="o">=</span> <span class="n">Decimal</span><span class="p">()</span>
 </pre></div>
 </div>
@@ -419,7 +409,7 @@ arguments.</p>
 <dl class="exception">
 <dt>
 <em class="property">exception </em><code class="descclassname">rom.</code><code class="descname">EntityDeletedError</code></dt>
-<dd><p>Bases: <a class="reference internal" href="exceptions.html#rom.exceptions.InvalidOperation" title="rom.exceptions.InvalidOperation"><code class="xref py py-class docutils literal"><span class="pre">rom.exceptions.InvalidOperation</span></code></a></p>
+<dd><p>Bases: <a class="reference internal" href="exceptions.html#rom.exceptions.InvalidOperation" title="rom.exceptions.InvalidOperation"><code class="xref py py-class docutils literal notranslate"><span class="pre">rom.exceptions.InvalidOperation</span></code></a></p>
 <p>Raised when another writer deleted the entity from Redis; use .save(force=True) to re-save</p>
 </dd></dl>
 
@@ -434,13 +424,13 @@ index is created for term searching.</p>
 <dl class="class">
 <dt>
 <em class="property">class </em><code class="descclassname">rom.</code><code class="descname">Float</code><span class="sig-paren">(</span><em>required=False</em>, <em>default=&lt;object object&gt;</em>, <em>unique=False</em>, <em>index=False</em>, <em>keygen=None</em>, <em>prefix=False</em>, <em>suffix=False</em>, <em>keygen2=None</em><span class="sig-paren">)</span></dt>
-<dd><p>Bases: <a class="reference internal" href="columns.html#rom.columns.Column" title="rom.columns.Column"><code class="xref py py-class docutils literal"><span class="pre">rom.columns.Column</span></code></a></p>
+<dd><p>Bases: <a class="reference internal" href="columns.html#rom.columns.Column" title="rom.columns.Column"><code class="xref py py-class docutils literal notranslate"><span class="pre">rom.columns.Column</span></code></a></p>
 <p>Numeric column that supports integers and floats (values are turned into
 floats on load from Redis).</p>
-<p>All standard arguments supported. See <code class="docutils literal"><span class="pre">Column</span></code> for details on supported
+<p>All standard arguments supported. See <code class="docutils literal notranslate"><span class="pre">Column</span></code> for details on supported
 arguments.</p>
 <p>Used via:</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="k">class</span> <span class="nc">MyModel</span><span class="p">(</span><span class="n">Model</span><span class="p">):</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">class</span> <span class="nc">MyModel</span><span class="p">(</span><span class="n">Model</span><span class="p">):</span>
     <span class="n">col</span> <span class="o">=</span> <span class="n">Float</span><span class="p">()</span>
 </pre></div>
 </div>
@@ -449,18 +439,18 @@ arguments.</p>
 <dl class="class">
 <dt>
 <em class="property">class </em><code class="descclassname">rom.</code><code class="descname">ForeignModel</code><span class="sig-paren">(</span><em>fmodel</em>, <em>required=False</em>, <em>default=&lt;object object&gt;</em><span class="sig-paren">)</span></dt>
-<dd><p>Bases: <a class="reference internal" href="columns.html#rom.columns.Column" title="rom.columns.Column"><code class="xref py py-class docutils literal"><span class="pre">rom.columns.Column</span></code></a></p>
-<p>This column allows for <code class="docutils literal"><span class="pre">rom</span></code> models to reference an instance of another
+<dd><p>Bases: <a class="reference internal" href="columns.html#rom.columns.Column" title="rom.columns.Column"><code class="xref py py-class docutils literal notranslate"><span class="pre">rom.columns.Column</span></code></a></p>
+<p>This column allows for <code class="docutils literal notranslate"><span class="pre">rom</span></code> models to reference an instance of another
 model from an unrelated ORM or otherwise.</p>
 <div class="admonition note">
 <p class="first admonition-title">Note</p>
 <p class="last">In order for this mechanism to work, the foreign model <em>must</em>
-have an <code class="docutils literal"><span class="pre">id</span></code> attribute or property represents its primary key, and
-<em>must</em> have a classmethod or staticmethod named <code class="docutils literal"><span class="pre">get()</span></code> that returns
+have an <code class="docutils literal notranslate"><span class="pre">id</span></code> attribute or property represents its primary key, and
+<em>must</em> have a classmethod or staticmethod named <code class="docutils literal notranslate"><span class="pre">get()</span></code> that returns
 the proper database entity.</p>
 </div>
 <p>Used via:</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="k">class</span> <span class="nc">MyModel</span><span class="p">(</span><span class="n">Model</span><span class="p">):</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">class</span> <span class="nc">MyModel</span><span class="p">(</span><span class="n">Model</span><span class="p">):</span>
     <span class="n">col</span> <span class="o">=</span> <span class="n">ForeignModel</span><span class="p">(</span><span class="n">DjangoModel</span><span class="p">)</span>
 
 <span class="n">dm</span> <span class="o">=</span> <span class="n">DjangoModel</span><span class="p">(</span><span class="n">col1</span><span class="o">=</span><span class="s1">&#39;foo&#39;</span><span class="p">)</span>
@@ -475,20 +465,20 @@ the proper database entity.</p>
 <dl class="class">
 <dt>
 <em class="property">class </em><code class="descclassname">rom.</code><code class="descname">GeneralIndex</code><span class="sig-paren">(</span><em>namespace</em><span class="sig-paren">)</span></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">object</span></code></p>
-<p>This class implements general indexing and search for the <code class="docutils literal"><span class="pre">rom</span></code> package.</p>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>This class implements general indexing and search for the <code class="docutils literal notranslate"><span class="pre">rom</span></code> package.</p>
 <div class="admonition warning">
 <p class="first admonition-title">Warning</p>
 <p class="last">You probably don’t want to be calling this directly. Instead,
-you should rely on the <code class="docutils literal"><span class="pre">Query</span></code> object returned from <code class="docutils literal"><span class="pre">Model.query</span></code> to
+you should rely on the <code class="docutils literal notranslate"><span class="pre">Query</span></code> object returned from <code class="docutils literal notranslate"><span class="pre">Model.query</span></code> to
 handle all of your query pre-processing.</p>
 </div>
 <p>Generally speaking, numeric indices use ZSETs, and text indices use SETs
 built using an ‘inverted index’.</p>
-<p>Say that we have words <code class="docutils literal"><span class="pre">hello</span> <span class="pre">world</span></code> in a column <code class="docutils literal"><span class="pre">c</span></code> on a model with
-primary key <code class="docutils literal"><span class="pre">MyModel:1</span></code>. The member <code class="docutils literal"><span class="pre">1</span></code> will be added to SETs with
+<p>Say that we have words <code class="docutils literal notranslate"><span class="pre">hello</span> <span class="pre">world</span></code> in a column <code class="docutils literal notranslate"><span class="pre">c</span></code> on a model with
+primary key <code class="docutils literal notranslate"><span class="pre">MyModel:1</span></code>. The member <code class="docutils literal notranslate"><span class="pre">1</span></code> will be added to SETs with
 keys:</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">MyModel</span><span class="p">:</span><span class="n">c</span><span class="p">:</span><span class="n">hello</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">MyModel</span><span class="p">:</span><span class="n">c</span><span class="p">:</span><span class="n">hello</span>
 <span class="n">MyModel</span><span class="p">:</span><span class="n">c</span><span class="p">:</span><span class="n">world</span>
 </pre></div>
 </div>
@@ -499,11 +489,11 @@ removing items outside the requested range after each intersection.</p>
 <p>Searches will pre-sort intersections from smallest to largest SET/ZSET
 prior to performing the search to improve performance.</p>
 <p>Prefix, suffix, and pattern matching change this operation. Given a key
-generated of <code class="docutils literal"><span class="pre">hello</span></code> on a column <code class="docutils literal"><span class="pre">c</span></code> on a model with primary key
-<code class="docutils literal"><span class="pre">MyModel:1</span></code>, the member <code class="docutils literal"><span class="pre">hello\01</span></code> with score 0 will be added to a
-ZSET with the key name <code class="docutils literal"><span class="pre">MyModel:c:pre</span></code> for the prefix/pattern index.
-On a suffix index, the member <code class="docutils literal"><span class="pre">olleh\01</span></code> with score 0 will be added to
-a ZSET with the key name <code class="docutils literal"><span class="pre">MyModel:c:suf</span></code>.</p>
+generated of <code class="docutils literal notranslate"><span class="pre">hello</span></code> on a column <code class="docutils literal notranslate"><span class="pre">c</span></code> on a model with primary key
+<code class="docutils literal notranslate"><span class="pre">MyModel:1</span></code>, the member <code class="docutils literal notranslate"><span class="pre">hello\01</span></code> with score 0 will be added to a
+ZSET with the key name <code class="docutils literal notranslate"><span class="pre">MyModel:c:pre</span></code> for the prefix/pattern index.
+On a suffix index, the member <code class="docutils literal notranslate"><span class="pre">olleh\01</span></code> with score 0 will be added to
+a ZSET with the key name <code class="docutils literal notranslate"><span class="pre">MyModel:c:suf</span></code>.</p>
 <p>Prefix and suffix matches are excuted in Lua with a variant of the
 autocomplete method described in Redis in Action. These methods ensure a
 runtime proportional to the number of matched entries.</p>
@@ -513,8 +503,8 @@ index, exploiting prefixes in patterns if they exist.</p>
 <dt>
 <code class="descname">count</code><span class="sig-paren">(</span><em>conn</em>, <em>filters</em><span class="sig-paren">)</span></dt>
 <dd><p>Returns the count of the items that match the provided filters.</p>
-<p>For the meaning of what the <code class="docutils literal"><span class="pre">filters</span></code> argument means, see the
-<code class="docutils literal"><span class="pre">.search()</span></code> method docs.</p>
+<p>For the meaning of what the <code class="docutils literal notranslate"><span class="pre">filters</span></code> argument means, see the
+<code class="docutils literal notranslate"><span class="pre">.search()</span></code> method docs.</p>
 </dd></dl>
 
 <dl class="method">
@@ -528,31 +518,31 @@ index, exploiting prefixes in patterns if they exist.</p>
 the following two forms:</p>
 <blockquote>
 <div><ol class="arabic simple">
-<li><code class="docutils literal"><span class="pre">'column:string'</span></code> - a plain string will match a word in a
+<li><code class="docutils literal notranslate"><span class="pre">'column:string'</span></code> - a plain string will match a word in a
 text search on the column</li>
 </ol>
 <div class="admonition note">
 <p class="first admonition-title">Note</p>
-<p class="last">Read the documentation about the <code class="docutils literal"><span class="pre">Query</span></code> object
+<p class="last">Read the documentation about the <code class="docutils literal notranslate"><span class="pre">Query</span></code> object
 for what is actually passed during text search</p>
 </div>
 <ol class="arabic simple" start="2">
-<li><code class="docutils literal"><span class="pre">('column',</span> <span class="pre">min,</span> <span class="pre">max)</span></code> - a numeric column range search,
+<li><code class="docutils literal notranslate"><span class="pre">('column',</span> <span class="pre">min,</span> <span class="pre">max)</span></code> - a numeric column range search,
 between min and max (inclusive by default)</li>
 </ol>
 <div class="admonition note">
 <p class="first admonition-title">Note</p>
-<p class="last">Read the documentation about the <code class="docutils literal"><span class="pre">Query</span></code> object
+<p class="last">Read the documentation about the <code class="docutils literal notranslate"><span class="pre">Query</span></code> object
 for information about open-ended ranges</p>
 </div>
 <ol class="arabic simple" start="3">
-<li><code class="docutils literal"><span class="pre">['column:string1',</span> <span class="pre">'column:string2']</span></code> - will match any
+<li><code class="docutils literal notranslate"><span class="pre">['column:string1',</span> <span class="pre">'column:string2']</span></code> - will match any
 of the provided words in a text search on the column</li>
-<li><code class="docutils literal"><span class="pre">Prefix('column',</span> <span class="pre">'prefix')</span></code> - will match prefixes of
+<li><code class="docutils literal notranslate"><span class="pre">Prefix('column',</span> <span class="pre">'prefix')</span></code> - will match prefixes of
 words in a text search on the column</li>
-<li><code class="docutils literal"><span class="pre">Suffix('column',</span> <span class="pre">'suffix')</span></code> - will match suffixes of
+<li><code class="docutils literal notranslate"><span class="pre">Suffix('column',</span> <span class="pre">'suffix')</span></code> - will match suffixes of
 words in a text search on the column</li>
-<li><code class="docutils literal"><span class="pre">Pattern('column',</span> <span class="pre">'pattern')</span></code> - will match patterns over
+<li><code class="docutils literal notranslate"><span class="pre">Pattern('column',</span> <span class="pre">'pattern')</span></code> - will match patterns over
 words in a text search on the column</li>
 </ol>
 </div></blockquote>
@@ -570,7 +560,7 @@ results by string comparison of the ids (10 will come before 2).</p>
 </div>
 <div class="admonition note">
 <p class="first admonition-title">Note</p>
-<p class="last">If you omit the <code class="docutils literal"><span class="pre">order_by</span></code> argument, results will be
+<p class="last">If you omit the <code class="docutils literal notranslate"><span class="pre">order_by</span></code> argument, results will be
 ordered by the last filter. If the last filter was a text
 filter, see the previous note. If the last filter was numeric,
 then results will be ordered by that result.</p>
@@ -587,7 +577,7 @@ then results will be ordered by that result.</p>
 <dl class="class">
 <dt>
 <em class="property">class </em><code class="descclassname">rom.</code><code class="descname">GeoIndex</code><span class="sig-paren">(</span><em>name</em>, <em>callback</em><span class="sig-paren">)</span></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">tuple</span></code></p>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">tuple</span></code></p>
 <dl class="attribute">
 <dt>
 <code class="descname">callback</code></dt>
@@ -607,13 +597,13 @@ then results will be ordered by that result.</p>
 <code class="descclassname">rom.</code><code class="descname">IDENTITY</code><span class="sig-paren">(</span><em>val</em><span class="sig-paren">)</span></dt>
 <dd><p>This is a basic “equality” index keygen, primarily meant to be used for
 things like:</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">Model</span><span class="o">.</span><span class="n">query</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">col</span><span class="o">=</span><span class="s1">&#39;value&#39;</span><span class="p">)</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">Model</span><span class="o">.</span><span class="n">query</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">col</span><span class="o">=</span><span class="s1">&#39;value&#39;</span><span class="p">)</span>
 </pre></div>
 </div>
-<p>Where <code class="docutils literal"><span class="pre">FULL_TEXT</span></code> would transform a sentence like “A Simple Sentence” into
+<p>Where <code class="docutils literal notranslate"><span class="pre">FULL_TEXT</span></code> would transform a sentence like “A Simple Sentence” into
 an inverted index searchable by the words “a”, “simple”, and/or “sentence”,
-<code class="docutils literal"><span class="pre">IDENTITY</span></code> will only be searchable by the orginal full sentence with the
-same capitalization - “A Simple Sentence”. See <code class="docutils literal"><span class="pre">IDENTITY_CI</span></code> for the
+<code class="docutils literal notranslate"><span class="pre">IDENTITY</span></code> will only be searchable by the orginal full sentence with the
+same capitalization - “A Simple Sentence”. See <code class="docutils literal notranslate"><span class="pre">IDENTITY_CI</span></code> for the
 same function, only case-insensitive.</p>
 </dd></dl>
 
@@ -626,15 +616,15 @@ same function, only case-insensitive.</p>
 <dl class="class">
 <dt>
 <em class="property">class </em><code class="descclassname">rom.</code><code class="descname">IndexOnly</code><span class="sig-paren">(</span><em>column=None</em>, <em>keygen=None</em>, <em>prefix=False</em>, <em>suffix=False</em>, <em>keygen2=None</em><span class="sig-paren">)</span></dt>
-<dd><p>Bases: <a class="reference internal" href="columns.html#rom.columns.Column" title="rom.columns.Column"><code class="xref py py-class docutils literal"><span class="pre">rom.columns.Column</span></code></a></p>
+<dd><p>Bases: <a class="reference internal" href="columns.html#rom.columns.Column" title="rom.columns.Column"><code class="xref py py-class docutils literal notranslate"><span class="pre">rom.columns.Column</span></code></a></p>
 <p>This column doesn’t actually store data, except in indexes for other
 columns. Say, for example, you have an email text field that you want to
 be unique, look-up by identity, but also be parsed out for a sort of
-address-book index. Normally that would suck. But not with <code class="docutils literal"><span class="pre">IndexOnly()</span></code>
+address-book index. Normally that would suck. But not with <code class="docutils literal notranslate"><span class="pre">IndexOnly()</span></code>
 columns! Data set on this attribute will raise an exception, and will be
 silently ignored (and potentially deleted) if already stored in Redis.</p>
 <p>Used via:</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">re</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">re</span>
 <span class="k">def</span> <span class="nf">split_email</span><span class="p">(</span><span class="n">val</span><span class="p">):</span>
     <span class="k">if</span> <span class="n">val</span><span class="p">:</span>
         <span class="k">return</span> <span class="nb">set</span><span class="p">(</span><span class="nb">filter</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="n">re</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;[^\w]&#39;</span><span class="p">,</span> <span class="n">val</span><span class="o">.</span><span class="n">lower</span><span class="p">())))</span>
@@ -658,12 +648,12 @@ own work, and I thought I’d release it as a convenience column.</p>
 <dl class="class">
 <dt>
 <em class="property">class </em><code class="descclassname">rom.</code><code class="descname">Integer</code><span class="sig-paren">(</span><em>required=False</em>, <em>default=&lt;object object&gt;</em>, <em>unique=False</em>, <em>index=False</em>, <em>keygen=None</em>, <em>prefix=False</em>, <em>suffix=False</em>, <em>keygen2=None</em><span class="sig-paren">)</span></dt>
-<dd><p>Bases: <a class="reference internal" href="columns.html#rom.columns.Column" title="rom.columns.Column"><code class="xref py py-class docutils literal"><span class="pre">rom.columns.Column</span></code></a></p>
+<dd><p>Bases: <a class="reference internal" href="columns.html#rom.columns.Column" title="rom.columns.Column"><code class="xref py py-class docutils literal notranslate"><span class="pre">rom.columns.Column</span></code></a></p>
 <p>Used for integer numeric columns.</p>
-<p>All standard arguments supported. See <code class="docutils literal"><span class="pre">Column</span></code> for details on supported
+<p>All standard arguments supported. See <code class="docutils literal notranslate"><span class="pre">Column</span></code> for details on supported
 arguments.</p>
 <p>Used via:</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="k">class</span> <span class="nc">MyModel</span><span class="p">(</span><span class="n">Model</span><span class="p">):</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">class</span> <span class="nc">MyModel</span><span class="p">(</span><span class="n">Model</span><span class="p">):</span>
     <span class="n">col</span> <span class="o">=</span> <span class="n">Integer</span><span class="p">()</span>
 </pre></div>
 </div>
@@ -672,26 +662,26 @@ arguments.</p>
 <dl class="exception">
 <dt>
 <em class="property">exception </em><code class="descclassname">rom.</code><code class="descname">InvalidColumnValue</code></dt>
-<dd><p>Bases: <a class="reference internal" href="exceptions.html#rom.exceptions.ColumnError" title="rom.exceptions.ColumnError"><code class="xref py py-class docutils literal"><span class="pre">rom.exceptions.ColumnError</span></code></a></p>
+<dd><p>Bases: <a class="reference internal" href="exceptions.html#rom.exceptions.ColumnError" title="rom.exceptions.ColumnError"><code class="xref py py-class docutils literal notranslate"><span class="pre">rom.exceptions.ColumnError</span></code></a></p>
 <p>Raised when you attempt to pass a primary key on entity creation or when data assigned to a column is the wrong type</p>
 </dd></dl>
 
 <dl class="exception">
 <dt>
 <em class="property">exception </em><code class="descclassname">rom.</code><code class="descname">InvalidOperation</code></dt>
-<dd><p>Bases: <a class="reference internal" href="exceptions.html#rom.exceptions.ORMError" title="rom.exceptions.ORMError"><code class="xref py py-class docutils literal"><span class="pre">rom.exceptions.ORMError</span></code></a></p>
+<dd><p>Bases: <a class="reference internal" href="exceptions.html#rom.exceptions.ORMError" title="rom.exceptions.ORMError"><code class="xref py py-class docutils literal notranslate"><span class="pre">rom.exceptions.ORMError</span></code></a></p>
 <p>Raised when trying to delete or modify a column that cannot be deleted or modified</p>
 </dd></dl>
 
 <dl class="class">
 <dt>
 <em class="property">class </em><code class="descclassname">rom.</code><code class="descname">Json</code><span class="sig-paren">(</span><em>required=False</em>, <em>default=&lt;object object&gt;</em>, <em>unique=False</em>, <em>index=False</em>, <em>keygen=None</em>, <em>prefix=False</em>, <em>suffix=False</em>, <em>keygen2=None</em><span class="sig-paren">)</span></dt>
-<dd><p>Bases: <a class="reference internal" href="columns.html#rom.columns.Column" title="rom.columns.Column"><code class="xref py py-class docutils literal"><span class="pre">rom.columns.Column</span></code></a></p>
+<dd><p>Bases: <a class="reference internal" href="columns.html#rom.columns.Column" title="rom.columns.Column"><code class="xref py py-class docutils literal notranslate"><span class="pre">rom.columns.Column</span></code></a></p>
 <p>Allows for more complicated nested structures as attributes.</p>
-<p>All standard arguments supported. The <code class="docutils literal"><span class="pre">keygen</span></code> argument must be provided
-if <code class="docutils literal"><span class="pre">index</span></code> is <code class="docutils literal"><span class="pre">True</span></code>.</p>
+<p>All standard arguments supported. The <code class="docutils literal notranslate"><span class="pre">keygen</span></code> argument must be provided
+if <code class="docutils literal notranslate"><span class="pre">index</span></code> is <code class="docutils literal notranslate"><span class="pre">True</span></code>.</p>
 <p>Used via:</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="k">class</span> <span class="nc">MyModel</span><span class="p">(</span><span class="n">Model</span><span class="p">):</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">class</span> <span class="nc">MyModel</span><span class="p">(</span><span class="n">Model</span><span class="p">):</span>
     <span class="n">col</span> <span class="o">=</span> <span class="n">Json</span><span class="p">()</span>
 </pre></div>
 </div>
@@ -700,14 +690,14 @@ if <code class="docutils literal"><span class="pre">index</span></code> is <code
 <dl class="class">
 <dt>
 <em class="property">class </em><code class="descclassname">rom.</code><code class="descname">ManyToOne</code><span class="sig-paren">(</span><em>ftable</em>, <em>on_delete=&lt;object object&gt;</em>, <em>required=False</em>, <em>default=&lt;object object&gt;</em><span class="sig-paren">)</span></dt>
-<dd><p>Bases: <a class="reference internal" href="columns.html#rom.columns.Column" title="rom.columns.Column"><code class="xref py py-class docutils literal"><span class="pre">rom.columns.Column</span></code></a></p>
+<dd><p>Bases: <a class="reference internal" href="columns.html#rom.columns.Column" title="rom.columns.Column"><code class="xref py py-class docutils literal notranslate"><span class="pre">rom.columns.Column</span></code></a></p>
 <p>This ManyToOne column allows for one model to reference another model.
 While a ManyToOne column does not require a reverse OneToMany column
 (which will return a list of models that reference it via a ManyToOne), it
 is generally seen as being useful to have both sides of the relationship
 defined.</p>
-<p>Aside from the name of the other model, only the <code class="docutils literal"><span class="pre">required</span></code> and
-<code class="docutils literal"><span class="pre">default</span></code> arguments are accepted.</p>
+<p>Aside from the name of the other model, only the <code class="docutils literal notranslate"><span class="pre">required</span></code> and
+<code class="docutils literal notranslate"><span class="pre">default</span></code> arguments are accepted.</p>
 <p>Four arguments are supported:</p>
 <blockquote>
 <div><ul class="simple">
@@ -725,13 +715,13 @@ when this column is not provided</li>
 </ul>
 </div></blockquote>
 <p>Used via:</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="k">class</span> <span class="nc">MyModel</span><span class="p">(</span><span class="n">Model</span><span class="p">):</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">class</span> <span class="nc">MyModel</span><span class="p">(</span><span class="n">Model</span><span class="p">):</span>
     <span class="n">col</span> <span class="o">=</span> <span class="n">ManyToOne</span><span class="p">(</span><span class="s1">&#39;OtherModelName&#39;</span><span class="p">)</span>
 </pre></div>
 </div>
 <div class="admonition note">
 <p class="first admonition-title">Note</p>
-<p class="last">All <code class="docutils literal"><span class="pre">ManyToOne</span></code> columns are indexed numerically, which means
+<p class="last">All <code class="docutils literal notranslate"><span class="pre">ManyToOne</span></code> columns are indexed numerically, which means
 that you can find entities referencing specific id ranges or even sort by
 referenced ids.</p>
 </div>
@@ -740,17 +730,17 @@ referenced ids.</p>
 <dl class="exception">
 <dt>
 <em class="property">exception </em><code class="descclassname">rom.</code><code class="descname">MissingColumn</code></dt>
-<dd><p>Bases: <a class="reference internal" href="exceptions.html#rom.exceptions.ColumnError" title="rom.exceptions.ColumnError"><code class="xref py py-class docutils literal"><span class="pre">rom.exceptions.ColumnError</span></code></a></p>
+<dd><p>Bases: <a class="reference internal" href="exceptions.html#rom.exceptions.ColumnError" title="rom.exceptions.ColumnError"><code class="xref py py-class docutils literal notranslate"><span class="pre">rom.exceptions.ColumnError</span></code></a></p>
 <p>Raised when a model has a required column, but it is not provided on construction</p>
 </dd></dl>
 
 <dl class="class">
 <dt>
 <em class="property">class </em><code class="descclassname">rom.</code><code class="descname">Model</code><span class="sig-paren">(</span><em>**kwargs</em><span class="sig-paren">)</span></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">object</span></code></p>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
 <p>This is the base class for all models. You subclass from this base Model
 in order to create a model with columns. As an example:</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="k">class</span> <span class="nc">User</span><span class="p">(</span><span class="n">Model</span><span class="p">):</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">class</span> <span class="nc">User</span><span class="p">(</span><span class="n">Model</span><span class="p">):</span>
     <span class="n">email_address</span> <span class="o">=</span> <span class="n">String</span><span class="p">(</span><span class="n">required</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">unique</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
     <span class="n">salt</span> <span class="o">=</span> <span class="n">String</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="s1">&#39;&#39;</span><span class="p">)</span>
     <span class="nb">hash</span> <span class="o">=</span> <span class="n">String</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="s1">&#39;&#39;</span><span class="p">)</span>
@@ -758,7 +748,7 @@ in order to create a model with columns. As an example:</p>
 </pre></div>
 </div>
 <p>Which can then be used like:</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">user</span> <span class="o">=</span> <span class="n">User</span><span class="p">(</span><span class="n">email_addrss</span><span class="o">=</span><span class="s1">&#39;user@domain.com&#39;</span><span class="p">)</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">user</span> <span class="o">=</span> <span class="n">User</span><span class="p">(</span><span class="n">email_addrss</span><span class="o">=</span><span class="s1">&#39;user@domain.com&#39;</span><span class="p">)</span>
 <span class="n">user</span><span class="o">.</span><span class="n">save</span><span class="p">()</span> <span class="c1"># session.commit() or session.flush() works too</span>
 <span class="n">user</span> <span class="o">=</span> <span class="n">User</span><span class="o">.</span><span class="n">get_by</span><span class="p">(</span><span class="n">email_address</span><span class="o">=</span><span class="s1">&#39;user@domain.com&#39;</span><span class="p">)</span>
 <span class="n">user</span> <span class="o">=</span> <span class="n">User</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="mi">5</span><span class="p">)</span>
@@ -766,9 +756,9 @@ in order to create a model with columns. As an example:</p>
 </pre></div>
 </div>
 <p>To perform arbitrary queries on entities involving the indices that you
-defined (by passing <code class="docutils literal"><span class="pre">index=True</span></code> on column creation), you access the
-<code class="docutils literal"><span class="pre">.query</span></code> class property on the model:</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">query</span> <span class="o">=</span> <span class="n">User</span><span class="o">.</span><span class="n">query</span>
+defined (by passing <code class="docutils literal notranslate"><span class="pre">index=True</span></code> on column creation), you access the
+<code class="docutils literal notranslate"><span class="pre">.query</span></code> class property on the model:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">query</span> <span class="o">=</span> <span class="n">User</span><span class="o">.</span><span class="n">query</span>
 <span class="n">query</span> <span class="o">=</span> <span class="n">query</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">created_at</span><span class="o">=</span><span class="p">(</span><span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span><span class="o">-</span><span class="mi">86400</span><span class="p">,</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()))</span>
 <span class="n">users</span> <span class="o">=</span> <span class="n">query</span><span class="o">.</span><span class="n">execute</span><span class="p">()</span>
 </pre></div>
@@ -776,19 +766,19 @@ defined (by passing <code class="docutils literal"><span class="pre">index=True<
 <div class="admonition note">
 <p class="first admonition-title">Note</p>
 <p class="last">You can perform single or chained queries against any/all columns
-that were defined with <code class="docutils literal"><span class="pre">index=True</span></code>.</p>
+that were defined with <code class="docutils literal notranslate"><span class="pre">index=True</span></code>.</p>
 </div>
 <p><strong>Composite/multi-column unique constraints</strong></p>
 <p>As of version 0.28.0 and later, rom supports the ability for you to have a
 unique constraint involving multiple columns. Individual columns can be
 defined unique by passing the ‘unique=True’ specifier during column
 definition as always.</p>
-<p>The attribute <code class="docutils literal"><span class="pre">unique_together</span></code> defines those groups of columns that when
-taken together must be unique for <code class="docutils literal"><span class="pre">.save()</span></code> to complete successfully.
-This will work almost exactly the same as Django’s <code class="docutils literal"><span class="pre">unique_together</span></code>, and
-is comparable to SQLAlchemy’s <code class="docutils literal"><span class="pre">UniqueConstraint()</span></code>.</p>
+<p>The attribute <code class="docutils literal notranslate"><span class="pre">unique_together</span></code> defines those groups of columns that when
+taken together must be unique for <code class="docutils literal notranslate"><span class="pre">.save()</span></code> to complete successfully.
+This will work almost exactly the same as Django’s <code class="docutils literal notranslate"><span class="pre">unique_together</span></code>, and
+is comparable to SQLAlchemy’s <code class="docutils literal notranslate"><span class="pre">UniqueConstraint()</span></code>.</p>
 <p>Usage:</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="k">class</span> <span class="nc">UniquePosition</span><span class="p">(</span><span class="n">Model</span><span class="p">):</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">class</span> <span class="nc">UniquePosition</span><span class="p">(</span><span class="n">Model</span><span class="p">):</span>
     <span class="n">x</span> <span class="o">=</span> <span class="n">Integer</span><span class="p">()</span>
     <span class="n">y</span> <span class="o">=</span> <span class="n">Integer</span><span class="p">()</span>
 
@@ -824,7 +814,7 @@ specified as part of column definitions.</p>
 <dd><p>Will fetch one or more entities of this type from the session or
 Redis.</p>
 <p>Used like:</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">MyModel</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="mi">5</span><span class="p">)</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">MyModel</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="mi">5</span><span class="p">)</span>
 <span class="n">MyModel</span><span class="o">.</span><span class="n">get</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span> <span class="mi">6</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">4</span><span class="p">])</span>
 </pre></div>
 </div>
@@ -836,10 +826,10 @@ order that the ids were passed.</p>
 <dt>
 <em class="property">classmethod </em><code class="descname">get_by</code><span class="sig-paren">(</span><em>**kwargs</em><span class="sig-paren">)</span></dt>
 <dd><p>This method offers a simple query method for fetching entities of this
-type via attribute numeric ranges (such columns must be <code class="docutils literal"><span class="pre">indexed</span></code>),
-or via <code class="docutils literal"><span class="pre">unique</span></code> columns.</p>
+type via attribute numeric ranges (such columns must be <code class="docutils literal notranslate"><span class="pre">indexed</span></code>),
+or via <code class="docutils literal notranslate"><span class="pre">unique</span></code> columns.</p>
 <p>Some examples:</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">user</span> <span class="o">=</span> <span class="n">User</span><span class="o">.</span><span class="n">get_by</span><span class="p">(</span><span class="n">email_address</span><span class="o">=</span><span class="s1">&#39;user@domain.com&#39;</span><span class="p">)</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">user</span> <span class="o">=</span> <span class="n">User</span><span class="o">.</span><span class="n">get_by</span><span class="p">(</span><span class="n">email_address</span><span class="o">=</span><span class="s1">&#39;user@domain.com&#39;</span><span class="p">)</span>
 <span class="c1"># gets up to 25 users created in the last 24 hours</span>
 <span class="n">users</span> <span class="o">=</span> <span class="n">User</span><span class="o">.</span><span class="n">get_by</span><span class="p">(</span>
     <span class="n">created_at</span><span class="o">=</span><span class="p">(</span><span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span><span class="o">-</span><span class="mi">86400</span><span class="p">,</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()),</span>
@@ -853,8 +843,8 @@ or via <code class="docutils literal"><span class="pre">unique</span></code> col
 paginate or otherwise limit results returned by a numeric range
 query</li>
 <li><em>_numeric</em> - An optional boolean defaulting to False that forces
-the use of a numeric index for <code class="docutils literal"><span class="pre">.get_by(col=val)</span></code> queries even
-when <code class="docutils literal"><span class="pre">col</span></code> has an existing unique index</li>
+the use of a numeric index for <code class="docutils literal notranslate"><span class="pre">.get_by(col=val)</span></code> queries even
+when <code class="docutils literal notranslate"><span class="pre">col</span></code> has an existing unique index</li>
 </ul>
 </div></blockquote>
 <p>If you would like to make queries against multiple columns or with
@@ -863,7 +853,7 @@ multiple criteria, look into the Model.query class property.</p>
 <p class="first admonition-title">Note</p>
 <p class="last">rom will attempt to use a unique index first, then a numeric
 index if there was no unique index. You can explicitly tell rom to
-only use the numeric index by using <code class="docutils literal"><span class="pre">.get_by(...,</span> <span class="pre">_numeric=True)</span></code>.</p>
+only use the numeric index by using <code class="docutils literal notranslate"><span class="pre">.get_by(...,</span> <span class="pre">_numeric=True)</span></code>.</p>
 </div>
 <div class="admonition note">
 <p class="first admonition-title">Note</p>
@@ -876,9 +866,9 @@ with columns that use a numeric index.</p>
 <dt>
 <code class="descname">save</code><span class="sig-paren">(</span><em>full=False</em>, <em>force=False</em><span class="sig-paren">)</span></dt>
 <dd><p>Saves the current entity to Redis. Will only save changed data by
-default, but you can force a full save by passing <code class="docutils literal"><span class="pre">full=True</span></code>.</p>
+default, but you can force a full save by passing <code class="docutils literal notranslate"><span class="pre">full=True</span></code>.</p>
 <p>If the underlying entity was deleted and you want to re-save the entity,
-you can pass <code class="docutils literal"><span class="pre">force=True</span></code> to force a full re-save of the entity.</p>
+you can pass <code class="docutils literal notranslate"><span class="pre">force=True</span></code> to force a full re-save of the entity.</p>
 </dd></dl>
 
 <dl class="method">
@@ -886,17 +876,17 @@ you can pass <code class="docutils literal"><span class="pre">force=True</span><
 <code class="descname">to_dict</code><span class="sig-paren">(</span><span class="sig-paren">)</span></dt>
 <dd><p>Returns a copy of all data assigned to columns in this entity. Useful
 for returning items to JSON-enabled APIs. If you want to copy an
-entity, you should look at the <code class="docutils literal"><span class="pre">.copy()</span></code> method.</p>
+entity, you should look at the <code class="docutils literal notranslate"><span class="pre">.copy()</span></code> method.</p>
 </dd></dl>
 
 <dl class="method">
 <dt>
 <code class="descname">update</code><span class="sig-paren">(</span><em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span></dt>
-<dd><p>Updates multiple attributes in a model. If <code class="docutils literal"><span class="pre">args</span></code> are provided, this
+<dd><p>Updates multiple attributes in a model. If <code class="docutils literal notranslate"><span class="pre">args</span></code> are provided, this
 method will assign attributes in the order returned by
-<code class="docutils literal"><span class="pre">list(self._columns)</span></code> until one or both are exhausted.</p>
-<p>If <code class="docutils literal"><span class="pre">kwargs</span></code> are provided, this method will assign attributes to the
-names provided, after <code class="docutils literal"><span class="pre">args</span></code> have been processed.</p>
+<code class="docutils literal notranslate"><span class="pre">list(self._columns)</span></code> until one or both are exhausted.</p>
+<p>If <code class="docutils literal notranslate"><span class="pre">kwargs</span></code> are provided, this method will assign attributes to the
+names provided, after <code class="docutils literal notranslate"><span class="pre">args</span></code> have been processed.</p>
 </dd></dl>
 
 </dd></dl>
@@ -904,14 +894,14 @@ names provided, after <code class="docutils literal"><span class="pre">args</spa
 <dl class="exception">
 <dt>
 <em class="property">exception </em><code class="descclassname">rom.</code><code class="descname">ORMError</code></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">Exception</span></code></p>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Exception</span></code></p>
 <p>Base class for all ORM-related errors</p>
 </dd></dl>
 
 <dl class="class">
 <dt>
 <em class="property">class </em><code class="descclassname">rom.</code><code class="descname">OneToMany</code><span class="sig-paren">(</span><em>ftable</em>, <em>column=None</em><span class="sig-paren">)</span></dt>
-<dd><p>Bases: <a class="reference internal" href="columns.html#rom.columns.Column" title="rom.columns.Column"><code class="xref py py-class docutils literal"><span class="pre">rom.columns.Column</span></code></a></p>
+<dd><p>Bases: <a class="reference internal" href="columns.html#rom.columns.Column" title="rom.columns.Column"><code class="xref py py-class docutils literal notranslate"><span class="pre">rom.columns.Column</span></code></a></p>
 <p>OneToMany columns do not actually store any information. They rely on a
 properly defined reverse ManyToOne column on the referenced model in order
 to be able to fetch a list of referring entities.</p>
@@ -928,7 +918,7 @@ referencing this model with OneToOne or ManyToOne columns</dd>
 </ul>
 </div></blockquote>
 <p>Used via:</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="k">class</span> <span class="nc">MyModel</span><span class="p">(</span><span class="n">Model</span><span class="p">):</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">class</span> <span class="nc">MyModel</span><span class="p">(</span><span class="n">Model</span><span class="p">):</span>
     <span class="n">col</span> <span class="o">=</span> <span class="n">OneToMany</span><span class="p">(</span><span class="s1">&#39;OtherModelName&#39;</span><span class="p">)</span>
     <span class="n">ocol</span> <span class="o">=</span> <span class="n">OneToMany</span><span class="p">(</span><span class="s1">&#39;ModelName&#39;</span><span class="p">)</span>
 </pre></div>
@@ -938,10 +928,10 @@ referencing this model with OneToOne or ManyToOne columns</dd>
 <dl class="class">
 <dt>
 <em class="property">class </em><code class="descclassname">rom.</code><code class="descname">OneToOne</code><span class="sig-paren">(</span><em>ftable</em>, <em>on_delete=&lt;object object&gt;</em>, <em>required=False</em>, <em>default=&lt;object object&gt;</em>, <em>unique=False</em><span class="sig-paren">)</span></dt>
-<dd><p>Bases: <a class="reference internal" href="columns.html#rom.columns.ManyToOne" title="rom.columns.ManyToOne"><code class="xref py py-class docutils literal"><span class="pre">rom.columns.ManyToOne</span></code></a></p>
+<dd><p>Bases: <a class="reference internal" href="columns.html#rom.columns.ManyToOne" title="rom.columns.ManyToOne"><code class="xref py py-class docutils literal notranslate"><span class="pre">rom.columns.ManyToOne</span></code></a></p>
 <p>This OneToOne column allows for one model to reference another model.
 A OneToOne column does not require a reverse OneToOne column, and provides
-<code class="docutils literal"><span class="pre">on_delete</span></code> behavior.</p>
+<code class="docutils literal notranslate"><span class="pre">on_delete</span></code> behavior.</p>
 <p>Five arguments are supported:</p>
 <blockquote>
 <div><ul class="simple">
@@ -964,13 +954,13 @@ when this column is not provided</li>
 </ul>
 </div></blockquote>
 <p>Used via:</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="k">class</span> <span class="nc">MyModel</span><span class="p">(</span><span class="n">Model</span><span class="p">):</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">class</span> <span class="nc">MyModel</span><span class="p">(</span><span class="n">Model</span><span class="p">):</span>
     <span class="n">col</span> <span class="o">=</span> <span class="n">OneToOne</span><span class="p">(</span><span class="s1">&#39;OtherModelName&#39;</span><span class="p">,</span> <span class="s1">&#39;no action&#39;</span><span class="p">)</span>
 </pre></div>
 </div>
 <div class="admonition note">
 <p class="first admonition-title">Note</p>
-<p class="last">All <code class="docutils literal"><span class="pre">OneToOne</span></code> columns are indexed numerically, which means
+<p class="last">All <code class="docutils literal notranslate"><span class="pre">OneToOne</span></code> columns are indexed numerically, which means
 that you can find entities referencing specific id ranges or even sort by
 referenced ids.</p>
 </div>
@@ -979,7 +969,7 @@ referenced ids.</p>
 <dl class="class">
 <dt>
 <em class="property">class </em><code class="descclassname">rom.</code><code class="descname">Pattern</code><span class="sig-paren">(</span><em>attr</em>, <em>pattern</em><span class="sig-paren">)</span></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">tuple</span></code></p>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">tuple</span></code></p>
 <dl class="attribute">
 <dt>
 <code class="descname">attr</code></dt>
@@ -997,7 +987,7 @@ referenced ids.</p>
 <dl class="class">
 <dt>
 <em class="property">class </em><code class="descclassname">rom.</code><code class="descname">Prefix</code><span class="sig-paren">(</span><em>attr</em>, <em>prefix</em><span class="sig-paren">)</span></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">tuple</span></code></p>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">tuple</span></code></p>
 <dl class="attribute">
 <dt>
 <code class="descname">attr</code></dt>
@@ -1015,15 +1005,15 @@ referenced ids.</p>
 <dl class="class">
 <dt>
 <em class="property">class </em><code class="descclassname">rom.</code><code class="descname">PrimaryKey</code><span class="sig-paren">(</span><em>index=False</em><span class="sig-paren">)</span></dt>
-<dd><p>Bases: <a class="reference internal" href="columns.html#rom.columns.Column" title="rom.columns.Column"><code class="xref py py-class docutils literal"><span class="pre">rom.columns.Column</span></code></a></p>
+<dd><p>Bases: <a class="reference internal" href="columns.html#rom.columns.Column" title="rom.columns.Column"><code class="xref py py-class docutils literal notranslate"><span class="pre">rom.columns.Column</span></code></a></p>
 <p>This is a primary key column, used when you want the primary key to be
 named something other than ‘id’. If you omit a PrimaryKey column on your
 Model classes, one will be automatically created for you.</p>
-<p>Only the <code class="docutils literal"><span class="pre">index</span></code> argument will be used. You may want to enable indexing
+<p>Only the <code class="docutils literal notranslate"><span class="pre">index</span></code> argument will be used. You may want to enable indexing
 on this column if you want to be able to perform queries and sort the
 results by primary key.</p>
 <p>Used via:</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="k">class</span> <span class="nc">MyModel</span><span class="p">(</span><span class="n">Model</span><span class="p">):</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">class</span> <span class="nc">MyModel</span><span class="p">(</span><span class="n">Model</span><span class="p">):</span>
     <span class="nb">id</span> <span class="o">=</span> <span class="n">PrimaryKey</span><span class="p">()</span>
 </pre></div>
 </div>
@@ -1032,14 +1022,14 @@ results by primary key.</p>
 <dl class="class">
 <dt>
 <em class="property">class </em><code class="descclassname">rom.</code><code class="descname">Query</code><span class="sig-paren">(</span><em>model</em>, <em>filters=()</em>, <em>order_by=None</em>, <em>limit=None</em>, <em>select=None</em><span class="sig-paren">)</span></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">object</span></code></p>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
 <p>This is a query object. It behaves a lot like other query objects. Every
 operation performed on Query objects returns a new Query object. The old
 Query object <em>does not</em> have any updated filters.</p>
 <dl class="method">
 <dt>
 <code class="descname">all</code><span class="sig-paren">(</span><span class="sig-paren">)</span></dt>
-<dd><p>Alias for <code class="docutils literal"><span class="pre">execute()</span></code>.</p>
+<dd><p>Alias for <code class="docutils literal notranslate"><span class="pre">execute()</span></code>.</p>
 </dd></dl>
 
 <dl class="method">
@@ -1056,7 +1046,7 @@ step to use the PERSIST command).</p>
 <p class="last">Limit clauses are ignored and not passed.</p>
 </div>
 <p>Usage:</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">ukey</span> <span class="o">=</span> <span class="n">User</span><span class="o">.</span><span class="n">query</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="n">email</span><span class="o">=</span><span class="s1">&#39;@gmail.com&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">cached_result</span><span class="p">(</span><span class="mi">30</span><span class="p">)</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">ukey</span> <span class="o">=</span> <span class="n">User</span><span class="o">.</span><span class="n">query</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="n">email</span><span class="o">=</span><span class="s1">&#39;@gmail.com&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">cached_result</span><span class="p">(</span><span class="mi">30</span><span class="p">)</span>
 <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">xrange</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">conn</span><span class="o">.</span><span class="n">zcard</span><span class="p">(</span><span class="n">ukey</span><span class="p">),</span> <span class="mi">100</span><span class="p">):</span>
     <span class="c1"># refresh the expiration</span>
     <span class="n">conn</span><span class="o">.</span><span class="n">expire</span><span class="p">(</span><span class="n">ukey</span><span class="p">,</span> <span class="mi">30</span><span class="p">)</span>
@@ -1071,7 +1061,7 @@ step to use the PERSIST command).</p>
 <code class="descname">count</code><span class="sig-paren">(</span><span class="sig-paren">)</span></dt>
 <dd><p>Will return the total count of the objects that match the specified
 filters.:</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="c1"># counts the number of users created in the last 24 hours</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1"># counts the number of users created in the last 24 hours</span>
 <span class="n">User</span><span class="o">.</span><span class="n">query</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">created_at</span><span class="o">=</span><span class="p">(</span><span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span><span class="o">-</span><span class="mi">86400</span><span class="p">,</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()))</span><span class="o">.</span><span class="n">count</span><span class="p">()</span>
 </pre></div>
 </div>
@@ -1082,26 +1072,26 @@ filters.:</p>
 <code class="descname">delete</code><span class="sig-paren">(</span><em>blocksize=100</em><span class="sig-paren">)</span></dt>
 <dd><p>Will delete the entities that match at the time the query is executed.</p>
 <p>Used like:</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">MyModel</span><span class="o">.</span><span class="n">query</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">email</span><span class="o">=...</span><span class="p">)</span><span class="o">.</span><span class="n">delete</span><span class="p">()</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">MyModel</span><span class="o">.</span><span class="n">query</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">email</span><span class="o">=...</span><span class="p">)</span><span class="o">.</span><span class="n">delete</span><span class="p">()</span>
 <span class="n">MyModel</span><span class="o">.</span><span class="n">query</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="n">email</span><span class="o">=</span><span class="s1">&#39;@host.com&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">delete</span><span class="p">()</span>
 </pre></div>
 </div>
 <div class="admonition warning">
 <p class="first admonition-title">Warning</p>
-<p class="last">can’t be used on models on either side of a <code class="docutils literal"><span class="pre">OneToMany</span></code>,
-<code class="docutils literal"><span class="pre">ManyToOne</span></code>, or <code class="docutils literal"><span class="pre">OneToOne</span></code> relationship.</p>
+<p class="last">can’t be used on models on either side of a <code class="docutils literal notranslate"><span class="pre">OneToMany</span></code>,
+<code class="docutils literal notranslate"><span class="pre">ManyToOne</span></code>, or <code class="docutils literal notranslate"><span class="pre">OneToOne</span></code> relationship.</p>
 </div>
 </dd></dl>
 
 <dl class="method">
 <dt>
 <code class="descname">endswith</code><span class="sig-paren">(</span><em>**kwargs</em><span class="sig-paren">)</span></dt>
-<dd><p>When provided with keyword arguments of the form <code class="docutils literal"><span class="pre">col=suffix</span></code>, this
+<dd><p>When provided with keyword arguments of the form <code class="docutils literal notranslate"><span class="pre">col=suffix</span></code>, this
 will limit the entities returned to those that have a word with the
 provided suffix in the specified column(s). This requires that the
-<code class="docutils literal"><span class="pre">suffix=True</span></code> option was provided during column definition.</p>
+<code class="docutils literal notranslate"><span class="pre">suffix=True</span></code> option was provided during column definition.</p>
 <p>Usage:</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">User</span><span class="o">.</span><span class="n">query</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="n">email</span><span class="o">=</span><span class="s1">&#39;@gmail.com&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">execute</span><span class="p">()</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">User</span><span class="o">.</span><span class="n">query</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="n">email</span><span class="o">=</span><span class="s1">&#39;@gmail.com&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">execute</span><span class="p">()</span>
 </pre></div>
 </div>
 </dd></dl>
@@ -1118,13 +1108,13 @@ earlier limit calls.</p>
 <dt>
 <code class="descname">filter</code><span class="sig-paren">(</span><em>**kwargs</em><span class="sig-paren">)</span></dt>
 <dd><p>Only columns/attributes that have been specified as having an index with
-the <code class="docutils literal"><span class="pre">index=True</span></code> option on the column definition can be filtered with
+the <code class="docutils literal notranslate"><span class="pre">index=True</span></code> option on the column definition can be filtered with
 this method. Prefix, suffix, and pattern match filters must be provided
-using the <code class="docutils literal"><span class="pre">.startswith()</span></code>, <code class="docutils literal"><span class="pre">.endswith()</span></code>, and the <code class="docutils literal"><span class="pre">.like()</span></code>
+using the <code class="docutils literal notranslate"><span class="pre">.startswith()</span></code>, <code class="docutils literal notranslate"><span class="pre">.endswith()</span></code>, and the <code class="docutils literal notranslate"><span class="pre">.like()</span></code>
 methods on the query object, respectively. Geo location queries should
-be performed using the <code class="docutils literal"><span class="pre">.near()</span></code> method.</p>
+be performed using the <code class="docutils literal notranslate"><span class="pre">.near()</span></code> method.</p>
 <p>Filters should be of the form:</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="c1"># for numeric ranges, use None for open-ended ranges</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1"># for numeric ranges, use None for open-ended ranges</span>
 <span class="n">attribute</span><span class="o">=</span><span class="p">(</span><span class="nb">min</span><span class="p">,</span> <span class="nb">max</span><span class="p">)</span>
 
 <span class="c1"># you can also query for equality by passing a single number</span>
@@ -1140,10 +1130,10 @@ be performed using the <code class="docutils literal"><span class="pre">.near()<
 </pre></div>
 </div>
 <p>As an example, the following will return entities that have both
-<code class="docutils literal"><span class="pre">hello</span></code> and <code class="docutils literal"><span class="pre">world</span></code> in the <code class="docutils literal"><span class="pre">String</span></code> column <code class="docutils literal"><span class="pre">scol</span></code> and has a
-<code class="docutils literal"><span class="pre">Numeric</span></code> column <code class="docutils literal"><span class="pre">ncol</span></code> with value between 2 and 10 (including the
+<code class="docutils literal notranslate"><span class="pre">hello</span></code> and <code class="docutils literal notranslate"><span class="pre">world</span></code> in the <code class="docutils literal notranslate"><span class="pre">String</span></code> column <code class="docutils literal notranslate"><span class="pre">scol</span></code> and has a
+<code class="docutils literal notranslate"><span class="pre">Numeric</span></code> column <code class="docutils literal notranslate"><span class="pre">ncol</span></code> with value between 2 and 10 (including the
 endpoints):</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">results</span> <span class="o">=</span> <span class="n">MyModel</span><span class="o">.</span><span class="n">query</span> \
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">results</span> <span class="o">=</span> <span class="n">MyModel</span><span class="o">.</span><span class="n">query</span> \
     <span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">scol</span><span class="o">=</span><span class="s1">&#39;hello&#39;</span><span class="p">)</span> \
     <span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">scol</span><span class="o">=</span><span class="s1">&#39;world&#39;</span><span class="p">)</span> \
     <span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">ncol</span><span class="o">=</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">10</span><span class="p">))</span> \
@@ -1152,8 +1142,8 @@ endpoints):</p>
 </div>
 <p>If you only want to match a single value as part of your range query,
 you can pass an integer, float, or Decimal object by itself, similar
-to the <code class="docutils literal"><span class="pre">Model.get_by()</span></code> method:</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">results</span> <span class="o">=</span> <span class="n">MyModel</span><span class="o">.</span><span class="n">query</span> \
+to the <code class="docutils literal notranslate"><span class="pre">Model.get_by()</span></code> method:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">results</span> <span class="o">=</span> <span class="n">MyModel</span><span class="o">.</span><span class="n">query</span> \
     <span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">ncol</span><span class="o">=</span><span class="mi">5</span><span class="p">)</span> \
     <span class="o">.</span><span class="n">execute</span><span class="p">()</span>
 </pre></div>
@@ -1166,7 +1156,7 @@ string columns won’t return any results.</p>
 <div class="admonition note">
 <p class="first admonition-title">Note</p>
 <p class="last">This method only filters columns that have been defined with
-<code class="docutils literal"><span class="pre">index=True</span></code>.</p>
+<code class="docutils literal notranslate"><span class="pre">index=True</span></code>.</p>
 </div>
 </dd></dl>
 
@@ -1185,7 +1175,7 @@ processing will take more than 30 seconds to process 100 items, you
 should pass <cite>timeout</cite> and <cite>pagesize</cite> to reflect an appropriate timeout
 and page size to fetch at once.</p>
 <p>Usage:</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="k">for</span> <span class="n">user</span> <span class="ow">in</span> <span class="n">User</span><span class="o">.</span><span class="n">query</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="n">email</span><span class="o">=</span><span class="s1">&#39;@gmail.com&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">iter_result</span><span class="p">():</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">for</span> <span class="n">user</span> <span class="ow">in</span> <span class="n">User</span><span class="o">.</span><span class="n">query</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="n">email</span><span class="o">=</span><span class="s1">&#39;@gmail.com&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">iter_result</span><span class="p">():</span>
     <span class="c1"># do something with user</span>
     <span class="o">...</span>
 </pre></div>
@@ -1195,9 +1185,9 @@ and page size to fetch at once.</p>
 <dl class="method">
 <dt>
 <code class="descname">like</code><span class="sig-paren">(</span><em>**kwargs</em><span class="sig-paren">)</span></dt>
-<dd><p>When provided with keyword arguments of the form <code class="docutils literal"><span class="pre">col=pattern</span></code>, this
+<dd><p>When provided with keyword arguments of the form <code class="docutils literal notranslate"><span class="pre">col=pattern</span></code>, this
 will limit the entities returned to those that include the provided
-pattern. Note that ‘like’ queries require that the <code class="docutils literal"><span class="pre">prefix=True</span></code>
+pattern. Note that ‘like’ queries require that the <code class="docutils literal notranslate"><span class="pre">prefix=True</span></code>
 option must have been provided as part of the column definition.</p>
 <p>Patterns allow for 4 wildcard characters, whose semantics are as
 follows:</p>
@@ -1210,9 +1200,9 @@ follows:</p>
 </ul>
 </div></blockquote>
 <p>As an example, imagine that you have enabled the required prefix
-matching on your <code class="docutils literal"><span class="pre">User.email</span></code> column. And lets say that you want to
+matching on your <code class="docutils literal notranslate"><span class="pre">User.email</span></code> column. And lets say that you want to
 find everyone with an email address that contains the name ‘frank’
-before the <code class="docutils literal"><span class="pre">&#64;</span></code> sign. You can use either of the following patterns
+before the <code class="docutils literal notranslate"><span class="pre">&#64;</span></code> sign. You can use either of the following patterns
 to discover those users.</p>
 <blockquote>
 <div><ul class="simple">
@@ -1225,7 +1215,7 @@ to discover those users.</p>
 <p class="last">Like queries implicitly start at the beginning of strings
 checked, so if you want to match a pattern that doesn’t start at
 the beginning of a string, you should prefix it with one of the
-wildcard characters (like <code class="docutils literal"><span class="pre">*</span></code> as we did with the ‘frank’ pattern).</p>
+wildcard characters (like <code class="docutils literal notranslate"><span class="pre">*</span></code> as we did with the ‘frank’ pattern).</p>
 </div>
 </dd></dl>
 
@@ -1233,7 +1223,7 @@ wildcard characters (like <code class="docutils literal"><span class="pre">*</sp
 <dt>
 <code class="descname">limit</code><span class="sig-paren">(</span><em>offset</em>, <em>count</em><span class="sig-paren">)</span></dt>
 <dd><p>Will limit the number of results returned from a query:</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="c1"># returns the most recent 25 users</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1"># returns the most recent 25 users</span>
 <span class="n">User</span><span class="o">.</span><span class="n">query</span><span class="o">.</span><span class="n">order_by</span><span class="p">(</span><span class="s1">&#39;-created_at&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">limit</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">25</span><span class="p">)</span><span class="o">.</span><span class="n">execute</span><span class="p">()</span>
 </pre></div>
 </div>
@@ -1243,7 +1233,7 @@ wildcard characters (like <code class="docutils literal"><span class="pre">*</sp
 <dt>
 <code class="descname">order_by</code><span class="sig-paren">(</span><em>column</em><span class="sig-paren">)</span></dt>
 <dd><p>When provided with a column name, will sort the results of your query:</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="c1"># returns all users, ordered by the created_at column in</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1"># returns all users, ordered by the created_at column in</span>
 <span class="c1"># descending order</span>
 <span class="n">User</span><span class="o">.</span><span class="n">query</span><span class="o">.</span><span class="n">order_by</span><span class="p">(</span><span class="s1">&#39;-created_at&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">execute</span><span class="p">()</span>
 </pre></div>
@@ -1288,7 +1278,7 @@ careful with the namedtuple option - see the warning below)</dd>
 </div></blockquote>
 <div class="admonition warning">
 <p class="first admonition-title">Warning</p>
-<p class="last">If <code class="docutils literal"><span class="pre">include_pk</span> <span class="pre">=</span> <span class="pre">True</span></code> and if you don’t provide
+<p class="last">If <code class="docutils literal notranslate"><span class="pre">include_pk</span> <span class="pre">=</span> <span class="pre">True</span></code> and if you don’t provide
 the primary key column, it will be appended to your list of columns.</p>
 </div>
 <div class="admonition note">
@@ -1297,7 +1287,7 @@ the primary key column, it will be appended to your list of columns.</p>
 data, it must be of the form (below is the actual dict factory
 function)</p>
 </div>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">_dict_data_factory</span><span class="p">(</span><span class="n">columns</span><span class="p">):</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">_dict_data_factory</span><span class="p">(</span><span class="n">columns</span><span class="p">):</span>
     <span class="n">_dict</span> <span class="o">=</span> <span class="nb">dict</span>
     <span class="n">_zip</span> <span class="o">=</span> <span class="nb">zip</span>
     <span class="k">def</span> <span class="nf">make</span><span class="p">(</span><span class="n">data</span><span class="p">):</span>
@@ -1310,17 +1300,17 @@ function)</p>
 <p>Available factory functions:</p>
 <blockquote>
 <div><ul class="simple">
-<li><em>“rom.query._dict_data_factory“</em> - default</li>
-<li><em>“rom.query._list_data_factory“</em> - lowest overhead, as the
-<code class="docutils literal"><span class="pre">data</span></code> passed in above is a list that you can do anything to</li>
-<li><em>“rom.query._tuple_data_factory“</em> - when you want tuples instead</li>
-<li><em>“rom.query._namedtuple_data_factory“</em> - get namedtuples, see
+<li><em>``rom.query._dict_data_factory``</em> - default</li>
+<li><em>``rom.query._list_data_factory``</em> - lowest overhead, as the
+<code class="docutils literal notranslate"><span class="pre">data</span></code> passed in above is a list that you can do anything to</li>
+<li><em>``rom.query._tuple_data_factory``</em> - when you want tuples instead</li>
+<li><em>``rom.query._namedtuple_data_factory``</em> - get namedtuples, see
 see warning below</li>
 </ul>
 </div></blockquote>
 <div class="admonition warning">
 <p class="first admonition-title">Warning</p>
-<p class="last">If you use the <code class="docutils literal"><span class="pre">_namedtuple_data_factory</span></code>, and your
+<p class="last">If you use the <code class="docutils literal notranslate"><span class="pre">_namedtuple_data_factory</span></code>, and your
 columns include underscore prefixes, they will be stripped. If this
 results in a name collision, you <em>will</em> get an exception. If you want
 differerent behavior, write your own 20 line factory function that
@@ -1331,12 +1321,12 @@ does exactly what you want, and pass it; they are really easy!</p>
 <dl class="method">
 <dt>
 <code class="descname">startswith</code><span class="sig-paren">(</span><em>**kwargs</em><span class="sig-paren">)</span></dt>
-<dd><p>When provided with keyword arguments of the form <code class="docutils literal"><span class="pre">col=prefix</span></code>, this
+<dd><p>When provided with keyword arguments of the form <code class="docutils literal notranslate"><span class="pre">col=prefix</span></code>, this
 will limit the entities returned to those that have a word with the
 provided prefix in the specified column(s). This requires that the
-<code class="docutils literal"><span class="pre">prefix=True</span></code> option was provided during column definition.</p>
+<code class="docutils literal notranslate"><span class="pre">prefix=True</span></code> option was provided during column definition.</p>
 <p>Usage:</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">User</span><span class="o">.</span><span class="n">query</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="n">email</span><span class="o">=</span><span class="s1">&#39;user@&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">execute</span><span class="p">()</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">User</span><span class="o">.</span><span class="n">query</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="n">email</span><span class="o">=</span><span class="s1">&#39;user@&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">execute</span><span class="p">()</span>
 </pre></div>
 </div>
 </dd></dl>
@@ -1346,14 +1336,14 @@ provided prefix in the specified column(s). This requires that the
 <dl class="exception">
 <dt>
 <em class="property">exception </em><code class="descclassname">rom.</code><code class="descname">QueryError</code></dt>
-<dd><p>Bases: <a class="reference internal" href="exceptions.html#rom.exceptions.InvalidOperation" title="rom.exceptions.InvalidOperation"><code class="xref py py-class docutils literal"><span class="pre">rom.exceptions.InvalidOperation</span></code></a></p>
-<p>Raised when arguments to <code class="docutils literal"><span class="pre">Model.get_by()</span></code> or <code class="docutils literal"><span class="pre">Query.filter</span></code> are not valid</p>
+<dd><p>Bases: <a class="reference internal" href="exceptions.html#rom.exceptions.InvalidOperation" title="rom.exceptions.InvalidOperation"><code class="xref py py-class docutils literal notranslate"><span class="pre">rom.exceptions.InvalidOperation</span></code></a></p>
+<p>Raised when arguments to <code class="docutils literal notranslate"><span class="pre">Model.get_by()</span></code> or <code class="docutils literal notranslate"><span class="pre">Query.filter</span></code> are not valid</p>
 </dd></dl>
 
 <dl class="exception">
 <dt>
 <em class="property">exception </em><code class="descclassname">rom.</code><code class="descname">RestrictError</code></dt>
-<dd><p>Bases: <a class="reference internal" href="exceptions.html#rom.exceptions.InvalidOperation" title="rom.exceptions.InvalidOperation"><code class="xref py py-class docutils literal"><span class="pre">rom.exceptions.InvalidOperation</span></code></a></p>
+<dd><p>Bases: <a class="reference internal" href="exceptions.html#rom.exceptions.InvalidOperation" title="rom.exceptions.InvalidOperation"><code class="xref py py-class docutils literal notranslate"><span class="pre">rom.exceptions.InvalidOperation</span></code></a></p>
 <p>Raised when deleting an object referenced by other objects</p>
 </dd></dl>
 
@@ -1383,13 +1373,13 @@ characters past the 7th encoded byte).</p>
 <dl class="class">
 <dt>
 <em class="property">class </em><code class="descclassname">rom.</code><code class="descname">SaferDateTime</code><span class="sig-paren">(</span><em>required=False</em>, <em>default=&lt;object object&gt;</em>, <em>unique=False</em>, <em>index=False</em>, <em>keygen=None</em>, <em>prefix=False</em>, <em>suffix=False</em>, <em>keygen2=None</em><span class="sig-paren">)</span></dt>
-<dd><p>Bases: <a class="reference internal" href="columns.html#rom.columns.DateTime" title="rom.columns.DateTime"><code class="xref py py-class docutils literal"><span class="pre">rom.columns.DateTime</span></code></a></p>
+<dd><p>Bases: <a class="reference internal" href="columns.html#rom.columns.DateTime" title="rom.columns.DateTime"><code class="xref py py-class docutils literal notranslate"><span class="pre">rom.columns.DateTime</span></code></a></p>
 <p>A (safer) datetime column (see Issue #109 or the below note for more
 information)</p>
-<p>All standard arguments supported. See <code class="docutils literal"><span class="pre">Column</span></code> for details on supported
+<p>All standard arguments supported. See <code class="docutils literal notranslate"><span class="pre">Column</span></code> for details on supported
 arguments.</p>
 <p>Used via:</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="k">class</span> <span class="nc">MyModel</span><span class="p">(</span><span class="n">Model</span><span class="p">):</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">class</span> <span class="nc">MyModel</span><span class="p">(</span><span class="n">Model</span><span class="p">):</span>
     <span class="n">col</span> <span class="o">=</span> <span class="n">SaferDateTime</span><span class="p">()</span>
 </pre></div>
 </div>
@@ -1400,8 +1390,8 @@ arguments.</p>
 <div class="admonition note">
 <p class="first admonition-title">Note</p>
 <p class="last">what makes this “safer” than other datetime objects is that there
-are exactly two types of values that can be set here: a <code class="docutils literal"><span class="pre">datetime</span></code>
-object, or a <code class="docutils literal"><span class="pre">str</span></code> that can represent a float, which is the number of
+are exactly two types of values that can be set here: a <code class="docutils literal notranslate"><span class="pre">datetime</span></code>
+object, or a <code class="docutils literal notranslate"><span class="pre">str</span></code> that can represent a float, which is the number of
 seconds since the unix epoch.</p>
 </div>
 </dd></dl>
@@ -1409,19 +1399,19 @@ seconds since the unix epoch.</p>
 <dl class="class">
 <dt>
 <em class="property">class </em><code class="descclassname">rom.</code><code class="descname">String</code><span class="sig-paren">(</span><em>required=False</em>, <em>default=&lt;object object&gt;</em>, <em>unique=False</em>, <em>index=False</em>, <em>keygen=None</em>, <em>prefix=False</em>, <em>suffix=False</em>, <em>keygen2=None</em><span class="sig-paren">)</span></dt>
-<dd><p>Bases: <a class="reference internal" href="columns.html#rom.columns.Column" title="rom.columns.Column"><code class="xref py py-class docutils literal"><span class="pre">rom.columns.Column</span></code></a></p>
+<dd><p>Bases: <a class="reference internal" href="columns.html#rom.columns.Column" title="rom.columns.Column"><code class="xref py py-class docutils literal notranslate"><span class="pre">rom.columns.Column</span></code></a></p>
 <p>A plain string column (str in 2.x, bytes in 3.x). Trying to save unicode
 strings will probably result in an error, if not corrupted data.</p>
-<p>All standard arguments and String/Text arguments supported. See <code class="docutils literal"><span class="pre">Column</span></code>
+<p>All standard arguments and String/Text arguments supported. See <code class="docutils literal notranslate"><span class="pre">Column</span></code>
 for details on supported arguments.</p>
 <p>This column can be indexed in one of five ways - a sorted index on a 7
-byte prefix of the value (<code class="docutils literal"><span class="pre">keygen=rom.SIMPLE</span></code>), a sorted index on a
-lowercased 7 byte prefix of the value (<code class="docutils literal"><span class="pre">keygen=rom.SIMPLE_CI</span></code>),
-a case-insensitive full-text index (<code class="docutils literal"><span class="pre">keygen=rom.FULL_TEXT</span></code>),
-a case-sensitive identity index (<code class="docutils literal"><span class="pre">keygen=rom.IDENTITY</span></code>), and a
-case-insensitive identity index (<code class="docutils literal"><span class="pre">keygen=rom.IDENTITY_CI</span></code>).</p>
+byte prefix of the value (<code class="docutils literal notranslate"><span class="pre">keygen=rom.SIMPLE</span></code>), a sorted index on a
+lowercased 7 byte prefix of the value (<code class="docutils literal notranslate"><span class="pre">keygen=rom.SIMPLE_CI</span></code>),
+a case-insensitive full-text index (<code class="docutils literal notranslate"><span class="pre">keygen=rom.FULL_TEXT</span></code>),
+a case-sensitive identity index (<code class="docutils literal notranslate"><span class="pre">keygen=rom.IDENTITY</span></code>), and a
+case-insensitive identity index (<code class="docutils literal notranslate"><span class="pre">keygen=rom.IDENTITY_CI</span></code>).</p>
 <p>Used via:</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="k">class</span> <span class="nc">MyModel</span><span class="p">(</span><span class="n">Model</span><span class="p">):</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">class</span> <span class="nc">MyModel</span><span class="p">(</span><span class="n">Model</span><span class="p">):</span>
     <span class="n">col</span> <span class="o">=</span> <span class="n">String</span><span class="p">()</span>
 </pre></div>
 </div>
@@ -1430,7 +1420,7 @@ case-insensitive identity index (<code class="docutils literal"><span class="pre
 <dl class="class">
 <dt>
 <em class="property">class </em><code class="descclassname">rom.</code><code class="descname">Suffix</code><span class="sig-paren">(</span><em>attr</em>, <em>suffix</em><span class="sig-paren">)</span></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">tuple</span></code></p>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">tuple</span></code></p>
 <dl class="attribute">
 <dt>
 <code class="descname">attr</code></dt>
@@ -1448,24 +1438,24 @@ case-insensitive identity index (<code class="docutils literal"><span class="pre
 <dl class="class">
 <dt>
 <em class="property">class </em><code class="descclassname">rom.</code><code class="descname">Text</code><span class="sig-paren">(</span><em>required=False</em>, <em>default=&lt;object object&gt;</em>, <em>unique=False</em>, <em>index=False</em>, <em>keygen=None</em>, <em>prefix=False</em>, <em>suffix=False</em>, <em>keygen2=None</em><span class="sig-paren">)</span></dt>
-<dd><p>Bases: <a class="reference internal" href="columns.html#rom.columns.Column" title="rom.columns.Column"><code class="xref py py-class docutils literal"><span class="pre">rom.columns.Column</span></code></a></p>
+<dd><p>Bases: <a class="reference internal" href="columns.html#rom.columns.Column" title="rom.columns.Column"><code class="xref py py-class docutils literal notranslate"><span class="pre">rom.columns.Column</span></code></a></p>
 <p>A unicode string column. Behavior is more or less identical to the String
 column type, except that unicode is supported (unicode in 2.x, str in 3.x).
 UTF-8 is used by default as the encoding to bytes on the wire, which <em>will</em>
-affect <code class="docutils literal"><span class="pre">rom.SIMPLE</span></code> and <code class="docutils literal"><span class="pre">rom.SIMPLE_CI</span></code> indexes.</p>
-<p>All standard arguments supported. See <code class="docutils literal"><span class="pre">Column</span></code> for details on supported
+affect <code class="docutils literal notranslate"><span class="pre">rom.SIMPLE</span></code> and <code class="docutils literal notranslate"><span class="pre">rom.SIMPLE_CI</span></code> indexes.</p>
+<p>All standard arguments supported. See <code class="docutils literal notranslate"><span class="pre">Column</span></code> for details on supported
 arguments.</p>
 <p>This column can be indexed in one of five ways - a sorted index on a 7
-byte prefix of the value (<code class="docutils literal"><span class="pre">keygen=rom.SIMPLE</span></code>), a sorted index on a
-lowercased 7 byte prefix of the value (<code class="docutils literal"><span class="pre">keygen=rom.SIMPLE_CI</span></code>),
-a case-insensitive full-text index (<code class="docutils literal"><span class="pre">keygen=rom.FULL_TEXT</span></code>),
-a case-sensitive identity index (<code class="docutils literal"><span class="pre">keygen=rom.IDENTITY</span></code>), and a
-case-insensitive identity index (<code class="docutils literal"><span class="pre">keygen=rom.IDENTITY_CI</span></code>).</p>
-<p>For the 7 byte prefix/suffixes on indexes using the <code class="docutils literal"><span class="pre">rom.SIMPLE</span></code> and
-<code class="docutils literal"><span class="pre">rom.SIMPLE_CI</span></code> keygen, because we use UTF-8 to encode text, a single
+byte prefix of the value (<code class="docutils literal notranslate"><span class="pre">keygen=rom.SIMPLE</span></code>), a sorted index on a
+lowercased 7 byte prefix of the value (<code class="docutils literal notranslate"><span class="pre">keygen=rom.SIMPLE_CI</span></code>),
+a case-insensitive full-text index (<code class="docutils literal notranslate"><span class="pre">keygen=rom.FULL_TEXT</span></code>),
+a case-sensitive identity index (<code class="docutils literal notranslate"><span class="pre">keygen=rom.IDENTITY</span></code>), and a
+case-insensitive identity index (<code class="docutils literal notranslate"><span class="pre">keygen=rom.IDENTITY_CI</span></code>).</p>
+<p>For the 7 byte prefix/suffixes on indexes using the <code class="docutils literal notranslate"><span class="pre">rom.SIMPLE</span></code> and
+<code class="docutils literal notranslate"><span class="pre">rom.SIMPLE_CI</span></code> keygen, because we use UTF-8 to encode text, a single
 character can turn into 1-3 bytes, so may not be useful in practice.</p>
 <p>Used via:</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="k">class</span> <span class="nc">MyModel</span><span class="p">(</span><span class="n">Model</span><span class="p">):</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">class</span> <span class="nc">MyModel</span><span class="p">(</span><span class="n">Model</span><span class="p">):</span>
     <span class="n">col</span> <span class="o">=</span> <span class="n">Text</span><span class="p">()</span>
 </pre></div>
 </div>
@@ -1474,12 +1464,12 @@ character can turn into 1-3 bytes, so may not be useful in practice.</p>
 <dl class="class">
 <dt>
 <em class="property">class </em><code class="descclassname">rom.</code><code class="descname">Time</code><span class="sig-paren">(</span><em>required=False</em>, <em>default=&lt;object object&gt;</em>, <em>unique=False</em>, <em>index=False</em>, <em>keygen=None</em>, <em>prefix=False</em>, <em>suffix=False</em>, <em>keygen2=None</em><span class="sig-paren">)</span></dt>
-<dd><p>Bases: <a class="reference internal" href="columns.html#rom.columns.Column" title="rom.columns.Column"><code class="xref py py-class docutils literal"><span class="pre">rom.columns.Column</span></code></a></p>
+<dd><p>Bases: <a class="reference internal" href="columns.html#rom.columns.Column" title="rom.columns.Column"><code class="xref py py-class docutils literal notranslate"><span class="pre">rom.columns.Column</span></code></a></p>
 <p>A time column. Timezones are ignored.</p>
-<p>All standard arguments supported. See <code class="docutils literal"><span class="pre">Column</span></code> for details on supported
+<p>All standard arguments supported. See <code class="docutils literal notranslate"><span class="pre">Column</span></code> for details on supported
 arguments.</p>
 <p>Used via:</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="k">class</span> <span class="nc">MyModel</span><span class="p">(</span><span class="n">Model</span><span class="p">):</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">class</span> <span class="nc">MyModel</span><span class="p">(</span><span class="n">Model</span><span class="p">):</span>
     <span class="n">col</span> <span class="o">=</span> <span class="n">Time</span><span class="p">()</span>
 </pre></div>
 </div>
@@ -1492,17 +1482,17 @@ arguments.</p>
 <dl class="exception">
 <dt>
 <em class="property">exception </em><code class="descclassname">rom.</code><code class="descname">UniqueKeyViolation</code></dt>
-<dd><p>Bases: <a class="reference internal" href="exceptions.html#rom.exceptions.ORMError" title="rom.exceptions.ORMError"><code class="xref py py-class docutils literal"><span class="pre">rom.exceptions.ORMError</span></code></a></p>
+<dd><p>Bases: <a class="reference internal" href="exceptions.html#rom.exceptions.ORMError" title="rom.exceptions.ORMError"><code class="xref py py-class docutils literal notranslate"><span class="pre">rom.exceptions.ORMError</span></code></a></p>
 <p>Raised when trying to save an entity without a distinct column value</p>
 </dd></dl>
 
 </div>
-<p><a class="reference internal" href="columns.html#module-rom.columns" title="rom.columns"><code class="xref py py-mod docutils literal"><span class="pre">rom.columns</span></code></a>
-<a class="reference internal" href="exceptions.html#module-rom.exceptions" title="rom.exceptions"><code class="xref py py-mod docutils literal"><span class="pre">rom.exceptions</span></code></a>
-<a class="reference internal" href="indexm.html#module-rom.index" title="rom.index"><code class="xref py py-mod docutils literal"><span class="pre">rom.index</span></code></a>
-<a class="reference internal" href="model.html#module-rom.model" title="rom.model"><code class="xref py py-mod docutils literal"><span class="pre">rom.model</span></code></a>
-<a class="reference internal" href="query.html#module-rom.query" title="rom.query"><code class="xref py py-mod docutils literal"><span class="pre">rom.query</span></code></a>
-<a class="reference internal" href="util.html#module-rom.util" title="rom.util"><code class="xref py py-mod docutils literal"><span class="pre">rom.util</span></code></a></p>
+<p><a class="reference internal" href="columns.html#module-rom.columns" title="rom.columns"><code class="xref py py-mod docutils literal notranslate"><span class="pre">rom.columns</span></code></a>
+<a class="reference internal" href="exceptions.html#module-rom.exceptions" title="rom.exceptions"><code class="xref py py-mod docutils literal notranslate"><span class="pre">rom.exceptions</span></code></a>
+<a class="reference internal" href="indexm.html#module-rom.index" title="rom.index"><code class="xref py py-mod docutils literal notranslate"><span class="pre">rom.index</span></code></a>
+<a class="reference internal" href="model.html#module-rom.model" title="rom.model"><code class="xref py py-mod docutils literal notranslate"><span class="pre">rom.model</span></code></a>
+<a class="reference internal" href="query.html#module-rom.query" title="rom.query"><code class="xref py py-mod docutils literal notranslate"><span class="pre">rom.query</span></code></a>
+<a class="reference internal" href="util.html#module-rom.util" title="rom.util"><code class="xref py py-mod docutils literal notranslate"><span class="pre">rom.util</span></code></a></p>
 </div>
 
 
@@ -1511,7 +1501,7 @@ arguments.</p>
       </div>
       <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
         <div class="sphinxsidebarwrapper">
-  <h3><a href="index.html">Table Of Contents</a></h3>
+  <h3><a href="index.html">Table of Contents</a></h3>
   <ul>
 <li><a class="reference internal" href="#">rom Package</a><ul>
 <li><a class="reference internal" href="#documentation">Documentation</a></li>
@@ -1530,7 +1520,7 @@ arguments.</p>
                         title="previous chapter">Welcome to the documentation for the Redis object Mapper</a></p>
   <h4>Next topic</h4>
   <p class="topless"><a href="columns.html"
-                        title="next chapter"><code class="docutils literal"><span class="pre">columns</span></code> Module</a></p>
+                        title="next chapter"><code class="docutils literal notranslate"><span class="pre">columns</span></code> Module</a></p>
   <div role="note" aria-label="source link">
     <h3>This Page</h3>
     <ul class="this-page-menu">
@@ -1540,12 +1530,14 @@ arguments.</p>
    </div>
 <div id="searchbox" style="display: none" role="search">
   <h3>Quick search</h3>
+    <div class="searchformwrapper">
     <form class="search" action="search.html" method="get">
-      <div><input type="text" name="q" /></div>
-      <div><input type="submit" value="Go" /></div>
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
       <input type="hidden" name="check_keywords" value="yes" />
       <input type="hidden" name="area" value="default" />
     </form>
+    </div>
 </div>
 <script type="text/javascript">$('#searchbox').show(0);</script>
         </div>
@@ -1567,12 +1559,12 @@ arguments.</p>
         <li class="right" >
           <a href="index.html" title="Welcome to the documentation for the Redis object Mapper"
              >previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="index.html">rom 0.42.3 documentation</a> &#187;</li> 
+        <li class="nav-item nav-item-0"><a href="index.html">rom 0.42.4 documentation</a> &#187;</li> 
       </ul>
     </div>
     <div class="footer" role="contentinfo">
         &#169; Copyright 2013-2015, Josiah Carlson.
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.6.2.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.8.2.
     </div>
   </body>
 </html>

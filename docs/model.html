@@ -4,32 +4,22 @@
 
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    
-    <title>model Module &#8212; rom 0.42.3 documentation</title>
-    
+    <title>model Module &#8212; rom 0.42.4 documentation</title>
     <link rel="stylesheet" href="_static/classic.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
     
-    <script type="text/javascript">
-      var DOCUMENTATION_OPTIONS = {
-        URL_ROOT:    './',
-        VERSION:     '0.42.3',
-        COLLAPSE_INDEX: false,
-        FILE_SUFFIX: '.html',
-        HAS_SOURCE:  true,
-        SOURCELINK_SUFFIX: '.txt'
-      };
-    </script>
+    <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
     <script type="text/javascript" src="_static/jquery.js"></script>
     <script type="text/javascript" src="_static/underscore.js"></script>
     <script type="text/javascript" src="_static/doctools.js"></script>
+    
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
     <link rel="next" title="query Module" href="query.html" />
     <link rel="prev" title="index Module" href="indexm.html" /> 
-  </head>
-  <body>
+  </head><body>
     <div class="related" role="navigation" aria-label="related navigation">
       <h3>Navigation</h3>
       <ul>
@@ -45,7 +35,7 @@
         <li class="right" >
           <a href="indexm.html" title="index Module"
              accesskey="P">previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="index.html">rom 0.42.3 documentation</a> &#187;</li> 
+        <li class="nav-item nav-item-0"><a href="index.html">rom 0.42.4 documentation</a> &#187;</li> 
       </ul>
     </div>  
 
@@ -55,7 +45,7 @@
           <div class="body" role="main">
             
   <div class="section" id="module-rom.model">
-<span id="model-module"></span><h1><code class="xref py py-mod docutils literal"><span class="pre">model</span></code> Module<a class="headerlink" href="#module-rom.model" title="Permalink to this headline">¶</a></h1>
+<span id="model-module"></span><h1><code class="xref py py-mod docutils literal notranslate"><span class="pre">model</span></code> Module<a class="headerlink" href="#module-rom.model" title="Permalink to this headline">¶</a></h1>
 <p>Rom - the Redis object mapper for Python</p>
 <p>Copyright 2013-2016 Josiah Carlson</p>
 <p>Released under the LGPL license version 2.1 and version 3 (you can choose
@@ -63,10 +53,10 @@ which you’d like to be bound under).</p>
 <dl class="class">
 <dt id="rom.model.Model">
 <em class="property">class </em><code class="descclassname">rom.model.</code><code class="descname">Model</code><span class="sig-paren">(</span><em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#rom.model.Model" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">object</span></code></p>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
 <p>This is the base class for all models. You subclass from this base Model
 in order to create a model with columns. As an example:</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="k">class</span> <span class="nc">User</span><span class="p">(</span><span class="n">Model</span><span class="p">):</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">class</span> <span class="nc">User</span><span class="p">(</span><span class="n">Model</span><span class="p">):</span>
     <span class="n">email_address</span> <span class="o">=</span> <span class="n">String</span><span class="p">(</span><span class="n">required</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">unique</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
     <span class="n">salt</span> <span class="o">=</span> <span class="n">String</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="s1">&#39;&#39;</span><span class="p">)</span>
     <span class="nb">hash</span> <span class="o">=</span> <span class="n">String</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="s1">&#39;&#39;</span><span class="p">)</span>
@@ -74,7 +64,7 @@ in order to create a model with columns. As an example:</p>
 </pre></div>
 </div>
 <p>Which can then be used like:</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">user</span> <span class="o">=</span> <span class="n">User</span><span class="p">(</span><span class="n">email_addrss</span><span class="o">=</span><span class="s1">&#39;user@domain.com&#39;</span><span class="p">)</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">user</span> <span class="o">=</span> <span class="n">User</span><span class="p">(</span><span class="n">email_addrss</span><span class="o">=</span><span class="s1">&#39;user@domain.com&#39;</span><span class="p">)</span>
 <span class="n">user</span><span class="o">.</span><span class="n">save</span><span class="p">()</span> <span class="c1"># session.commit() or session.flush() works too</span>
 <span class="n">user</span> <span class="o">=</span> <span class="n">User</span><span class="o">.</span><span class="n">get_by</span><span class="p">(</span><span class="n">email_address</span><span class="o">=</span><span class="s1">&#39;user@domain.com&#39;</span><span class="p">)</span>
 <span class="n">user</span> <span class="o">=</span> <span class="n">User</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="mi">5</span><span class="p">)</span>
@@ -82,9 +72,9 @@ in order to create a model with columns. As an example:</p>
 </pre></div>
 </div>
 <p>To perform arbitrary queries on entities involving the indices that you
-defined (by passing <code class="docutils literal"><span class="pre">index=True</span></code> on column creation), you access the
-<code class="docutils literal"><span class="pre">.query</span></code> class property on the model:</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">query</span> <span class="o">=</span> <span class="n">User</span><span class="o">.</span><span class="n">query</span>
+defined (by passing <code class="docutils literal notranslate"><span class="pre">index=True</span></code> on column creation), you access the
+<code class="docutils literal notranslate"><span class="pre">.query</span></code> class property on the model:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">query</span> <span class="o">=</span> <span class="n">User</span><span class="o">.</span><span class="n">query</span>
 <span class="n">query</span> <span class="o">=</span> <span class="n">query</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">created_at</span><span class="o">=</span><span class="p">(</span><span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span><span class="o">-</span><span class="mi">86400</span><span class="p">,</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()))</span>
 <span class="n">users</span> <span class="o">=</span> <span class="n">query</span><span class="o">.</span><span class="n">execute</span><span class="p">()</span>
 </pre></div>
@@ -92,19 +82,19 @@ defined (by passing <code class="docutils literal"><span class="pre">index=True<
 <div class="admonition note">
 <p class="first admonition-title">Note</p>
 <p class="last">You can perform single or chained queries against any/all columns
-that were defined with <code class="docutils literal"><span class="pre">index=True</span></code>.</p>
+that were defined with <code class="docutils literal notranslate"><span class="pre">index=True</span></code>.</p>
 </div>
 <p><strong>Composite/multi-column unique constraints</strong></p>
 <p>As of version 0.28.0 and later, rom supports the ability for you to have a
 unique constraint involving multiple columns. Individual columns can be
 defined unique by passing the ‘unique=True’ specifier during column
 definition as always.</p>
-<p>The attribute <code class="docutils literal"><span class="pre">unique_together</span></code> defines those groups of columns that when
-taken together must be unique for <code class="docutils literal"><span class="pre">.save()</span></code> to complete successfully.
-This will work almost exactly the same as Django’s <code class="docutils literal"><span class="pre">unique_together</span></code>, and
-is comparable to SQLAlchemy’s <code class="docutils literal"><span class="pre">UniqueConstraint()</span></code>.</p>
+<p>The attribute <code class="docutils literal notranslate"><span class="pre">unique_together</span></code> defines those groups of columns that when
+taken together must be unique for <code class="docutils literal notranslate"><span class="pre">.save()</span></code> to complete successfully.
+This will work almost exactly the same as Django’s <code class="docutils literal notranslate"><span class="pre">unique_together</span></code>, and
+is comparable to SQLAlchemy’s <code class="docutils literal notranslate"><span class="pre">UniqueConstraint()</span></code>.</p>
 <p>Usage:</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="k">class</span> <span class="nc">UniquePosition</span><span class="p">(</span><span class="n">Model</span><span class="p">):</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">class</span> <span class="nc">UniquePosition</span><span class="p">(</span><span class="n">Model</span><span class="p">):</span>
     <span class="n">x</span> <span class="o">=</span> <span class="n">Integer</span><span class="p">()</span>
     <span class="n">y</span> <span class="o">=</span> <span class="n">Integer</span><span class="p">()</span>
 
@@ -140,7 +130,7 @@ specified as part of column definitions.</p>
 <dd><p>Will fetch one or more entities of this type from the session or
 Redis.</p>
 <p>Used like:</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">MyModel</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="mi">5</span><span class="p">)</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">MyModel</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="mi">5</span><span class="p">)</span>
 <span class="n">MyModel</span><span class="o">.</span><span class="n">get</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span> <span class="mi">6</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">4</span><span class="p">])</span>
 </pre></div>
 </div>
@@ -152,10 +142,10 @@ order that the ids were passed.</p>
 <dt id="rom.model.Model.get_by">
 <em class="property">classmethod </em><code class="descname">get_by</code><span class="sig-paren">(</span><em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#rom.model.Model.get_by" title="Permalink to this definition">¶</a></dt>
 <dd><p>This method offers a simple query method for fetching entities of this
-type via attribute numeric ranges (such columns must be <code class="docutils literal"><span class="pre">indexed</span></code>),
-or via <code class="docutils literal"><span class="pre">unique</span></code> columns.</p>
+type via attribute numeric ranges (such columns must be <code class="docutils literal notranslate"><span class="pre">indexed</span></code>),
+or via <code class="docutils literal notranslate"><span class="pre">unique</span></code> columns.</p>
 <p>Some examples:</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">user</span> <span class="o">=</span> <span class="n">User</span><span class="o">.</span><span class="n">get_by</span><span class="p">(</span><span class="n">email_address</span><span class="o">=</span><span class="s1">&#39;user@domain.com&#39;</span><span class="p">)</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">user</span> <span class="o">=</span> <span class="n">User</span><span class="o">.</span><span class="n">get_by</span><span class="p">(</span><span class="n">email_address</span><span class="o">=</span><span class="s1">&#39;user@domain.com&#39;</span><span class="p">)</span>
 <span class="c1"># gets up to 25 users created in the last 24 hours</span>
 <span class="n">users</span> <span class="o">=</span> <span class="n">User</span><span class="o">.</span><span class="n">get_by</span><span class="p">(</span>
     <span class="n">created_at</span><span class="o">=</span><span class="p">(</span><span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span><span class="o">-</span><span class="mi">86400</span><span class="p">,</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()),</span>
@@ -169,8 +159,8 @@ or via <code class="docutils literal"><span class="pre">unique</span></code> col
 paginate or otherwise limit results returned by a numeric range
 query</li>
 <li><em>_numeric</em> - An optional boolean defaulting to False that forces
-the use of a numeric index for <code class="docutils literal"><span class="pre">.get_by(col=val)</span></code> queries even
-when <code class="docutils literal"><span class="pre">col</span></code> has an existing unique index</li>
+the use of a numeric index for <code class="docutils literal notranslate"><span class="pre">.get_by(col=val)</span></code> queries even
+when <code class="docutils literal notranslate"><span class="pre">col</span></code> has an existing unique index</li>
 </ul>
 </div></blockquote>
 <p>If you would like to make queries against multiple columns or with
@@ -179,7 +169,7 @@ multiple criteria, look into the Model.query class property.</p>
 <p class="first admonition-title">Note</p>
 <p class="last">rom will attempt to use a unique index first, then a numeric
 index if there was no unique index. You can explicitly tell rom to
-only use the numeric index by using <code class="docutils literal"><span class="pre">.get_by(...,</span> <span class="pre">_numeric=True)</span></code>.</p>
+only use the numeric index by using <code class="docutils literal notranslate"><span class="pre">.get_by(...,</span> <span class="pre">_numeric=True)</span></code>.</p>
 </div>
 <div class="admonition note">
 <p class="first admonition-title">Note</p>
@@ -194,11 +184,11 @@ with columns that use a numeric index.</p>
 <dd><p>This is a primary key column, used when you want the primary key to be
 named something other than ‘id’. If you omit a PrimaryKey column on your
 Model classes, one will be automatically created for you.</p>
-<p>Only the <code class="docutils literal"><span class="pre">index</span></code> argument will be used. You may want to enable indexing
+<p>Only the <code class="docutils literal notranslate"><span class="pre">index</span></code> argument will be used. You may want to enable indexing
 on this column if you want to be able to perform queries and sort the
 results by primary key.</p>
 <p>Used via:</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="k">class</span> <span class="nc">MyModel</span><span class="p">(</span><span class="n">Model</span><span class="p">):</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">class</span> <span class="nc">MyModel</span><span class="p">(</span><span class="n">Model</span><span class="p">):</span>
     <span class="nb">id</span> <span class="o">=</span> <span class="n">PrimaryKey</span><span class="p">()</span>
 </pre></div>
 </div>
@@ -218,9 +208,9 @@ results by primary key.</p>
 <dt id="rom.model.Model.save">
 <code class="descname">save</code><span class="sig-paren">(</span><em>full=False</em>, <em>force=False</em><span class="sig-paren">)</span><a class="headerlink" href="#rom.model.Model.save" title="Permalink to this definition">¶</a></dt>
 <dd><p>Saves the current entity to Redis. Will only save changed data by
-default, but you can force a full save by passing <code class="docutils literal"><span class="pre">full=True</span></code>.</p>
+default, but you can force a full save by passing <code class="docutils literal notranslate"><span class="pre">full=True</span></code>.</p>
 <p>If the underlying entity was deleted and you want to re-save the entity,
-you can pass <code class="docutils literal"><span class="pre">force=True</span></code> to force a full re-save of the entity.</p>
+you can pass <code class="docutils literal notranslate"><span class="pre">force=True</span></code> to force a full re-save of the entity.</p>
 </dd></dl>
 
 <dl class="method">
@@ -228,17 +218,17 @@ you can pass <code class="docutils literal"><span class="pre">force=True</span><
 <code class="descname">to_dict</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#rom.model.Model.to_dict" title="Permalink to this definition">¶</a></dt>
 <dd><p>Returns a copy of all data assigned to columns in this entity. Useful
 for returning items to JSON-enabled APIs. If you want to copy an
-entity, you should look at the <code class="docutils literal"><span class="pre">.copy()</span></code> method.</p>
+entity, you should look at the <code class="docutils literal notranslate"><span class="pre">.copy()</span></code> method.</p>
 </dd></dl>
 
 <dl class="method">
 <dt id="rom.model.Model.update">
 <code class="descname">update</code><span class="sig-paren">(</span><em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#rom.model.Model.update" title="Permalink to this definition">¶</a></dt>
-<dd><p>Updates multiple attributes in a model. If <code class="docutils literal"><span class="pre">args</span></code> are provided, this
+<dd><p>Updates multiple attributes in a model. If <code class="docutils literal notranslate"><span class="pre">args</span></code> are provided, this
 method will assign attributes in the order returned by
-<code class="docutils literal"><span class="pre">list(self._columns)</span></code> until one or both are exhausted.</p>
-<p>If <code class="docutils literal"><span class="pre">kwargs</span></code> are provided, this method will assign attributes to the
-names provided, after <code class="docutils literal"><span class="pre">args</span></code> have been processed.</p>
+<code class="docutils literal notranslate"><span class="pre">list(self._columns)</span></code> until one or both are exhausted.</p>
+<p>If <code class="docutils literal notranslate"><span class="pre">kwargs</span></code> are provided, this method will assign attributes to the
+names provided, after <code class="docutils literal notranslate"><span class="pre">args</span></code> have been processed.</p>
 </dd></dl>
 
 </dd></dl>
@@ -260,10 +250,10 @@ call me directly.</p>
         <div class="sphinxsidebarwrapper">
   <h4>Previous topic</h4>
   <p class="topless"><a href="indexm.html"
-                        title="previous chapter"><code class="docutils literal"><span class="pre">index</span></code> Module</a></p>
+                        title="previous chapter"><code class="docutils literal notranslate"><span class="pre">index</span></code> Module</a></p>
   <h4>Next topic</h4>
   <p class="topless"><a href="query.html"
-                        title="next chapter"><code class="docutils literal"><span class="pre">query</span></code> Module</a></p>
+                        title="next chapter"><code class="docutils literal notranslate"><span class="pre">query</span></code> Module</a></p>
   <div role="note" aria-label="source link">
     <h3>This Page</h3>
     <ul class="this-page-menu">
@@ -273,12 +263,14 @@ call me directly.</p>
    </div>
 <div id="searchbox" style="display: none" role="search">
   <h3>Quick search</h3>
+    <div class="searchformwrapper">
     <form class="search" action="search.html" method="get">
-      <div><input type="text" name="q" /></div>
-      <div><input type="submit" value="Go" /></div>
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
       <input type="hidden" name="check_keywords" value="yes" />
       <input type="hidden" name="area" value="default" />
     </form>
+    </div>
 </div>
 <script type="text/javascript">$('#searchbox').show(0);</script>
         </div>
@@ -300,12 +292,12 @@ call me directly.</p>
         <li class="right" >
           <a href="indexm.html" title="index Module"
              >previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="index.html">rom 0.42.3 documentation</a> &#187;</li> 
+        <li class="nav-item nav-item-0"><a href="index.html">rom 0.42.4 documentation</a> &#187;</li> 
       </ul>
     </div>
     <div class="footer" role="contentinfo">
         &#169; Copyright 2013-2015, Josiah Carlson.
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.6.2.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.8.2.
     </div>
   </body>
 </html>

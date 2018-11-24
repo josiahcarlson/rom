@@ -17,6 +17,12 @@ import warnings
 from redis import client
 import six
 
+try:
+    _Pipeline = client.BasePipeline
+except AttributeError:
+    #redis-python client 3.0+ change
+    _Pipeline = client.Pipeline
+
 from .columns import (Column, Text, PrimaryKey, ManyToOne, OneToOne, OneToMany,
     MODELS, MODELS_REFERENCED, _on_delete, SKIP_ON_DELETE)
 from .exceptions import (ORMError, UniqueKeyViolation, InvalidOperation,
@@ -869,14 +875,9 @@ def redis_writer_lua(conn, pkey, namespace, id, unique, udelete, delete,
             (unique, udelete, delete, ldata, keys, scored, prefix, suffix, geo, is_delete, old_data)]
     result = _redis_writer_lua(conn, [], [namespace, id] + data)
 
-    try:
-        if isinstance(conn, client.BasePipeline):
-            # we're in a pipelined write situation, don't parse the pipeline :P
-            return
-    except AttributeError: #redis 3.x
-        if isinstance(conn, client.Pipeline):
-            # we're in a pipelined write situation, don't parse the pipeline :P
-            return
+    if isinstance(conn, _Pipeline):
+        # we're in a pipelined write situation, don't parse the pipeline :P
+        return
 
     if six.PY3:
         result = result.decode()

@@ -56,7 +56,7 @@ test-tox:
 	tox
 
 docs:
-	python -c "import rom; open('README.rst', 'wb').write(rom.__doc__); open('VERSION', 'wb').write(rom.VERSION);"
+	python3.6 -c "import rom; open('README.rst', 'wb').write(rom.__doc__.encode('latin-1')); open('VERSION', 'wb').write(rom.VERSION.encode('latin-1'));"
 	$(SPHINXBUILD) -b html $(ALLSPHINXOPTS) $(BUILDDIR)/html
 	cp -r $(BUILDDIR)/html/. docs
 	@echo

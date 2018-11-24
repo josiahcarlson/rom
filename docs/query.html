@@ -4,32 +4,22 @@
 
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    
-    <title>query Module &#8212; rom 0.42.3 documentation</title>
-    
+    <title>query Module &#8212; rom 0.42.4 documentation</title>
     <link rel="stylesheet" href="_static/classic.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
     
-    <script type="text/javascript">
-      var DOCUMENTATION_OPTIONS = {
-        URL_ROOT:    './',
-        VERSION:     '0.42.3',
-        COLLAPSE_INDEX: false,
-        FILE_SUFFIX: '.html',
-        HAS_SOURCE:  true,
-        SOURCELINK_SUFFIX: '.txt'
-      };
-    </script>
+    <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
     <script type="text/javascript" src="_static/jquery.js"></script>
     <script type="text/javascript" src="_static/underscore.js"></script>
     <script type="text/javascript" src="_static/doctools.js"></script>
+    
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
     <link rel="next" title="util Module" href="util.html" />
     <link rel="prev" title="model Module" href="model.html" /> 
-  </head>
-  <body>
+  </head><body>
     <div class="related" role="navigation" aria-label="related navigation">
       <h3>Navigation</h3>
       <ul>
@@ -45,7 +35,7 @@
         <li class="right" >
           <a href="model.html" title="model Module"
              accesskey="P">previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="index.html">rom 0.42.3 documentation</a> &#187;</li> 
+        <li class="nav-item nav-item-0"><a href="index.html">rom 0.42.4 documentation</a> &#187;</li> 
       </ul>
     </div>  
 
@@ -55,7 +45,7 @@
           <div class="body" role="main">
             
   <div class="section" id="module-rom.query">
-<span id="query-module"></span><h1><code class="xref py py-mod docutils literal"><span class="pre">query</span></code> Module<a class="headerlink" href="#module-rom.query" title="Permalink to this headline">¶</a></h1>
+<span id="query-module"></span><h1><code class="xref py py-mod docutils literal notranslate"><span class="pre">query</span></code> Module<a class="headerlink" href="#module-rom.query" title="Permalink to this headline">¶</a></h1>
 <p>Rom - the Redis object mapper for Python</p>
 <p>Copyright 2013-2016 Josiah Carlson</p>
 <p>Released under the LGPL license version 2.1 and version 3 (you can choose
@@ -63,14 +53,14 @@ which you’d like to be bound under).</p>
 <dl class="class">
 <dt id="rom.query.Query">
 <em class="property">class </em><code class="descclassname">rom.query.</code><code class="descname">Query</code><span class="sig-paren">(</span><em>model</em>, <em>filters=()</em>, <em>order_by=None</em>, <em>limit=None</em>, <em>select=None</em><span class="sig-paren">)</span><a class="headerlink" href="#rom.query.Query" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">object</span></code></p>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
 <p>This is a query object. It behaves a lot like other query objects. Every
 operation performed on Query objects returns a new Query object. The old
 Query object <em>does not</em> have any updated filters.</p>
 <dl class="method">
 <dt id="rom.query.Query.all">
 <code class="descname">all</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#rom.query.Query.all" title="Permalink to this definition">¶</a></dt>
-<dd><p>Alias for <code class="docutils literal"><span class="pre">execute()</span></code>.</p>
+<dd><p>Alias for <code class="docutils literal notranslate"><span class="pre">execute()</span></code>.</p>
 </dd></dl>
 
 <dl class="method">
@@ -87,7 +77,7 @@ step to use the PERSIST command).</p>
 <p class="last">Limit clauses are ignored and not passed.</p>
 </div>
 <p>Usage:</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">ukey</span> <span class="o">=</span> <span class="n">User</span><span class="o">.</span><span class="n">query</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="n">email</span><span class="o">=</span><span class="s1">&#39;@gmail.com&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">cached_result</span><span class="p">(</span><span class="mi">30</span><span class="p">)</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">ukey</span> <span class="o">=</span> <span class="n">User</span><span class="o">.</span><span class="n">query</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="n">email</span><span class="o">=</span><span class="s1">&#39;@gmail.com&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">cached_result</span><span class="p">(</span><span class="mi">30</span><span class="p">)</span>
 <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">xrange</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">conn</span><span class="o">.</span><span class="n">zcard</span><span class="p">(</span><span class="n">ukey</span><span class="p">),</span> <span class="mi">100</span><span class="p">):</span>
     <span class="c1"># refresh the expiration</span>
     <span class="n">conn</span><span class="o">.</span><span class="n">expire</span><span class="p">(</span><span class="n">ukey</span><span class="p">,</span> <span class="mi">30</span><span class="p">)</span>
@@ -102,7 +92,7 @@ step to use the PERSIST command).</p>
 <code class="descname">count</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#rom.query.Query.count" title="Permalink to this definition">¶</a></dt>
 <dd><p>Will return the total count of the objects that match the specified
 filters.:</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="c1"># counts the number of users created in the last 24 hours</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1"># counts the number of users created in the last 24 hours</span>
 <span class="n">User</span><span class="o">.</span><span class="n">query</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">created_at</span><span class="o">=</span><span class="p">(</span><span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span><span class="o">-</span><span class="mi">86400</span><span class="p">,</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()))</span><span class="o">.</span><span class="n">count</span><span class="p">()</span>
 </pre></div>
 </div>
@@ -113,26 +103,26 @@ filters.:</p>
 <code class="descname">delete</code><span class="sig-paren">(</span><em>blocksize=100</em><span class="sig-paren">)</span><a class="headerlink" href="#rom.query.Query.delete" title="Permalink to this definition">¶</a></dt>
 <dd><p>Will delete the entities that match at the time the query is executed.</p>
 <p>Used like:</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">MyModel</span><span class="o">.</span><span class="n">query</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">email</span><span class="o">=...</span><span class="p">)</span><span class="o">.</span><span class="n">delete</span><span class="p">()</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">MyModel</span><span class="o">.</span><span class="n">query</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">email</span><span class="o">=...</span><span class="p">)</span><span class="o">.</span><span class="n">delete</span><span class="p">()</span>
 <span class="n">MyModel</span><span class="o">.</span><span class="n">query</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="n">email</span><span class="o">=</span><span class="s1">&#39;@host.com&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">delete</span><span class="p">()</span>
 </pre></div>
 </div>
 <div class="admonition warning">
 <p class="first admonition-title">Warning</p>
-<p class="last">can’t be used on models on either side of a <code class="docutils literal"><span class="pre">OneToMany</span></code>,
-<code class="docutils literal"><span class="pre">ManyToOne</span></code>, or <code class="docutils literal"><span class="pre">OneToOne</span></code> relationship.</p>
+<p class="last">can’t be used on models on either side of a <code class="docutils literal notranslate"><span class="pre">OneToMany</span></code>,
+<code class="docutils literal notranslate"><span class="pre">ManyToOne</span></code>, or <code class="docutils literal notranslate"><span class="pre">OneToOne</span></code> relationship.</p>
 </div>
 </dd></dl>
 
 <dl class="method">
 <dt id="rom.query.Query.endswith">
 <code class="descname">endswith</code><span class="sig-paren">(</span><em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#rom.query.Query.endswith" title="Permalink to this definition">¶</a></dt>
-<dd><p>When provided with keyword arguments of the form <code class="docutils literal"><span class="pre">col=suffix</span></code>, this
+<dd><p>When provided with keyword arguments of the form <code class="docutils literal notranslate"><span class="pre">col=suffix</span></code>, this
 will limit the entities returned to those that have a word with the
 provided suffix in the specified column(s). This requires that the
-<code class="docutils literal"><span class="pre">suffix=True</span></code> option was provided during column definition.</p>
+<code class="docutils literal notranslate"><span class="pre">suffix=True</span></code> option was provided during column definition.</p>
 <p>Usage:</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">User</span><span class="o">.</span><span class="n">query</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="n">email</span><span class="o">=</span><span class="s1">&#39;@gmail.com&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">execute</span><span class="p">()</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">User</span><span class="o">.</span><span class="n">query</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="n">email</span><span class="o">=</span><span class="s1">&#39;@gmail.com&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">execute</span><span class="p">()</span>
 </pre></div>
 </div>
 </dd></dl>
@@ -149,13 +139,13 @@ earlier limit calls.</p>
 <dt id="rom.query.Query.filter">
 <code class="descname">filter</code><span class="sig-paren">(</span><em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#rom.query.Query.filter" title="Permalink to this definition">¶</a></dt>
 <dd><p>Only columns/attributes that have been specified as having an index with
-the <code class="docutils literal"><span class="pre">index=True</span></code> option on the column definition can be filtered with
+the <code class="docutils literal notranslate"><span class="pre">index=True</span></code> option on the column definition can be filtered with
 this method. Prefix, suffix, and pattern match filters must be provided
-using the <code class="docutils literal"><span class="pre">.startswith()</span></code>, <code class="docutils literal"><span class="pre">.endswith()</span></code>, and the <code class="docutils literal"><span class="pre">.like()</span></code>
+using the <code class="docutils literal notranslate"><span class="pre">.startswith()</span></code>, <code class="docutils literal notranslate"><span class="pre">.endswith()</span></code>, and the <code class="docutils literal notranslate"><span class="pre">.like()</span></code>
 methods on the query object, respectively. Geo location queries should
-be performed using the <code class="docutils literal"><span class="pre">.near()</span></code> method.</p>
+be performed using the <code class="docutils literal notranslate"><span class="pre">.near()</span></code> method.</p>
 <p>Filters should be of the form:</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="c1"># for numeric ranges, use None for open-ended ranges</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1"># for numeric ranges, use None for open-ended ranges</span>
 <span class="n">attribute</span><span class="o">=</span><span class="p">(</span><span class="nb">min</span><span class="p">,</span> <span class="nb">max</span><span class="p">)</span>
 
 <span class="c1"># you can also query for equality by passing a single number</span>
@@ -171,10 +161,10 @@ be performed using the <code class="docutils literal"><span class="pre">.near()<
 </pre></div>
 </div>
 <p>As an example, the following will return entities that have both
-<code class="docutils literal"><span class="pre">hello</span></code> and <code class="docutils literal"><span class="pre">world</span></code> in the <code class="docutils literal"><span class="pre">String</span></code> column <code class="docutils literal"><span class="pre">scol</span></code> and has a
-<code class="docutils literal"><span class="pre">Numeric</span></code> column <code class="docutils literal"><span class="pre">ncol</span></code> with value between 2 and 10 (including the
+<code class="docutils literal notranslate"><span class="pre">hello</span></code> and <code class="docutils literal notranslate"><span class="pre">world</span></code> in the <code class="docutils literal notranslate"><span class="pre">String</span></code> column <code class="docutils literal notranslate"><span class="pre">scol</span></code> and has a
+<code class="docutils literal notranslate"><span class="pre">Numeric</span></code> column <code class="docutils literal notranslate"><span class="pre">ncol</span></code> with value between 2 and 10 (including the
 endpoints):</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">results</span> <span class="o">=</span> <span class="n">MyModel</span><span class="o">.</span><span class="n">query</span> \
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">results</span> <span class="o">=</span> <span class="n">MyModel</span><span class="o">.</span><span class="n">query</span> \
     <span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">scol</span><span class="o">=</span><span class="s1">&#39;hello&#39;</span><span class="p">)</span> \
     <span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">scol</span><span class="o">=</span><span class="s1">&#39;world&#39;</span><span class="p">)</span> \
     <span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">ncol</span><span class="o">=</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">10</span><span class="p">))</span> \
@@ -183,8 +173,8 @@ endpoints):</p>
 </div>
 <p>If you only want to match a single value as part of your range query,
 you can pass an integer, float, or Decimal object by itself, similar
-to the <code class="docutils literal"><span class="pre">Model.get_by()</span></code> method:</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">results</span> <span class="o">=</span> <span class="n">MyModel</span><span class="o">.</span><span class="n">query</span> \
+to the <code class="docutils literal notranslate"><span class="pre">Model.get_by()</span></code> method:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">results</span> <span class="o">=</span> <span class="n">MyModel</span><span class="o">.</span><span class="n">query</span> \
     <span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">ncol</span><span class="o">=</span><span class="mi">5</span><span class="p">)</span> \
     <span class="o">.</span><span class="n">execute</span><span class="p">()</span>
 </pre></div>
@@ -197,7 +187,7 @@ string columns won’t return any results.</p>
 <div class="admonition note">
 <p class="first admonition-title">Note</p>
 <p class="last">This method only filters columns that have been defined with
-<code class="docutils literal"><span class="pre">index=True</span></code>.</p>
+<code class="docutils literal notranslate"><span class="pre">index=True</span></code>.</p>
 </div>
 </dd></dl>
 
@@ -216,7 +206,7 @@ processing will take more than 30 seconds to process 100 items, you
 should pass <cite>timeout</cite> and <cite>pagesize</cite> to reflect an appropriate timeout
 and page size to fetch at once.</p>
 <p>Usage:</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="k">for</span> <span class="n">user</span> <span class="ow">in</span> <span class="n">User</span><span class="o">.</span><span class="n">query</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="n">email</span><span class="o">=</span><span class="s1">&#39;@gmail.com&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">iter_result</span><span class="p">():</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">for</span> <span class="n">user</span> <span class="ow">in</span> <span class="n">User</span><span class="o">.</span><span class="n">query</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="n">email</span><span class="o">=</span><span class="s1">&#39;@gmail.com&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">iter_result</span><span class="p">():</span>
     <span class="c1"># do something with user</span>
     <span class="o">...</span>
 </pre></div>
@@ -226,9 +216,9 @@ and page size to fetch at once.</p>
 <dl class="method">
 <dt id="rom.query.Query.like">
 <code class="descname">like</code><span class="sig-paren">(</span><em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#rom.query.Query.like" title="Permalink to this definition">¶</a></dt>
-<dd><p>When provided with keyword arguments of the form <code class="docutils literal"><span class="pre">col=pattern</span></code>, this
+<dd><p>When provided with keyword arguments of the form <code class="docutils literal notranslate"><span class="pre">col=pattern</span></code>, this
 will limit the entities returned to those that include the provided
-pattern. Note that ‘like’ queries require that the <code class="docutils literal"><span class="pre">prefix=True</span></code>
+pattern. Note that ‘like’ queries require that the <code class="docutils literal notranslate"><span class="pre">prefix=True</span></code>
 option must have been provided as part of the column definition.</p>
 <p>Patterns allow for 4 wildcard characters, whose semantics are as
 follows:</p>
@@ -241,9 +231,9 @@ follows:</p>
 </ul>
 </div></blockquote>
 <p>As an example, imagine that you have enabled the required prefix
-matching on your <code class="docutils literal"><span class="pre">User.email</span></code> column. And lets say that you want to
+matching on your <code class="docutils literal notranslate"><span class="pre">User.email</span></code> column. And lets say that you want to
 find everyone with an email address that contains the name ‘frank’
-before the <code class="docutils literal"><span class="pre">&#64;</span></code> sign. You can use either of the following patterns
+before the <code class="docutils literal notranslate"><span class="pre">&#64;</span></code> sign. You can use either of the following patterns
 to discover those users.</p>
 <blockquote>
 <div><ul class="simple">
@@ -256,7 +246,7 @@ to discover those users.</p>
 <p class="last">Like queries implicitly start at the beginning of strings
 checked, so if you want to match a pattern that doesn’t start at
 the beginning of a string, you should prefix it with one of the
-wildcard characters (like <code class="docutils literal"><span class="pre">*</span></code> as we did with the ‘frank’ pattern).</p>
+wildcard characters (like <code class="docutils literal notranslate"><span class="pre">*</span></code> as we did with the ‘frank’ pattern).</p>
 </div>
 </dd></dl>
 
@@ -264,7 +254,7 @@ wildcard characters (like <code class="docutils literal"><span class="pre">*</sp
 <dt id="rom.query.Query.limit">
 <code class="descname">limit</code><span class="sig-paren">(</span><em>offset</em>, <em>count</em><span class="sig-paren">)</span><a class="headerlink" href="#rom.query.Query.limit" title="Permalink to this definition">¶</a></dt>
 <dd><p>Will limit the number of results returned from a query:</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="c1"># returns the most recent 25 users</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1"># returns the most recent 25 users</span>
 <span class="n">User</span><span class="o">.</span><span class="n">query</span><span class="o">.</span><span class="n">order_by</span><span class="p">(</span><span class="s1">&#39;-created_at&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">limit</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">25</span><span class="p">)</span><span class="o">.</span><span class="n">execute</span><span class="p">()</span>
 </pre></div>
 </div>
@@ -279,7 +269,7 @@ wildcard characters (like <code class="docutils literal"><span class="pre">*</sp
 <dt id="rom.query.Query.order_by">
 <code class="descname">order_by</code><span class="sig-paren">(</span><em>column</em><span class="sig-paren">)</span><a class="headerlink" href="#rom.query.Query.order_by" title="Permalink to this definition">¶</a></dt>
 <dd><p>When provided with a column name, will sort the results of your query:</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="c1"># returns all users, ordered by the created_at column in</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1"># returns all users, ordered by the created_at column in</span>
 <span class="c1"># descending order</span>
 <span class="n">User</span><span class="o">.</span><span class="n">query</span><span class="o">.</span><span class="n">order_by</span><span class="p">(</span><span class="s1">&#39;-created_at&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">execute</span><span class="p">()</span>
 </pre></div>
@@ -324,7 +314,7 @@ careful with the namedtuple option - see the warning below)</dd>
 </div></blockquote>
 <div class="admonition warning">
 <p class="first admonition-title">Warning</p>
-<p class="last">If <code class="docutils literal"><span class="pre">include_pk</span> <span class="pre">=</span> <span class="pre">True</span></code> and if you don’t provide
+<p class="last">If <code class="docutils literal notranslate"><span class="pre">include_pk</span> <span class="pre">=</span> <span class="pre">True</span></code> and if you don’t provide
 the primary key column, it will be appended to your list of columns.</p>
 </div>
 <div class="admonition note">
@@ -333,7 +323,7 @@ the primary key column, it will be appended to your list of columns.</p>
 data, it must be of the form (below is the actual dict factory
 function)</p>
 </div>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">_dict_data_factory</span><span class="p">(</span><span class="n">columns</span><span class="p">):</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">_dict_data_factory</span><span class="p">(</span><span class="n">columns</span><span class="p">):</span>
     <span class="n">_dict</span> <span class="o">=</span> <span class="nb">dict</span>
     <span class="n">_zip</span> <span class="o">=</span> <span class="nb">zip</span>
     <span class="k">def</span> <span class="nf">make</span><span class="p">(</span><span class="n">data</span><span class="p">):</span>
@@ -346,17 +336,17 @@ function)</p>
 <p>Available factory functions:</p>
 <blockquote>
 <div><ul class="simple">
-<li><em>“rom.query._dict_data_factory“</em> - default</li>
-<li><em>“rom.query._list_data_factory“</em> - lowest overhead, as the
-<code class="docutils literal"><span class="pre">data</span></code> passed in above is a list that you can do anything to</li>
-<li><em>“rom.query._tuple_data_factory“</em> - when you want tuples instead</li>
-<li><em>“rom.query._namedtuple_data_factory“</em> - get namedtuples, see
+<li><em>``rom.query._dict_data_factory``</em> - default</li>
+<li><em>``rom.query._list_data_factory``</em> - lowest overhead, as the
+<code class="docutils literal notranslate"><span class="pre">data</span></code> passed in above is a list that you can do anything to</li>
+<li><em>``rom.query._tuple_data_factory``</em> - when you want tuples instead</li>
+<li><em>``rom.query._namedtuple_data_factory``</em> - get namedtuples, see
 see warning below</li>
 </ul>
 </div></blockquote>
 <div class="admonition warning">
 <p class="first admonition-title">Warning</p>
-<p class="last">If you use the <code class="docutils literal"><span class="pre">_namedtuple_data_factory</span></code>, and your
+<p class="last">If you use the <code class="docutils literal notranslate"><span class="pre">_namedtuple_data_factory</span></code>, and your
 columns include underscore prefixes, they will be stripped. If this
 results in a name collision, you <em>will</em> get an exception. If you want
 differerent behavior, write your own 20 line factory function that
@@ -367,12 +357,12 @@ does exactly what you want, and pass it; they are really easy!</p>
 <dl class="method">
 <dt id="rom.query.Query.startswith">
 <code class="descname">startswith</code><span class="sig-paren">(</span><em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#rom.query.Query.startswith" title="Permalink to this definition">¶</a></dt>
-<dd><p>When provided with keyword arguments of the form <code class="docutils literal"><span class="pre">col=prefix</span></code>, this
+<dd><p>When provided with keyword arguments of the form <code class="docutils literal notranslate"><span class="pre">col=prefix</span></code>, this
 will limit the entities returned to those that have a word with the
 provided prefix in the specified column(s). This requires that the
-<code class="docutils literal"><span class="pre">prefix=True</span></code> option was provided during column definition.</p>
+<code class="docutils literal notranslate"><span class="pre">prefix=True</span></code> option was provided during column definition.</p>
 <p>Usage:</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">User</span><span class="o">.</span><span class="n">query</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="n">email</span><span class="o">=</span><span class="s1">&#39;user@&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">execute</span><span class="p">()</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">User</span><span class="o">.</span><span class="n">query</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="n">email</span><span class="o">=</span><span class="s1">&#39;user@&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">execute</span><span class="p">()</span>
 </pre></div>
 </div>
 </dd></dl>
@@ -389,10 +379,10 @@ provided prefix in the specified column(s). This requires that the
         <div class="sphinxsidebarwrapper">
   <h4>Previous topic</h4>
   <p class="topless"><a href="model.html"
-                        title="previous chapter"><code class="docutils literal"><span class="pre">model</span></code> Module</a></p>
+                        title="previous chapter"><code class="docutils literal notranslate"><span class="pre">model</span></code> Module</a></p>
   <h4>Next topic</h4>
   <p class="topless"><a href="util.html"
-                        title="next chapter"><code class="docutils literal"><span class="pre">util</span></code> Module</a></p>
+                        title="next chapter"><code class="docutils literal notranslate"><span class="pre">util</span></code> Module</a></p>
   <div role="note" aria-label="source link">
     <h3>This Page</h3>
     <ul class="this-page-menu">
@@ -402,12 +392,14 @@ provided prefix in the specified column(s). This requires that the
    </div>
 <div id="searchbox" style="display: none" role="search">
   <h3>Quick search</h3>
+    <div class="searchformwrapper">
     <form class="search" action="search.html" method="get">
-      <div><input type="text" name="q" /></div>
-      <div><input type="submit" value="Go" /></div>
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
       <input type="hidden" name="check_keywords" value="yes" />
       <input type="hidden" name="area" value="default" />
     </form>
+    </div>
 </div>
 <script type="text/javascript">$('#searchbox').show(0);</script>
         </div>
@@ -429,12 +421,12 @@ provided prefix in the specified column(s). This requires that the
         <li class="right" >
           <a href="model.html" title="model Module"
              >previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="index.html">rom 0.42.3 documentation</a> &#187;</li> 
+        <li class="nav-item nav-item-0"><a href="index.html">rom 0.42.4 documentation</a> &#187;</li> 
       </ul>
     </div>
     <div class="footer" role="contentinfo">
         &#169; Copyright 2013-2015, Josiah Carlson.
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.6.2.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.8.2.
     </div>
   </body>
 </html>

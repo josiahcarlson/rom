@@ -4,32 +4,22 @@
 
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    
-    <title>index Module &#8212; rom 0.42.3 documentation</title>
-    
+    <title>index Module &#8212; rom 0.42.4 documentation</title>
     <link rel="stylesheet" href="_static/classic.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
     
-    <script type="text/javascript">
-      var DOCUMENTATION_OPTIONS = {
-        URL_ROOT:    './',
-        VERSION:     '0.42.3',
-        COLLAPSE_INDEX: false,
-        FILE_SUFFIX: '.html',
-        HAS_SOURCE:  true,
-        SOURCELINK_SUFFIX: '.txt'
-      };
-    </script>
+    <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
     <script type="text/javascript" src="_static/jquery.js"></script>
     <script type="text/javascript" src="_static/underscore.js"></script>
     <script type="text/javascript" src="_static/doctools.js"></script>
+    
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
     <link rel="next" title="model Module" href="model.html" />
     <link rel="prev" title="exceptions Module" href="exceptions.html" /> 
-  </head>
-  <body>
+  </head><body>
     <div class="related" role="navigation" aria-label="related navigation">
       <h3>Navigation</h3>
       <ul>
@@ -45,7 +35,7 @@
         <li class="right" >
           <a href="exceptions.html" title="exceptions Module"
              accesskey="P">previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="index.html">rom 0.42.3 documentation</a> &#187;</li> 
+        <li class="nav-item nav-item-0"><a href="index.html">rom 0.42.4 documentation</a> &#187;</li> 
       </ul>
     </div>  
 
@@ -55,7 +45,7 @@
           <div class="body" role="main">
             
   <div class="section" id="module-rom.index">
-<span id="index-module"></span><h1><code class="xref py py-mod docutils literal"><span class="pre">index</span></code> Module<a class="headerlink" href="#module-rom.index" title="Permalink to this headline">¶</a></h1>
+<span id="index-module"></span><h1><code class="xref py py-mod docutils literal notranslate"><span class="pre">index</span></code> Module<a class="headerlink" href="#module-rom.index" title="Permalink to this headline">¶</a></h1>
 <p>Rom - the Redis object mapper for Python</p>
 <p>Copyright 2013-2016 Josiah Carlson</p>
 <p>Released under the LGPL license version 2.1 and version 3 (you can choose
@@ -63,20 +53,20 @@ which you’d like to be bound under).</p>
 <dl class="class">
 <dt id="rom.index.GeneralIndex">
 <em class="property">class </em><code class="descclassname">rom.index.</code><code class="descname">GeneralIndex</code><span class="sig-paren">(</span><em>namespace</em><span class="sig-paren">)</span><a class="headerlink" href="#rom.index.GeneralIndex" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">object</span></code></p>
-<p>This class implements general indexing and search for the <code class="docutils literal"><span class="pre">rom</span></code> package.</p>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>This class implements general indexing and search for the <code class="docutils literal notranslate"><span class="pre">rom</span></code> package.</p>
 <div class="admonition warning">
 <p class="first admonition-title">Warning</p>
 <p class="last">You probably don’t want to be calling this directly. Instead,
-you should rely on the <code class="docutils literal"><span class="pre">Query</span></code> object returned from <code class="docutils literal"><span class="pre">Model.query</span></code> to
+you should rely on the <code class="docutils literal notranslate"><span class="pre">Query</span></code> object returned from <code class="docutils literal notranslate"><span class="pre">Model.query</span></code> to
 handle all of your query pre-processing.</p>
 </div>
 <p>Generally speaking, numeric indices use ZSETs, and text indices use SETs
 built using an ‘inverted index’.</p>
-<p>Say that we have words <code class="docutils literal"><span class="pre">hello</span> <span class="pre">world</span></code> in a column <code class="docutils literal"><span class="pre">c</span></code> on a model with
-primary key <code class="docutils literal"><span class="pre">MyModel:1</span></code>. The member <code class="docutils literal"><span class="pre">1</span></code> will be added to SETs with
+<p>Say that we have words <code class="docutils literal notranslate"><span class="pre">hello</span> <span class="pre">world</span></code> in a column <code class="docutils literal notranslate"><span class="pre">c</span></code> on a model with
+primary key <code class="docutils literal notranslate"><span class="pre">MyModel:1</span></code>. The member <code class="docutils literal notranslate"><span class="pre">1</span></code> will be added to SETs with
 keys:</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">MyModel</span><span class="p">:</span><span class="n">c</span><span class="p">:</span><span class="n">hello</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">MyModel</span><span class="p">:</span><span class="n">c</span><span class="p">:</span><span class="n">hello</span>
 <span class="n">MyModel</span><span class="p">:</span><span class="n">c</span><span class="p">:</span><span class="n">world</span>
 </pre></div>
 </div>
@@ -87,11 +77,11 @@ removing items outside the requested range after each intersection.</p>
 <p>Searches will pre-sort intersections from smallest to largest SET/ZSET
 prior to performing the search to improve performance.</p>
 <p>Prefix, suffix, and pattern matching change this operation. Given a key
-generated of <code class="docutils literal"><span class="pre">hello</span></code> on a column <code class="docutils literal"><span class="pre">c</span></code> on a model with primary key
-<code class="docutils literal"><span class="pre">MyModel:1</span></code>, the member <code class="docutils literal"><span class="pre">hello\01</span></code> with score 0 will be added to a
-ZSET with the key name <code class="docutils literal"><span class="pre">MyModel:c:pre</span></code> for the prefix/pattern index.
-On a suffix index, the member <code class="docutils literal"><span class="pre">olleh\01</span></code> with score 0 will be added to
-a ZSET with the key name <code class="docutils literal"><span class="pre">MyModel:c:suf</span></code>.</p>
+generated of <code class="docutils literal notranslate"><span class="pre">hello</span></code> on a column <code class="docutils literal notranslate"><span class="pre">c</span></code> on a model with primary key
+<code class="docutils literal notranslate"><span class="pre">MyModel:1</span></code>, the member <code class="docutils literal notranslate"><span class="pre">hello\01</span></code> with score 0 will be added to a
+ZSET with the key name <code class="docutils literal notranslate"><span class="pre">MyModel:c:pre</span></code> for the prefix/pattern index.
+On a suffix index, the member <code class="docutils literal notranslate"><span class="pre">olleh\01</span></code> with score 0 will be added to
+a ZSET with the key name <code class="docutils literal notranslate"><span class="pre">MyModel:c:suf</span></code>.</p>
 <p>Prefix and suffix matches are excuted in Lua with a variant of the
 autocomplete method described in Redis in Action. These methods ensure a
 runtime proportional to the number of matched entries.</p>
@@ -101,8 +91,8 @@ index, exploiting prefixes in patterns if they exist.</p>
 <dt id="rom.index.GeneralIndex.count">
 <code class="descname">count</code><span class="sig-paren">(</span><em>conn</em>, <em>filters</em><span class="sig-paren">)</span><a class="headerlink" href="#rom.index.GeneralIndex.count" title="Permalink to this definition">¶</a></dt>
 <dd><p>Returns the count of the items that match the provided filters.</p>
-<p>For the meaning of what the <code class="docutils literal"><span class="pre">filters</span></code> argument means, see the
-<code class="docutils literal"><span class="pre">.search()</span></code> method docs.</p>
+<p>For the meaning of what the <code class="docutils literal notranslate"><span class="pre">filters</span></code> argument means, see the
+<code class="docutils literal notranslate"><span class="pre">.search()</span></code> method docs.</p>
 </dd></dl>
 
 <dl class="method">
@@ -116,31 +106,31 @@ index, exploiting prefixes in patterns if they exist.</p>
 the following two forms:</p>
 <blockquote>
 <div><ol class="arabic simple">
-<li><code class="docutils literal"><span class="pre">'column:string'</span></code> - a plain string will match a word in a
+<li><code class="docutils literal notranslate"><span class="pre">'column:string'</span></code> - a plain string will match a word in a
 text search on the column</li>
 </ol>
 <div class="admonition note">
 <p class="first admonition-title">Note</p>
-<p class="last">Read the documentation about the <code class="docutils literal"><span class="pre">Query</span></code> object
+<p class="last">Read the documentation about the <code class="docutils literal notranslate"><span class="pre">Query</span></code> object
 for what is actually passed during text search</p>
 </div>
 <ol class="arabic simple" start="2">
-<li><code class="docutils literal"><span class="pre">('column',</span> <span class="pre">min,</span> <span class="pre">max)</span></code> - a numeric column range search,
+<li><code class="docutils literal notranslate"><span class="pre">('column',</span> <span class="pre">min,</span> <span class="pre">max)</span></code> - a numeric column range search,
 between min and max (inclusive by default)</li>
 </ol>
 <div class="admonition note">
 <p class="first admonition-title">Note</p>
-<p class="last">Read the documentation about the <code class="docutils literal"><span class="pre">Query</span></code> object
+<p class="last">Read the documentation about the <code class="docutils literal notranslate"><span class="pre">Query</span></code> object
 for information about open-ended ranges</p>
 </div>
 <ol class="arabic simple" start="3">
-<li><code class="docutils literal"><span class="pre">['column:string1',</span> <span class="pre">'column:string2']</span></code> - will match any
+<li><code class="docutils literal notranslate"><span class="pre">['column:string1',</span> <span class="pre">'column:string2']</span></code> - will match any
 of the provided words in a text search on the column</li>
-<li><code class="docutils literal"><span class="pre">Prefix('column',</span> <span class="pre">'prefix')</span></code> - will match prefixes of
+<li><code class="docutils literal notranslate"><span class="pre">Prefix('column',</span> <span class="pre">'prefix')</span></code> - will match prefixes of
 words in a text search on the column</li>
-<li><code class="docutils literal"><span class="pre">Suffix('column',</span> <span class="pre">'suffix')</span></code> - will match suffixes of
+<li><code class="docutils literal notranslate"><span class="pre">Suffix('column',</span> <span class="pre">'suffix')</span></code> - will match suffixes of
 words in a text search on the column</li>
-<li><code class="docutils literal"><span class="pre">Pattern('column',</span> <span class="pre">'pattern')</span></code> - will match patterns over
+<li><code class="docutils literal notranslate"><span class="pre">Pattern('column',</span> <span class="pre">'pattern')</span></code> - will match patterns over
 words in a text search on the column</li>
 </ol>
 </div></blockquote>
@@ -158,7 +148,7 @@ results by string comparison of the ids (10 will come before 2).</p>
 </div>
 <div class="admonition note">
 <p class="first admonition-title">Note</p>
-<p class="last">If you omit the <code class="docutils literal"><span class="pre">order_by</span></code> argument, results will be
+<p class="last">If you omit the <code class="docutils literal notranslate"><span class="pre">order_by</span></code> argument, results will be
 ordered by the last filter. If the last filter was a text
 filter, see the previous note. If the last filter was numeric,
 then results will be ordered by that result.</p>
@@ -175,7 +165,7 @@ then results will be ordered by that result.</p>
 <dl class="class">
 <dt id="rom.index.GeoIndex">
 <em class="property">class </em><code class="descclassname">rom.index.</code><code class="descname">GeoIndex</code><span class="sig-paren">(</span><em>name</em>, <em>callback</em><span class="sig-paren">)</span><a class="headerlink" href="#rom.index.GeoIndex" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">tuple</span></code></p>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">tuple</span></code></p>
 <dl class="attribute">
 <dt id="rom.index.GeoIndex.callback">
 <code class="descname">callback</code><a class="headerlink" href="#rom.index.GeoIndex.callback" title="Permalink to this definition">¶</a></dt>
@@ -193,13 +183,13 @@ then results will be ordered by that result.</p>
 <dl class="attribute">
 <dt id="rom.index.Geofilter">
 <code class="descclassname">rom.index.</code><code class="descname">Geofilter</code><a class="headerlink" href="#rom.index.Geofilter" title="Permalink to this definition">¶</a></dt>
-<dd><p>alias of <code class="xref py py-class docutils literal"><span class="pre">Geo</span></code></p>
+<dd><p>alias of <code class="xref py py-class docutils literal notranslate"><span class="pre">rom.index.Geo</span></code></p>
 </dd></dl>
 
 <dl class="class">
 <dt id="rom.index.Pattern">
 <em class="property">class </em><code class="descclassname">rom.index.</code><code class="descname">Pattern</code><span class="sig-paren">(</span><em>attr</em>, <em>pattern</em><span class="sig-paren">)</span><a class="headerlink" href="#rom.index.Pattern" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">tuple</span></code></p>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">tuple</span></code></p>
 <dl class="attribute">
 <dt id="rom.index.Pattern.attr">
 <code class="descname">attr</code><a class="headerlink" href="#rom.index.Pattern.attr" title="Permalink to this definition">¶</a></dt>
@@ -217,7 +207,7 @@ then results will be ordered by that result.</p>
 <dl class="class">
 <dt id="rom.index.Prefix">
 <em class="property">class </em><code class="descclassname">rom.index.</code><code class="descname">Prefix</code><span class="sig-paren">(</span><em>attr</em>, <em>prefix</em><span class="sig-paren">)</span><a class="headerlink" href="#rom.index.Prefix" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">tuple</span></code></p>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">tuple</span></code></p>
 <dl class="attribute">
 <dt id="rom.index.Prefix.attr">
 <code class="descname">attr</code><a class="headerlink" href="#rom.index.Prefix.attr" title="Permalink to this definition">¶</a></dt>
@@ -235,7 +225,7 @@ then results will be ordered by that result.</p>
 <dl class="class">
 <dt id="rom.index.Suffix">
 <em class="property">class </em><code class="descclassname">rom.index.</code><code class="descname">Suffix</code><span class="sig-paren">(</span><em>attr</em>, <em>suffix</em><span class="sig-paren">)</span><a class="headerlink" href="#rom.index.Suffix" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">tuple</span></code></p>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">tuple</span></code></p>
 <dl class="attribute">
 <dt id="rom.index.Suffix.attr">
 <code class="descname">attr</code><a class="headerlink" href="#rom.index.Suffix.attr" title="Permalink to this definition">¶</a></dt>
@@ -273,10 +263,10 @@ given index with the provided prefix.</p>
         <div class="sphinxsidebarwrapper">
   <h4>Previous topic</h4>
   <p class="topless"><a href="exceptions.html"
-                        title="previous chapter"><code class="docutils literal"><span class="pre">exceptions</span></code> Module</a></p>
+                        title="previous chapter"><code class="docutils literal notranslate"><span class="pre">exceptions</span></code> Module</a></p>
   <h4>Next topic</h4>
   <p class="topless"><a href="model.html"
-                        title="next chapter"><code class="docutils literal"><span class="pre">model</span></code> Module</a></p>
+                        title="next chapter"><code class="docutils literal notranslate"><span class="pre">model</span></code> Module</a></p>
   <div role="note" aria-label="source link">
     <h3>This Page</h3>
     <ul class="this-page-menu">
@@ -286,12 +276,14 @@ given index with the provided prefix.</p>
    </div>
 <div id="searchbox" style="display: none" role="search">
   <h3>Quick search</h3>
+    <div class="searchformwrapper">
     <form class="search" action="search.html" method="get">
-      <div><input type="text" name="q" /></div>
-      <div><input type="submit" value="Go" /></div>
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
       <input type="hidden" name="check_keywords" value="yes" />
       <input type="hidden" name="area" value="default" />
     </form>
+    </div>
 </div>
 <script type="text/javascript">$('#searchbox').show(0);</script>
         </div>
@@ -313,12 +305,12 @@ given index with the provided prefix.</p>
         <li class="right" >
           <a href="exceptions.html" title="exceptions Module"
              >previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="index.html">rom 0.42.3 documentation</a> &#187;</li> 
+        <li class="nav-item nav-item-0"><a href="index.html">rom 0.42.4 documentation</a> &#187;</li> 
       </ul>
     </div>
     <div class="footer" role="contentinfo">
         &#169; Copyright 2013-2015, Josiah Carlson.
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.6.2.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.8.2.
     </div>
   </body>
 </html>
