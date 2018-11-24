@@ -1,3 +1,9 @@
+#---------------------------------- 0.42.4 -----------------------------------
+[fixed] Thanks to github user https://github.com/stacywsmith for the bug
+    report and PR for fixing the Redis client compatability edge case due to
+    the Redis Python client upgrades
+[changed] Upgraded machines, so upgraded sphinx, so docs got mangled, huge
+    changelog for what amounts to a few lines of library code change
 #---------------------------------- 0.42.3 -----------------------------------
 [fixed] IndexOnly() columns no longer accept the unique parameter (was ignored
     in effect, anyway)
