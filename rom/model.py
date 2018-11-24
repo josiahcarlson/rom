@@ -869,9 +869,14 @@ def redis_writer_lua(conn, pkey, namespace, id, unique, udelete, delete,
             (unique, udelete, delete, ldata, keys, scored, prefix, suffix, geo, is_delete, old_data)]
     result = _redis_writer_lua(conn, [], [namespace, id] + data)
 
-    if isinstance(conn, client.BasePipeline):
-        # we're in a pipelined write situation, don't parse the pipeline :P
-        return
+    try:
+        if isinstance(conn, client.BasePipeline):
+            # we're in a pipelined write situation, don't parse the pipeline :P
+            return
+    except AttributeError: #redis 3.x
+        if isinstance(conn, client.Pipeline):
+            # we're in a pipelined write situation, don't parse the pipeline :P
+            return
 
     if six.PY3:
         result = result.decode()
