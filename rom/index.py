@@ -63,12 +63,12 @@ def _start_end(prefix):
 if six.PY3:
     def _ts(v):
         if not isinstance(v, str):
-            return v.decode('latin-1')
+            return v.decode('utf-8')
         return v
 else:
     def _ts(v):
         if not isinstance(v, unicode):
-            return v.decode('latin-1')
+            return v.decode('utf-8')
         return v
 
 class GeneralIndex(object):
