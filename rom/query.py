@@ -18,7 +18,7 @@ import uuid
 import six
 
 from .exceptions import QueryError
-from .index import Geofilter, Pattern, Prefix, Suffix
+from .index import Geofilter, Pattern, Prefix, Suffix, _ts
 from .util import (_connect, session, dt2ts, t2ts, _script_load,
     STRING_SORT_KEYGENS, STRING_SORT_KEYGENS_STR)
 
@@ -284,7 +284,7 @@ class Query(object):
                 cur_filters.append((attr, value[0], value[1]))
 
             elif isinstance(value, list) and value:
-                cur_filters.append(['%s:%s'%(attr, v) for v in value])
+                cur_filters.append(['%s:%s'%(attr, _ts(v)) for v in value])
 
             else:
                 raise QueryError("Sorry, we don't know how to filter %r by %r"%(attr, value))

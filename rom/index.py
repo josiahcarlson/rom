@@ -60,6 +60,17 @@ MAX_PREFIX_SCORE = _prefix_score(7*'\xff', True)
 def _start_end(prefix):
     return _prefix_score(prefix), (_prefix_score(prefix, True) if prefix else MAX_PREFIX_SCORE)
 
+if six.PY3:
+    def _ts(v):
+        if not isinstance(v, str):
+            return v.decode('latin-1')
+        return v
+else:
+    def _ts(v):
+        if not isinstance(v, unicode):
+            return v.decode('latin-1')
+        return v
+
 class GeneralIndex(object):
     '''
     This class implements general indexing and search for the ``rom`` package.
@@ -122,7 +133,7 @@ class GeneralIndex(object):
                 elif isinstance(fltr, Pattern):
                     estimate_work_lua(pipe, '%s:%s:pre'%(self.namespace, fltr.attr), _find_prefix(fltr.pattern))
                 elif isinstance(fltr, list):
-                    estimate_work_lua(pipe, '%s:%s:idx'%(self.namespace, fltr[0]), None)
+                    estimate_work_lua(pipe, '%s:%s:idx'%(self.namespace, _ts(fltr[0])), None)
                 elif isinstance(fltr, Geofilter):
                     estimate_work_lua(pipe, '%s:%s:geo'%(self.namespace, fltr.name), fltr.count)
                 elif isinstance(fltr, tuple):
@@ -143,7 +154,7 @@ class GeneralIndex(object):
                 # or string string/tag search
                 if len(fltr) == 1:
                     # only 1? Use the simple version.
-                    fltr = fltr[0]
+                    fltr = _ts(fltr[0])
                 elif not fltr:
                     continue
                 else:

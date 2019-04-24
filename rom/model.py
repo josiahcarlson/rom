@@ -28,7 +28,7 @@ from .columns import (Column, Text, PrimaryKey, ManyToOne, OneToOne, OneToMany,
 from .exceptions import (ORMError, UniqueKeyViolation, InvalidOperation,
     QueryError, ColumnError, InvalidColumnValue, DataRaceError,
     EntityDeletedError)
-from .index import GeneralIndex, GeoIndex
+from .index import GeneralIndex, GeoIndex, _ts
 from .query import Query, NUMERIC_TYPES
 from .util import (ClassProperty, _connect, session,
     _prefix_score, _script_load, _encode_unique_constraint,
@@ -357,11 +357,11 @@ class Model(six.with_metaclass(_ModelMetaclass, object)):
                 elif isinstance(generated, (list, tuple, set)):
                     if ca._index:
                         for k in generated:
-                            keys.add('%s:%s'%(attr, k))
+                            keys.add(u'%s:%s'%(attr, _ts(k)))
 
                     if ca._prefix:
                         for k in generated:
-                            prefix.append([attr, k])
+                            prefix.append([attr, _ts(k)])
 
                     if ca._suffix:
                         for k in generated:
@@ -380,9 +380,9 @@ class Model(six.with_metaclass(_ModelMetaclass, object)):
                                 scores[attr] = v
                             elif v in (None, ''):
                                 # mixed index type support
-                                keys.add('%s:%s'%(attr, k))
+                                keys.add(u'%s:%s'%(attr, _ts(k)))
                             else:
-                                scores['%s:%s'%(attr, k)] = v
+                                scores[u'%s:%s'%(attr, _ts(k))] = v
 
                     if ca._prefix:
                         if ca._keygen.__name__ not in _STRING_SORT_KEYGENS:
