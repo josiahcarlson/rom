@@ -816,6 +816,14 @@ class ManyToOne(Column):
             value.save()
         v = str(getattr(value, value._pkey))
         return v
+    
+    def get_related_model(self):
+        try:
+            model = MODELS[self._ftable]
+        except KeyError:
+            model = None
+        return model
+
 
 class OneToOne(ManyToOne):
     '''
@@ -964,6 +972,13 @@ class OneToMany(Column):
 
     def __delete__(self, obj):
         raise InvalidOperation("Cannot delete OneToMany relationships")
+    
+    def get_related_model(self):
+        try:
+            model = MODELS[self._ftable]
+        except KeyError:
+            model = None
+        return model
 
 COLUMN_TYPES = [v for v in globals().values() if isinstance(v, type) and issubclass(v, Column)]
 __all__ = [v.__name__ for v in COLUMN_TYPES] + 'MODELS MODELS_REFERENCED ON_DELETE'.split()
