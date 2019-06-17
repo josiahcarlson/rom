@@ -1,7 +1,10 @@
+#---------------------------------- 0.42.6 -----------------------------------
+[added] get related model from relationship columns thanks to PR from github
+    user https://github.com/Aimage ; MyModel.column_name.get_related_model()
 #---------------------------------- 0.42.5 -----------------------------------
 [fixed] Odd indexing and query edge cases that would make some 3.6 String
     (bytes) indexes not usable when Text (unicode) was passed. Reindexing
-    should fix the issue..
+    should fix the issue.
 #---------------------------------- 0.42.4 -----------------------------------
 [fixed] Thanks to github user https://github.com/stacywsmith for the bug
     report and PR for fixing the Redis client compatability edge case due to

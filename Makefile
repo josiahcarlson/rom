@@ -28,7 +28,8 @@ install:
 upload:
 	git tag `cat VERSION`
 	git push origin --tags
-	python3.6 setup.py sdist upload
+	python3.6 setup.py sdist
+	python3.6 -m twine upload --verbose dist/rom-`cat VERSION`.tar.gz
 
 test:
 	PYTHONPATH=`pwd` python2.6 test/test_rom.py
