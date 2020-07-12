@@ -189,7 +189,7 @@ class GeneralIndex(object):
                 first = intersect == pipe.zunionstore
                 args.append(temp_id if first else str(uuid.uuid4()))
 
-                pipe.pipeline_execute_command(*args)
+                pipe.pipeline_execute_command(*args, **{"store": None, "store_dist": None})
                 if not first:
                     intersect(temp_id, {temp_id: 0, args[-1]: 1})
                     pipe.delete(args[-1])
