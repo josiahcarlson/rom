@@ -968,7 +968,7 @@ class Lock(object):
     def _acquire(self):
         self.identifier = self.identifier or str(_random_hex(16))
         return _acquire_refresh_lock_with_timeout_lua(
-            self.conn, [self.lockname], [self.lock_timeout, self.identifier]) in ('OK', 1)
+            self.conn, [self.lockname], [self.lock_timeout, self.identifier or '']) in ('OK', 1)
 
     def acquire(self):
         acquired = False
@@ -987,7 +987,7 @@ class Lock(object):
         return refreshed
 
     def release(self):
-        return bool(_release_lock_lua(self.conn, [self.lockname], [self.identifier]))
+        return bool(_release_lock_lua(self.conn, [self.lockname], [self.identifier or '']))
 
     def __enter__(self):
         if not self.acquire():
