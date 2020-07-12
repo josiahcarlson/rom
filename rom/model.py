@@ -3,7 +3,7 @@
 '''
 Rom - the Redis object mapper for Python
 
-Copyright 2013-2016 Josiah Carlson
+Copyright 2013-2020 Josiah Carlson
 
 Released under the LGPL license version 2.1 and version 3 (you can choose
 which you'd like to be bound under).
@@ -662,6 +662,129 @@ class Model(six.with_metaclass(_ModelMetaclass, object)):
                 query = query.limit(*_limit)
             return query.all()
 
+    @classmethod
+    def does_not_startwith(cls, attr, values, blocksize=100):
+        """
+        This iterates over all entities with an attribute that does not start
+        with the provided values. This is only available to models with a prefix
+        index on the given attribute; values must be normalized the same as with
+        the indexed inputs for this to work properly (lowercased, etc.).
+
+        Args:
+          * *attr* - name of the attribute/column on the entity.
+          * *values* - list of values to exclude.
+
+        This method will auto-forget items from the session after yielding them,
+        so if you want to *change* data, you'll have to handle saving and
+        deleting outside of the session.
+
+        ..note: values <= 7 characters long will be fast, values >= 8 characters
+          will require round trips and will be substantially slower.
+
+        """
+        if not isinstance(values, list):
+            values = [values]
+
+        idx = cls._namespace + ":" + attr + ":pre"
+        val = []
+        for v in values:
+            if isinstance(v, six.string_types):
+                v = v.encode("utf-8")
+            val.append(v)
+
+        return cls._iter_ex(idx, val, blocksize)
+
+    @classmethod
+    def does_not_endwith(cls, attr, values, blocksize=100):
+        """
+        This iterates over all entities with an attribute that does not end
+        with the provided values. This is only available to models with a suffix
+        index on the given attribute; values must be normalized the same as with
+        the indexed inputs for this to work properly (lowercased, etc.).
+
+        Args:
+          * *attr* - name of the attribute/column on the entity.
+          * *values* - list of values to exclude.
+
+        This method will auto-forget items from the session after yielding them,
+        so if you want to *change* data, you'll have to handle saving and
+        deleting outside of the session.
+
+        ..note: values <= 7 characters long will be fast, values >= 8 characters
+          will require round trips and will be substantially slower.
+
+        """
+        if not isinstance(values, list):
+            values = [values]
+
+        idx = cls._namespace + ":" + attr + ":suf"
+        val = []
+        for v in values:
+            if isinstance(v, six.string_types):
+                v = v[::-1].encode("utf-8")
+            else:
+                v = v[::-1]
+            val.append(v)
+
+        return cls._iter_ex(idx, val, blocksize)
+
+    @classmethod
+    def _iter_ex(cls, idx, values, blocksize):
+        exclude = {}
+        for v in values:
+            psv = _prefix_score(v)
+            if psv not in exclude:
+                exclude[psv] = set()
+            exclude[psv].add(v)
+
+        excludes = ['inf'] + sorted(exclude, reverse=True)
+        last = 0
+        c = cls._connection
+        print(exclude)
+        while excludes:
+            exc = excludes.pop()
+            # things that are between the matched items
+            for chunk in _zrange_limit_iterator(c, idx, last, "(" + exc, blocksize):
+                ids = set(int(p.rpartition(b"\0")[-1]) for p in chunk)
+                if ids:
+                    found = cls.get(list(ids))
+                    if found:
+                        for f in found:
+                            yield f
+                            session.forget(f)
+
+            if exc == 'inf':
+                break
+
+            m = exclude.pop(exc)
+
+            last = repr(max(float(_prefix_score(v, True)) for v in m))
+            # things that match the prefix score, but which don't match the prefix
+            # values provided...
+
+            max_length = max(map(len, m))
+            if max_length <= 7:
+                continue
+
+            for chunk in _zrange_limit_iterator(c, idx, exc, "(" + last, blocksize):
+                ids = set()
+                for p in chunk:
+                    # make sure they don't match our requested skips
+                    pre, _, _id = p.rpartition(b"\0")
+                    for v in m:
+                        if pre.startswith(v):
+                            break
+                    else:
+                        ids.add(int(_id))
+
+                if ids:
+                    # yield the non-matches
+                    found = cls.get(list(ids))
+                    if found:
+                        for f in found:
+                            yield f
+                            session.forget(f)
+
     @ClassProperty
     def query(cls):
         '''
@@ -686,7 +809,135 @@ class Model(six.with_metaclass(_ModelMetaclass, object)):
             sa(self, a, v)
         return self
 
+    def transfer(self, other, attr, value, txn_model, txn_attr, decimal_places=0,
+                 refresh_entities=True, refresh_index=True):
+        '''
+        Transfer some numeric value from one entity to another.
+
+        This can (for example) be used to transfer money as part of an in-game
+        transaction, or other sort of value transfer.
+
+          * *other* - the other entity you would like to participate in this
+            transaction (must both have the same db connection)
+          * *attr* - the name of the attribute to transfer value on
+          * *value* - the value to transfer (rounded to ``decimal_places``)
+          * *txn_model* - the entity that represents the value transfer to
+            perform (must have the same db connection as ``self``, and ``other``)
+          * *txn_attr* - the attribute on the entity that represents if the
+            value has been transferred
+          * *decimal_places* - the number of decimal places to the right of the
+            decimal to round to inside Redis / Lua; note that for values ``>0``,
+            this *will* introduce binary/decimal rounding problems; so small
+            epsilon credit may go away, and you will want to explicitly round on
+            the client on read + display. Or better yet; stick to integers.
+          * *refresh_entities* - will refresh the entity data on transfer if
+            ``True``-ish
+          * *refresh_index* - will refresh the update any relevant indexs after
+            the transfer, if ``True``-ish; implies ``refresh_entities``
+
+        ..warning: This doesn't magically create more bits for you. Values in
+          Redis are either stored as up-to 64 bit integers (0 decimal places) or
+          64 bit doubles with 53 bits of precision. For doubles, that means
+          15-16 decimal digits. For 64 bit integers, that is 19+ digits, but
+          only integers. So if you want to maximize both precision, and your
+          range of values for "gold", "points", "experience", "value", etc.; use
+          your smallest denomination as your 1, and divmod on the client for
+          display if you need to.
+        '''
+
+        c1 = self._connection
+        c2 = other._connection
+        c3 = txn_model._connection
+        if not (c1 is c2 and c2 is c3):
+            raise ValueError("All entities must share a Redis connection")
+        check = lambda x: x._modified or x._new or x._deleted
+        if check(self) or check(other) or check(txn_model):
+            raise ValueError(
+              "All entities must be unmodified before transfer; .save() or .refresh() first")
+
+        if value <= 0:
+            raise ValueError("value must be >0")
+
+        if decimal_places < 0:
+            raise ValueError("decimal_places must be >= 0")
+
+        keys = [self._pk, other._pk, txn_model._pk]
+        argv = [attr, txn_attr, repr(value), int(decimal_places)]
+
+        results = _redis_transfer_lua(c1, keys, argv)
+        if not results[0]:
+            raise ValueError(results[1])
+
+        if refresh_index or refresh_entities:
+            self.refresh()
+            other.refresh()
+            txn_model.refresh()
+
+        if refresh_index:
+            self.save(True)
+            other.save(True)
+            txn_model.save(True)
+
+        return 
+
+_redis_transfer_lua = _script_load('''
+-- KEYS - {old_entity, new_entity, txn_entity}
+-- ARGV - {attr, txn_attr, value, decimal_places}
+
+local transferred = tonumber(redis.call('hget', KEYS[3], ARGV[2])) or 0
+if transferred > 0 then
+    return {0, "already sent"}
+end
+
+local available = tonumber(redis.call('hget', KEYS[1], ARGV[1])) or 0
+local value = tonumber(ARGV[3]) or 0
+if available < value then
+    return {0, "not enough credit"}
+end
+
+local decp = tonumber(ARGV[4]) or 0
+local destv = tonumber(redis.call('hget', KEYS[2], ARGV[1])) or 0
+if decp > 0 then
+    decp = 10 ^ decp
+    value = value * decp
+    -- scale add/sub, floor, and divide back
+    destv = math.floor(destv * decp + value) / decp
+    available = math.floor(available * decp - value) / decp
+else
+    destv = destv + value
+    available = available - value
+end
+-- update money totals
+redis.call('hset', KEYS[1], ARGV[1], available)
+redis.call('hset', KEYS[2], ARGV[1], destv)
+-- txn done
+redis.call('hset', KEYS[3], ARGV[2], 1)
+return {1, ""}
+
+''')
+
+
+
 _ModelMetaclass__init = True
+
+"""
+So, big changes for the reader of this particular chunk.
+
+In rom <= 0.42.6, we stored the "this is how this was generated" index data in
+a <namespace>:: hash key, by id, where the data is the index data.
+
+In rom >= 1.0.0, we store the "this is how this was generated" index data
+in the <namespace>:<id> key itself, so that a row knows how to delete itself.
+
+This does 2 big things:
+1. Ensure that we're not creating huge keys that are bad with Redis, if we can
+   help it.
+2. Reduce the common keys that need to be mangled on data changes.
+
+
+"""
+
+
 
 _redis_writer_lua = _script_load('''
 local namespace = ARGV[1]
@@ -749,6 +1000,9 @@ end
 
 -- remove old index data, update util.clean_index_lua when changed
 local idata = redis.call('HGET', namespace .. '::', id)
+if not idata then
+    idata = redis.call('HGET', row_key, '-index-data-')
+end
 local _changes = 0
 if idata then
     idata = cjson.decode(idata)
@@ -798,6 +1052,7 @@ end
 
 if is_delete then
     redis.call('DEL', string.format('%s:%s', namespace, id))
+    -- should now be historic
     redis.call('HDEL', namespace .. '::', id)
     return cjson.encode({changes=_changes})
 end
@@ -841,11 +1096,12 @@ for i, data in ipairs(cjson.decode(ARGV[11])) do
     nsuffix[#nsuffix + 1] = data[1]
 end
 
-if not is_delete then
-    -- update known index data
-    local encoded = cjson.encode({nkeys, nscored, nprefix, nsuffix, ngeo})
-    redis.call('HSET', namespace .. '::', id, encoded)
-end
+-- update known index data
+local encoded = cjson.encode({nkeys, nscored, nprefix, nsuffix, ngeo})
+-- clean historic
+redis.call('HDEL', namespace .. '::', id)
+redis.call('HSET', namespace .. ':' .. id, '-index-data-', encoded)
+
 return cjson.encode({changes=#nkeys + #nscored + #nprefix + #nsuffix + #ngeo + _changes})
 ''')
 
@@ -902,6 +1158,21 @@ def redis_writer_lua(conn, pkey, namespace, id, unique, udelete, delete,
             "%s:%s Column(s) %r updated by another writer, write aborted!"%(
                 namespace, id, result),
             namespace, id)
+
+
+def _zrange_limit_iterator(conn, key, vstart, end, count=100):
+    """
+    Utility function for iterating over chunks of a sorted-set index.
+    """
+    start = 0
+    lc = count
+    while lc == count:
+        print(vstart, end, start, count)
+        chunk = conn.execute_command("zrangebyscore", key, vstart, end, "LIMIT", start, count)
+        yield chunk
+        lc = len(chunk)
+        start += lc
+
 
 __all__ = [k for k, v in globals().items() if getattr(v, '__doc__', None) and k not in _skip]
 __all__.sort()

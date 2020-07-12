@@ -6,7 +6,7 @@
   <head>
     <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    <title>util Module &#8212; rom 0.42.6 documentation</title>
+    <title>util Module &#8212; rom 1.0.0 documentation</title>
     <link rel="stylesheet" href="_static/classic.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
     
@@ -31,7 +31,7 @@
         <li class="right" >
           <a href="query.html" title="query Module"
              accesskey="P">previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="index.html">rom 0.42.6 documentation</a> &#187;</li> 
+        <li class="nav-item nav-item-0"><a href="index.html">rom 1.0.0 documentation</a> &#187;</li> 
       </ul>
     </div>  
 
@@ -43,7 +43,7 @@
   <div class="section" id="module-rom.util">
 <span id="util-module"></span><h1><code class="xref py py-mod docutils literal notranslate"><span class="pre">util</span></code> Module<a class="headerlink" href="#module-rom.util" title="Permalink to this headline">¶</a></h1>
 <p>Rom - the Redis object mapper for Python</p>
-<p>Copyright 2013-2016 Josiah Carlson</p>
+<p>Copyright 2013-2020 Josiah Carlson</p>
 <p>Released under the LGPL license version 2.1 and version 3 (you can choose
 which you’d like to be bound under).</p>
 <div class="section" id="changing-connection-settings">
@@ -495,8 +495,17 @@ data that could be left over.</p>
 </dd></dl>
 
 <dl class="function">
+<dt id="rom.util.refresh_all_indexes">
+<code class="descclassname">rom.util.</code><code class="descname">refresh_all_indexes</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#rom.util.refresh_all_indexes" title="Permalink to this definition">¶</a></dt>
+<dd><p>This utility function will renew and refresh all indexes for all entities.
+Useful if you’ve recently upgraded rom, or changed your index definitions
+and want to ensure that all of your models are properly indexed.</p>
+<p>Will print the model namespaces and progress along the way.</p>
+</dd></dl>
+
+<dl class="function">
 <dt id="rom.util.refresh_indices">
-<code class="descclassname">rom.util.</code><code class="descname">refresh_indices</code><span class="sig-paren">(</span><em>model</em>, <em>block_size=100</em><span class="sig-paren">)</span><a class="headerlink" href="#rom.util.refresh_indices" title="Permalink to this definition">¶</a></dt>
+<code class="descclassname">rom.util.</code><code class="descname">refresh_indices</code><span class="sig-paren">(</span><em>model</em>, <em>block_size=100</em>, <em>scan=True</em><span class="sig-paren">)</span><a class="headerlink" href="#rom.util.refresh_indices" title="Permalink to this definition">¶</a></dt>
 <dd><p>This utility function will iterate over all entities of a provided model,
 refreshing their indices. This is primarily useful after adding an index
 on a column.</p>
@@ -624,7 +633,7 @@ respectively).</p>
         <li class="right" >
           <a href="query.html" title="query Module"
              >previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="index.html">rom 0.42.6 documentation</a> &#187;</li> 
+        <li class="nav-item nav-item-0"><a href="index.html">rom 1.0.0 documentation</a> &#187;</li> 
       </ul>
     </div>
     <div class="footer" role="contentinfo">

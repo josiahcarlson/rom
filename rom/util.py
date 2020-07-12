@@ -2,7 +2,7 @@
 '''
 Rom - the Redis object mapper for Python
 
-Copyright 2013-2016 Josiah Carlson
+Copyright 2013-2020 Josiah Carlson
 
 Released under the LGPL license version 2.1 and version 3 (you can choose
 which you'd like to be bound under).
@@ -693,7 +693,21 @@ def use_rom_session():
 
 session = Session()
 
-def refresh_indices(model, block_size=100):
+def _get_row_ids(model, block_size):
+    cursor = 0
+    pfx = "%s:"%(model._namespace,)
+    for cursor, chunk in model._connection.scan(cursor, pfx + "*", block_size):
+        oc = []
+        for v in chunk:
+            vv = v.decode().partition(pfx)
+            if vv[1] == pfx and not vv[0] and vv[2].isdigit():
+                oc.append(int(vv[2]))
+        if oc:
+          yield oc
+        if cursor == 0:
+            break
+
+def refresh_indices(model, block_size=100, scan=True):
     '''
     This utility function will iterate over all entities of a provided model,
     refreshing their indices. This is primarily useful after adding an index
@@ -720,13 +734,39 @@ def refresh_indices(model, block_size=100):
     conn = _connect(model)
     max_id = int(conn.get('%s:%s:'%(model._namespace, model._pkey)) or '0')
     block_size = max(block_size, 10)
-    for i in range(1, max_id+1, block_size):
+    if scan:
+        blocks = _get_row_ids(model, block_size)
+        count = 0
+    else:
+        blocks = (list(range(i, i+block_size)) for i in range(1, max_id+1, block_size))
+
+    for i, block in enumerate(blocks):
         # fetches entities, keeping a record in the session
-        models = model.get(list(range(i, i+block_size)))
+        models = model.get(block)
         models # for pyflakes
         # re-save un-modified data, resulting in index-only updates
         session.commit(all=True)
-        yield min(i+block_size, max_id), max_id
+        if scan:
+            count += len(block)
+            yield count, max_id
+        else:
+            yield min(i+block_size, max_id), max_id
+
+
+def refresh_all_indexes():
+    '''
+    This utility function will renew and refresh all indexes for all entities.
+    Useful if you've recently upgraded rom, or changed your index definitions
+    and want to ensure that all of your models are properly indexed.
+
+    Will print the model namespaces and progress along the way.
+    '''
+    from .columns import MODELS
+
+    for m in MODELS.values():
+        print("updating", m._namespace)
+        show_progress(refresh_indices(m))
+
 
 def clean_old_index(model, block_size=100, **kwargs):
     '''

@@ -1,3 +1,27 @@
+#----------------------------------- 1.0.0 -----------------------------------
+[WARNING] data indexed in this version is NO LONGER COMPATIBLE with data indexed
+    in versions < 1.0.0, THIS VERSION WILL AUTOMATICALLY CONVERT YOUR INDEXES on
+    save, and older clients saving may not update indexes properly.
+[future change] At some point, we'll stop supporting Python 2.7. I don't know
+    when that is, but it will be soon-ish.
+[changed] data storage for "old" indexed data (so we can delete items) has
+    changed to reduce the number of big keys.
+[changed] If you previously used no-filter model.query.count() without a primary
+    index, that previously worked. That will now return a lie, in order to be
+    fast. Sorry.
+[added] You can now transfer value from one entity to another, marking success
+    in a 3rd "transfer" entity in a single Redis round-trip. Added from an
+    inbound email + self-answered StackOverflow answer. Check the new test for
+    how one might use that + indexes + json in order to handle the 1) payment,
+    and 2) item transfer for purchaseable items in a market. Thanks to Roman V
+    for the question / feature request.
+[added] You can now iterate over all entities that do not match a given set of
+    prefixes or suffixes on a known prefix/suffix column. Thanks to github user
+    https://github.com/bgervan for the feature request.
+[fixed] upstream travis config; Redis 3.2 and 4.0 were removed from Docker repo
+[fixed] Thanks to github user https://github.com/cdessez for the bug report and
+    PR to not pass None to a Lua script. Had to fix upstream Travis CI
+[added] Utility function to refresh all indexes, while showing progress.
 #---------------------------------- 0.42.6 -----------------------------------
 [added] get related model from relationship columns thanks to PR from github
     user https://github.com/Aimage ; MyModel.column_name.get_related_model()

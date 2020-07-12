@@ -411,8 +411,9 @@ class Query(object):
         if self._order_by:
             filters += (self._order_by.lstrip('-'),)
         if not filters:
-            # We can actually count entities here...
-            size = _connect(self._model).hlen(self._model._namespace + '::')
+            # a lie
+            size = int(_connect(self._model).get(
+                '%s:%s:'%(self._model._namespace, self._model._pkey)) or 0)
             limit = self._limit or (0, 2**64)
             size = max(size - max(limit[0], 0), 0)
             return min(size, limit[1])
@@ -446,8 +447,6 @@ class Query(object):
                 return self._iter_all_pkey()
             conn = _connect(self._model)
             version = list(map(int, conn.info()['redis_version'].split('.')[:2]))
-            if version >= [2,8] and not no_hscan:
-                return self._iter_all_hscan()
             return self._iter_all()
         return self._iter_results(timeout, pagesize)
 
@@ -535,69 +534,6 @@ class Query(object):
                     elif remaining > 0:
                         remaining -= 1
                         yield ent
-
-    def _iter_all_hscan(self):
-        conn = _connect(self._model)
-        limit = self._limit or (0, 2**64)
-        start = max(limit[0], 0)
-        ns = self._model._namespace + ':'
-        tkey = ns + str(uuid.uuid4())
-        pkey = self._model._pkey
-
-        remaining = max(limit[1], 0)
-        cursor = 0
-        ids = ''
-        cols = None
-        ids = []
-        cols = ''
-        if self._select:
-            cols = self._select[0]
-            data_gen = iter(_select_generator(ids, self._model, *self._select))
-            next(data_gen) # prime the generator
-        dcols = json.dumps(cols)
-
-        while cursor != '0' and remaining > 0:
-            result = _scan_fetch_index_hash(conn, [ns, tkey], [cursor, json.dumps(ids or ''), dcols])
-            cursor, data = _json_loads(result)
-
-            del ids[:]
-            for mdata in data:
-                if cols:
-                    # we are doing a special select, so ... do what we were going to do :)
-                    d = data_gen.send(mdata)
-                    if start:
-                        start -= 1
-                    elif remaining > 0:
-                        remaining -= 1
-                        yield d
-                    else:
-                        break
-
-                else:
-                    # Turn the flattened data into a dict so we can instantiate the
-                    # result and/or fetch the object from the session.
-                    mdata = iter(mdata)
-                    mdata = dict(zip(mdata, mdata))
-                    id = mdata[pkey]
-                    ids.append(int(id))
-                    # Try to get the shared entity from the session, even though
-                    # we just fetched the data from Redis.
-                    ent = session.get(ns + id)
-                    if not ent:
-                        ent = self._model(_loading=True, **mdata)
-                        # Same session comment as from _iter_results()
-                        session.forget(ent)
-                    else:
-                        # do a refresh...
-                        ent.__init__(_loading=True, **mdata)
-
-                    if start:
-                        start -= 1
-                    elif remaining > 0:
-                        remaining -= 1
-                        yield ent
-                    else:
-                        break
 
     def _iter_all_pkey(self):
         conn = _connect(self._model)

@@ -6,7 +6,7 @@
   <head>
     <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    <title>model Module &#8212; rom 0.42.6 documentation</title>
+    <title>model Module &#8212; rom 1.0.0 documentation</title>
     <link rel="stylesheet" href="_static/classic.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
     
@@ -35,7 +35,7 @@
         <li class="right" >
           <a href="indexm.html" title="index Module"
              accesskey="P">previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="index.html">rom 0.42.6 documentation</a> &#187;</li> 
+        <li class="nav-item nav-item-0"><a href="index.html">rom 1.0.0 documentation</a> &#187;</li> 
       </ul>
     </div>  
 
@@ -47,7 +47,7 @@
   <div class="section" id="module-rom.model">
 <span id="model-module"></span><h1><code class="xref py py-mod docutils literal notranslate"><span class="pre">model</span></code> Module<a class="headerlink" href="#module-rom.model" title="Permalink to this headline">¶</a></h1>
 <p>Rom - the Redis object mapper for Python</p>
-<p>Copyright 2013-2016 Josiah Carlson</p>
+<p>Copyright 2013-2020 Josiah Carlson</p>
 <p>Released under the LGPL license version 2.1 and version 3 (you can choose
 which you’d like to be bound under).</p>
 <dl class="class">
@@ -122,6 +122,54 @@ retrieved from a OneToMany relationship will not be copied).</p>
 <code class="descname">delete</code><span class="sig-paren">(</span><em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#rom.model.Model.delete" title="Permalink to this definition">¶</a></dt>
 <dd><p>Deletes the entity immediately. Also performs any on_delete operations
 specified as part of column definitions.</p>
+</dd></dl>
+
+<dl class="classmethod">
+<dt id="rom.model.Model.does_not_endwith">
+<em class="property">classmethod </em><code class="descname">does_not_endwith</code><span class="sig-paren">(</span><em>attr</em>, <em>values</em>, <em>blocksize=100</em><span class="sig-paren">)</span><a class="headerlink" href="#rom.model.Model.does_not_endwith" title="Permalink to this definition">¶</a></dt>
+<dd><p>This iterates over all entities with an attribute that does not end
+with the provided values. This is only available to models with a suffix
+index on the given attribute; values must be normalized the same as with
+the indexed inputs for this to work properly (lowercased, etc.).</p>
+<dl class="docutils">
+<dt>Args:</dt>
+<dd><ul class="first last simple">
+<li><em>attr</em> - name of the attribute/column on the entity.</li>
+<li><em>values</em> - list of values to exclude.</li>
+</ul>
+</dd>
+</dl>
+<p>This method will auto-forget items from the session after yielding them,
+so if you want to <em>change</em> data, you’ll have to handle saving and
+deleting outside of the session.</p>
+<dl class="docutils">
+<dt>..note: values &lt;= 7 characters long will be fast, values &gt;= 8 characters</dt>
+<dd>will require round trips and will be substantially slower.</dd>
+</dl>
+</dd></dl>
+
+<dl class="classmethod">
+<dt id="rom.model.Model.does_not_startwith">
+<em class="property">classmethod </em><code class="descname">does_not_startwith</code><span class="sig-paren">(</span><em>attr</em>, <em>values</em>, <em>blocksize=100</em><span class="sig-paren">)</span><a class="headerlink" href="#rom.model.Model.does_not_startwith" title="Permalink to this definition">¶</a></dt>
+<dd><p>This iterates over all entities with an attribute that does not start
+with the provided values. This is only available to models with a prefix
+index on the given attribute; values must be normalized the same as with
+the indexed inputs for this to work properly (lowercased, etc.).</p>
+<dl class="docutils">
+<dt>Args:</dt>
+<dd><ul class="first last simple">
+<li><em>attr</em> - name of the attribute/column on the entity.</li>
+<li><em>values</em> - list of values to exclude.</li>
+</ul>
+</dd>
+</dl>
+<p>This method will auto-forget items from the session after yielding them,
+so if you want to <em>change</em> data, you’ll have to handle saving and
+deleting outside of the session.</p>
+<dl class="docutils">
+<dt>..note: values &lt;= 7 characters long will be fast, values &gt;= 8 characters</dt>
+<dd>will require round trips and will be substantially slower.</dd>
+</dl>
 </dd></dl>
 
 <dl class="classmethod">
@@ -222,6 +270,45 @@ entity, you should look at the <code class="docutils literal notranslate"><span 
 </dd></dl>
 
 <dl class="method">
+<dt id="rom.model.Model.transfer">
+<code class="descname">transfer</code><span class="sig-paren">(</span><em>other</em>, <em>attr</em>, <em>value</em>, <em>txn_model</em>, <em>txn_attr</em>, <em>decimal_places=0</em>, <em>refresh_entities=True</em>, <em>refresh_index=True</em><span class="sig-paren">)</span><a class="headerlink" href="#rom.model.Model.transfer" title="Permalink to this definition">¶</a></dt>
+<dd><p>Transfer some numeric value from one entity to another.</p>
+<p>This can (for example) be used to transfer money as part of an in-game
+transaction, or other sort of value transfer.</p>
+<blockquote>
+<div><ul class="simple">
+<li><em>other</em> - the other entity you would like to participate in this
+transaction (must both have the same db connection)</li>
+<li><em>attr</em> - the name of the attribute to transfer value on</li>
+<li><em>value</em> - the value to transfer (rounded to <code class="docutils literal notranslate"><span class="pre">decimal_places</span></code>)</li>
+<li><em>txn_model</em> - the entity that represents the value transfer to
+perform (must have the same db connection as <code class="docutils literal notranslate"><span class="pre">self</span></code>, and <code class="docutils literal notranslate"><span class="pre">other</span></code>)</li>
+<li><em>txn_attr</em> - the attribute on the entity that represents if the
+value has been transferred</li>
+<li><em>decimal_places</em> - the number of decimal places to the right of the
+decimal to round to inside Redis / Lua; note that for values <code class="docutils literal notranslate"><span class="pre">&gt;0</span></code>,
+this <em>will</em> introduce binary/decimal rounding problems; so small
+epsilon credit may go away, and you will want to explicitly round on
+the client on read + display. Or better yet; stick to integers.</li>
+<li><em>refresh_entities</em> - will refresh the entity data on transfer if
+<code class="docutils literal notranslate"><span class="pre">True</span></code>-ish</li>
+<li><em>refresh_index</em> - will refresh the update any relevant indexs after
+the transfer, if <code class="docutils literal notranslate"><span class="pre">True</span></code>-ish; implies <code class="docutils literal notranslate"><span class="pre">refresh_entities</span></code></li>
+</ul>
+</div></blockquote>
+<dl class="docutils">
+<dt>..warning: This doesn’t magically create more bits for you. Values in</dt>
+<dd>Redis are either stored as up-to 64 bit integers (0 decimal places) or
+64 bit doubles with 53 bits of precision. For doubles, that means
+15-16 decimal digits. For 64 bit integers, that is 19+ digits, but
+only integers. So if you want to maximize both precision, and your
+range of values for “gold”, “points”, “experience”, “value”, etc.; use
+your smallest denomination as your 1, and divmod on the client for
+display if you need to.</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
 <dt id="rom.model.Model.update">
 <code class="descname">update</code><span class="sig-paren">(</span><em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#rom.model.Model.update" title="Permalink to this definition">¶</a></dt>
 <dd><p>Updates multiple attributes in a model. If <code class="docutils literal notranslate"><span class="pre">args</span></code> are provided, this
@@ -292,7 +379,7 @@ call me directly.</p>
         <li class="right" >
           <a href="indexm.html" title="index Module"
              >previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="index.html">rom 0.42.6 documentation</a> &#187;</li> 
+        <li class="nav-item nav-item-0"><a href="index.html">rom 1.0.0 documentation</a> &#187;</li> 
       </ul>
     </div>
     <div class="footer" role="contentinfo">
