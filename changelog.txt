@@ -1,3 +1,7 @@
+#----------------------------------- 1.0.1 -----------------------------------
+[fix] thanks to bug report and instructions from github user
+    https://github.com/mshalom-meta, I have fixed rom to be compatible with
+    Redis connections having `decode_responses=True` set.
 #----------------------------------- 1.0.0 -----------------------------------
 [WARNING] data indexed in this version is NO LONGER COMPATIBLE with data indexed
     in versions < 1.0.0, THIS VERSION WILL AUTOMATICALLY CONVERT YOUR INDEXES on

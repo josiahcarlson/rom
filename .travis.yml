@@ -4,12 +4,14 @@ python:
   - "3.4"
   - "3.5"
   - "3.6"
+  - "3.7"
+  - "3.8"
+  - "3.9"
 sudo: required
 services:
   - docker
 env:
   matrix:
-    - REDIS_VERSION=2.8
     - REDIS_VERSION=3.0
     - REDIS_VERSION=5.0
     - REDIS_VERSION=6.0

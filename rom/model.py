@@ -1142,6 +1142,10 @@ def redis_writer_lua(conn, pkey, namespace, id, unique, udelete, delete,
         # we're in a pipelined write situation, don't parse the pipeline :P
         return
 
+    if six.PY3 and sys.version_info < (3, 6):
+        # necessary for old Pythons
+        result = result.decode()
+
     result = json.loads(result)
     if 'unique' in result:
         result = result['unique']
