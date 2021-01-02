@@ -12,6 +12,7 @@ which you'd like to be bound under).
 from __future__ import print_function
 from collections import defaultdict
 import json
+import sys
 import warnings
 
 from redis import client
