@@ -39,6 +39,11 @@ _skip = set(globals()) - set(['__doc__'])
 
 _STRING_SORT_KEYGENS = [ss.__name__ for ss in STRING_SORT_KEYGENS]
 
+def _conn_needs_decoding(conn):
+    if isinstance(conn.connection_pool.connection_kwargs, dict):
+        return not conn.connection_pool.connection_kwargs.get('decode_responses', None)
+    return True
+
 class _ModelMetaclass(type):
     def __new__(cls, name, bases, dict):
         ns = dict.pop('_namespace', None)
@@ -62,6 +67,7 @@ class _ModelMetaclass(type):
         odict = {}
         for ocls in reversed(bases):
             if hasattr(ocls, '_columns'):
+                # __init -> _ModelMetaclass__init, which is used later
                 if __init and ocls is not Model:
                     odict.update(ocls._columns)
 
@@ -303,7 +309,7 @@ class Model(six.with_metaclass(_ModelMetaclass, object)):
 
         conn = _connect(self)
         data = conn.hgetall(self._pk)
-        if six.PY3:
+        if six.PY3 and _conn_needs_decoding(conn):
             data = dict((k.decode(), v.decode()) for k, v in data.items())
         self.__init__(_loading=True, **data)
 
@@ -563,7 +569,7 @@ class Model(six.with_metaclass(_ModelMetaclass, object)):
             # Update output list
             for i, data in zip(idxs, pipe.execute()):
                 if data:
-                    if six.PY3:
+                    if six.PY3 and _conn_needs_decoding(conn):
                         data = dict((k.decode(), v.decode()) for k, v in data.items())
                     out[i] = cls(_loading=True, **data)
             # Get rid of missing models
@@ -1112,6 +1118,7 @@ def _fix_bytes(d):
         return d.decode('latin-1')
     raise TypeError
 
+
 def redis_writer_lua(conn, pkey, namespace, id, unique, udelete, delete,
                      data, keys, scored, prefix, suffix, geo, old_data, is_delete):
     '''
@@ -1134,9 +1141,6 @@ def redis_writer_lua(conn, pkey, namespace, id, unique, udelete, delete,
     if isinstance(conn, _Pipeline):
         # we're in a pipelined write situation, don't parse the pipeline :P
         return
-
-    if six.PY3:
-        result = result.decode()
 
     result = json.loads(result)
     if 'unique' in result:
