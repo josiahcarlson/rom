@@ -696,7 +696,8 @@ session = Session()
 def _get_row_ids(model, block_size):
     cursor = 0
     pfx = "%s:"%(model._namespace,)
-    for cursor, chunk in model._connection.scan(cursor, pfx + "*", block_size):
+    cursor, chunk = model._connection.scan(cursor, pfx + "*", block_size)
+    while chunk:
         oc = []
         for v in chunk:
             vv = v.decode().partition(pfx)
@@ -706,6 +707,7 @@ def _get_row_ids(model, block_size):
           yield oc
         if cursor == 0:
             break
+        cursor, chunk = model._connection.scan(cursor, pfx + "*", block_size)
 
 def refresh_indices(model, block_size=100, scan=True):
     '''
