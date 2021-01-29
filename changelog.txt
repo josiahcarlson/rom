@@ -1,3 +1,9 @@
+#----------------------------------- 1.0.3 -----------------------------------
+[fix] explicitly added support for Python 3.7, 3.8, and 3.9 that were already
+    being tested in travis, but which we missed. Thanks to github user
+    https://github.com/Frank5000 for the bug report. Also removed extra-old and
+    generally unsupported Python 2.6 and 3.3 from the list. If you *need*
+    support for these, please contact me about a support license.
 #----------------------------------- 1.0.2 -----------------------------------
 [fix] thanks to bug report by github user https://github.com/Goury, fixed old
     bug with rebuilding indexes via scan.
