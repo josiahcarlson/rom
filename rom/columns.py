@@ -563,7 +563,9 @@ class String(Column):
     '''
     _allowed = str if six.PY2 else bytes
     def _to_redis(self, value):
-        return value.decode('latin-1')
+        if isinstance(value, self._allowed):
+            value = value.decode('utf-8')
+        return value
 
     def _from_redis(self, value):
         return value
