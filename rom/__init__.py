@@ -9,6 +9,22 @@ Copyright 2013-2021 Josiah Carlson
 Released under the LGPL license version 2.1 and version 3 (you can choose
 which you'd like to be bound under).
 
+Sponsorships Available
+======================
+
+Don't like LGPL? Sponsor the project and get almost any license you want.
+
+This project has been partly sponsored by structd.com . Historically,
+rom has been used to help support the delivery of millions of food orders for
+chownow.com, and has been used as the primary backend and prototype for several
+startups that have made it all the way to series A.
+
+Thank you to our sponsors and those who have consumed our services.
+
+You are welcome for the good service.
+
+Your company link here.
+
 Documentation
 =============
 
@@ -179,7 +195,7 @@ from .util import (ClassProperty, _connect, session,
     _prefix_score, _script_load, _encode_unique_constraint,
     FULL_TEXT, CASE_INSENSITIVE, SIMPLE, SIMPLE_CI, IDENTITY, IDENTITY_CI)
 
-VERSION = '1.0.3'
+VERSION = '1.0.4'
 
 COLUMN_TYPES = [Column, Integer, Boolean, Float, Decimal, DateTime, Date,
 Time, String, Text, Json, PrimaryKey, ManyToOne, ForeignModel, OneToMany,
