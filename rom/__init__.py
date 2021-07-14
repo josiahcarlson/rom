@@ -161,7 +161,7 @@ is a huge waste and is the antithesis of good design.
 Instead, if you create a new ``expire_at`` float column with ``index=True``,
 the column can store when the entity is to expire. Then to expire the data, you
 can use: ``Model.query.filter(expire_at=(0, time.time())).limit(10)`` to (for
-example) get up to the 10 oldest entites that need to be expired.
+example) get up to the 10 oldest entities that need to be expired.
 
 Now, I know what you are thinking. You are thinking, "but I wish the data would
 just go away on its own." And I don't disagree. But for that to happen, Redis

@@ -151,7 +151,7 @@ class Query(object):
         .. warning:: If you use the ``_namedtuple_data_factory``, and your
           columns include underscore prefixes, they will be stripped. If this
           results in a name collision, you *will* get an exception. If you want
-          differerent behavior, write your own 20 line factory function that
+          different behavior, write your own 20 line factory function that
           does exactly what you want, and pass it; they are really easy!
 
         '''
@@ -250,7 +250,7 @@ class Query(object):
             value = self._check(attr, value, which='filter')
 
             if isinstance(value, NUMERIC_TYPES):
-                # for simple numeric equiality filters
+                # for simple numeric equality filters
                 value = (value, value)
 
             if isinstance(value, six.string_types):

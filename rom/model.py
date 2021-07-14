@@ -153,7 +153,7 @@ class _ModelMetaclass(type):
                 raise ColumnError("Single-column unique constraint: %r should be defined via 'unique=True' on the %r column"%(
                     comp, key[0]))
             if key in seen:
-                raise ColumnError("Multi-column unique constraint: %r not different than earlier constrant: %r"%(
+                raise ColumnError("Multi-column unique constraint: %r not different than earlier constraint: %r"%(
                     comp, seen[key]))
             for col in key:
                 if col not in columns:
@@ -240,7 +240,7 @@ class Model(six.with_metaclass(_ModelMetaclass, object)):
             ]
 
     .. note:: If one or more of the column values on an entity that is part of a
-        unique constrant is None in Python, the unique constraint won't apply.
+        unique constraint is None in Python, the unique constraint won't apply.
         This is the typical behavior of nulls in unique constraints inside both
         MySQL and Postgres.
     '''
@@ -839,7 +839,7 @@ class Model(six.with_metaclass(_ModelMetaclass, object)):
             the client on read + display. Or better yet; stick to integers.
           * *refresh_entities* - will refresh the entity data on transfer if
             ``True``-ish
-          * *refresh_index* - will refresh the update any relevant indexs after
+          * *refresh_index* - will refresh the update any relevant indexes after
             the transfer, if ``True``-ish; implies ``refresh_entities``
 
         ..warning: This doesn't magically create more bits for you. Values in
