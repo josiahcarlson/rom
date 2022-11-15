@@ -1,3 +1,5 @@
+#----------------------------------- 1.0.5 -----------------------------------
+Re-release for git tags
 #----------------------------------- 1.0.4 -----------------------------------
 [added] dockerfiles + docker-compose yamls for testing.
 [updated] Python version compatability.
