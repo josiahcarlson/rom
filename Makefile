@@ -1,11 +1,17 @@
-SHELL=/bin/bash
+FILES=`ls docker-compose.*.yaml`
+# A little nasty here, but we can do it!
+# The grep finds the 'rom-test-<service version>' in the .yaml
+# The sed removes extra spaces and colons
+# Which we pass into our rebuild
+GET_TARGET=grep rom-test docker-compose.$${target}.yaml | sed 's/[ :]//g'
+COMPOSE_PREFIX=docker-compose -f docker-compose.
 
+SHELL=/bin/bash
 # You can set these variables from the command line.
 SPHINXOPTS    =
 SPHINXBUILD   = sphinx-build
 PAPER         =
 BUILDDIR      = _build
-
 # Internal variables.
 PAPEROPT_a4     = -D latex_paper_size=a4
 PAPEROPT_letter = -D latex_paper_size=letter
@@ -25,40 +31,54 @@ clean:
 install:
 	python setup.py install
 
+
+compose-build-all:
+	echo ${FILES}
+	for target in ${FILES} ; do \
+		docker-compose -f $${target} build -- `${GET_TARGET}` redis-data-storage; \
+	done
+
+compose-build-%:
+	for target in $(patsubst compose-build-%,%,$@) ; do \
+		echo ${COMPOSE_PREFIX}$${target}.yaml build `${GET_TARGET}`; \
+		${COMPOSE_PREFIX}$${target}.yaml build `${GET_TARGET}`; \
+	done
+
+
+compose-up-%:
+	for target in $(patsubst compose-up-%,%,$@) ; do \
+		${COMPOSE_PREFIX}$${target}.yaml up --remove-orphans `${GET_TARGET}`; \
+	done
+
+compose-down-%:
+	for target in $(patsubst compose-down-%,%,$@) ; do \
+		echo ${COMPOSE_PREFIX}$${target}.yaml down `${GET_TARGET}`; \
+	done
+
+testall:
+	# they use the same Redis, so can't run in parallel
+	make -j1 test-3.11 test-3.10 test-3.9 test-3.8 test-3.7 test-3.6 test-3.5 test-3.4 test-2.7
+
+test-%:
+	# the test container runs the tests on up, then does an exit 0 when done
+	for target in $(patsubst test-%,%,$@) ; do \
+		make compose-build-$${target} && make compose-up-$${target}; \
+	done
+
+
 upload:
 	git tag `cat VERSION`
 	git push origin --tags
 	python3.6 setup.py sdist
 	python3.6 -m twine upload --verbose dist/rom-`cat VERSION`.tar.gz
 
-test:
-	PYTHONPATH=`pwd` python2.6 test/test_rom.py
-	PYTHONPATH=`pwd` python2.7 test/test_rom.py
-	PYTHONPATH=`pwd` python3.3 test/test_rom.py
-	PYTHONPATH=`pwd` python3.4 test/test_rom.py
-	PYTHONPATH=`pwd` python3.5 test/test_rom.py
-	PYTHONPATH=`pwd` python3.6 test/test_rom.py
-
-install-test-requirements:
-	sudo apt-get install python2.6 python2.6-dev python2.7 python2.7-dev python3.3 python3.3-dev python3.4 python3.4-dev python3.5 python3.5-dev
-	# may require other steps to get pip installed
-	sudo python2.6 -m pip.__init__ install setuptools
-	sudo python2.6 -m pip.__init__ install redis hiredis six
-	sudo python2.7 -m pip install setuptools
-	sudo python2.7 -m pip install redis hiredis six
-	sudo python3.3 -m pip install setuptools
-	sudo python3.3 -m pip install redis hiredis six
-	sudo python3.4 -m pip install setuptools
-	sudo python3.4 -m pip install redis hiredis six
-	sudo python3.5 -m pip install setuptools
-	sudo python3.5 -m pip install redis hiredis six
-
 test-tox:
 	tox
 
 docs:
 	python3.6 -c "import rom; open('README.rst', 'wb').write(rom.__doc__.encode('latin-1')); open('VERSION', 'wb').write(rom.VERSION.encode('latin-1'));"
-	$(SPHINXBUILD) -b html $(ALLSPHINXOPTS) $(BUILDDIR)/html
+	docker-compose -f docker-compose.docs.yaml -- build
+	docker-compose -f docker-compose.docs.yaml -- run rom-test-docs $(SPHINXBUILD) -b html $(ALLSPHINXOPTS) /app/_build/html
 	cp -r $(BUILDDIR)/html/. docs
 	@echo
 	@echo "Build finished. The HTML pages are in docs"

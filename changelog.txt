@@ -1,3 +1,6 @@
+#----------------------------------- 1.0.4 -----------------------------------
+[added] dockerfiles + docker-compose yamls for testing.
+[updated] Python version compatability.
 #----------------------------------- 1.0.3 -----------------------------------
 [fix] explicitly added support for Python 3.7, 3.8, and 3.9 that were already
     being tested in travis, but which we missed. Thanks to github user

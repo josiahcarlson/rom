@@ -1,0 +1,10 @@
+version: '3.9'
+services:
+  rom-test-docs:
+    build:
+      context: .
+      dockerfile: Dockerfile.docs
+    environment:
+      PYTHONPATH: /app
+    volumes:
+      - /home/josiah/open-source/rom/_build/html/:/app/_build/html:rw

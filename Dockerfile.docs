@@ -1,0 +1,24 @@
+FROM python:3.11-bullseye
+
+WORKDIR /app
+
+COPY requirements.txt .
+
+RUN python3.11 -m pip install -r requirements.txt
+RUN python3.11 -m pip install sphinx twine
+
+# need rom
+COPY rom/*.py rom/
+# and need the tests too
+COPY test/* rom_tests/
+# and the sphinx stuff in
+
+# COPY conf.py .
+COPY VERSION .
+# COPY index.rst .
+COPY README.rst .
+# COPY more docs
+COPY source/* source/ 
+
+# Note: needs access to Redis; assumes localhost:6879
+CMD ["python3.11", "-m", "rom_tests.test_rom"]

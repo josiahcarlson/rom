@@ -1,0 +1,14 @@
+FROM python:2.7
+WORKDIR /app
+
+COPY requirements.txt .
+
+RUN python2.7 -m pip install -r requirements.txt
+
+# need rom
+COPY rom/*.py rom/
+# and need the tests too
+COPY test/* rom_tests/
+
+# Note: needs access to Redis; assumes localhost:6879
+CMD ["python2.7", "rom_tests/test_rom.py"]

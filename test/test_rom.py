@@ -2,7 +2,7 @@
 '''
 Rom - the Redis object mapper for Python
 
-Copyright 2013-2020 Josiah Carlson
+Copyright 2013-2022 Josiah Carlson
 
 Released under the LGPL license version 2.1 and version 3 (you can choose
 which you'd like to be bound under).
@@ -23,7 +23,7 @@ import six
 
 from rom import util
 
-util.CONNECTION = redis.Redis(db=15)
+util.CONNECTION = redis.Redis(db=15, port=6379, host='redis-data-storage')
 connect = util._connect
 
 from rom import *
@@ -354,7 +354,7 @@ class TestORM(unittest.TestCase):
             pass
 
         class RomTestBar(Model):
-            _conn = redis.Redis(db=14)
+            _conn = redis.Redis(db=14, port=6379, host='redis-data-storage')
 
         RomTestBar._conn.delete('RomTestBar:id:')
 

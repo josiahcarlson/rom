@@ -1,19 +1,21 @@
 
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
-  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<!DOCTYPE html>
 
-<html xmlns="http://www.w3.org/1999/xhtml">
+<html lang="en">
   <head>
-    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
-    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
+
     <title>model Module &#8212; rom 1.0.4 documentation</title>
-    <link rel="stylesheet" href="_static/classic.css" type="text/css" />
-    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="_static/classic.css" />
     
-    <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
-    <script type="text/javascript" src="_static/jquery.js"></script>
-    <script type="text/javascript" src="_static/underscore.js"></script>
-    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+    <script src="_static/jquery.js"></script>
+    <script src="_static/underscore.js"></script>
+    <script src="_static/_sphinx_javascript_frameworks_compat.js"></script>
+    <script src="_static/doctools.js"></script>
+    <script src="_static/sphinx_highlight.js"></script>
     
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
@@ -35,7 +37,8 @@
         <li class="right" >
           <a href="indexm.html" title="index Module"
              accesskey="P">previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="index.html">rom 1.0.4 documentation</a> &#187;</li> 
+        <li class="nav-item nav-item-0"><a href="index.html">rom 1.0.4 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href=""><code class="xref py py-mod docutils literal notranslate"><span class="pre">model</span></code> Module</a></li> 
       </ul>
     </div>  
 
@@ -44,15 +47,15 @@
         <div class="bodywrapper">
           <div class="body" role="main">
             
-  <div class="section" id="module-rom.model">
-<span id="model-module"></span><h1><code class="xref py py-mod docutils literal notranslate"><span class="pre">model</span></code> Module<a class="headerlink" href="#module-rom.model" title="Permalink to this headline">¶</a></h1>
+  <section id="module-rom.model">
+<span id="model-module"></span><h1><code class="xref py py-mod docutils literal notranslate"><span class="pre">model</span></code> Module<a class="headerlink" href="#module-rom.model" title="Permalink to this heading">¶</a></h1>
 <p>Rom - the Redis object mapper for Python</p>
 <p>Copyright 2013-2020 Josiah Carlson</p>
 <p>Released under the LGPL license version 2.1 and version 3 (you can choose
 which you’d like to be bound under).</p>
-<dl class="class">
-<dt id="rom.model.Model">
-<em class="property">class </em><code class="descclassname">rom.model.</code><code class="descname">Model</code><span class="sig-paren">(</span><em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#rom.model.Model" title="Permalink to this definition">¶</a></dt>
+<dl class="py class">
+<dt class="sig sig-object py" id="rom.model.Model">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">rom.model.</span></span><span class="sig-name descname"><span class="pre">Model</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#rom.model.Model" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
 <p>This is the base class for all models. You subclass from this base Model
 in order to create a model with columns. As an example:</p>
@@ -80,8 +83,8 @@ defined (by passing <code class="docutils literal notranslate"><span class="pre"
 </pre></div>
 </div>
 <div class="admonition note">
-<p class="first admonition-title">Note</p>
-<p class="last">You can perform single or chained queries against any/all columns
+<p class="admonition-title">Note</p>
+<p>You can perform single or chained queries against any/all columns
 that were defined with <code class="docutils literal notranslate"><span class="pre">index=True</span></code>.</p>
 </div>
 <p><strong>Composite/multi-column unique constraints</strong></p>
@@ -104,77 +107,75 @@ is comparable to SQLAlchemy’s <code class="docutils literal notranslate"><span
 </pre></div>
 </div>
 <div class="admonition note">
-<p class="first admonition-title">Note</p>
-<p class="last">If one or more of the column values on an entity that is part of a
+<p class="admonition-title">Note</p>
+<p>If one or more of the column values on an entity that is part of a
 unique constrant is None in Python, the unique constraint won’t apply.
 This is the typical behavior of nulls in unique constraints inside both
 MySQL and Postgres.</p>
 </div>
-<dl class="method">
-<dt id="rom.model.Model.copy">
-<code class="descname">copy</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#rom.model.Model.copy" title="Permalink to this definition">¶</a></dt>
+<dl class="py method">
+<dt class="sig sig-object py" id="rom.model.Model.copy">
+<span class="sig-name descname"><span class="pre">copy</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#rom.model.Model.copy" title="Permalink to this definition">¶</a></dt>
 <dd><p>Creates a shallow copy of the given entity (any entities that can be
 retrieved from a OneToMany relationship will not be copied).</p>
 </dd></dl>
 
-<dl class="method">
-<dt id="rom.model.Model.delete">
-<code class="descname">delete</code><span class="sig-paren">(</span><em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#rom.model.Model.delete" title="Permalink to this definition">¶</a></dt>
+<dl class="py method">
+<dt class="sig sig-object py" id="rom.model.Model.delete">
+<span class="sig-name descname"><span class="pre">delete</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#rom.model.Model.delete" title="Permalink to this definition">¶</a></dt>
 <dd><p>Deletes the entity immediately. Also performs any on_delete operations
 specified as part of column definitions.</p>
 </dd></dl>
 
-<dl class="classmethod">
-<dt id="rom.model.Model.does_not_endwith">
-<em class="property">classmethod </em><code class="descname">does_not_endwith</code><span class="sig-paren">(</span><em>attr</em>, <em>values</em>, <em>blocksize=100</em><span class="sig-paren">)</span><a class="headerlink" href="#rom.model.Model.does_not_endwith" title="Permalink to this definition">¶</a></dt>
+<dl class="py method">
+<dt class="sig sig-object py" id="rom.model.Model.does_not_endwith">
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">does_not_endwith</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">attr</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">values</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">blocksize</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">100</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#rom.model.Model.does_not_endwith" title="Permalink to this definition">¶</a></dt>
 <dd><p>This iterates over all entities with an attribute that does not end
 with the provided values. This is only available to models with a suffix
 index on the given attribute; values must be normalized the same as with
 the indexed inputs for this to work properly (lowercased, etc.).</p>
-<dl class="docutils">
-<dt>Args:</dt>
-<dd><ul class="first last simple">
-<li><em>attr</em> - name of the attribute/column on the entity.</li>
-<li><em>values</em> - list of values to exclude.</li>
+<dl class="simple">
+<dt>Args:</dt><dd><ul class="simple">
+<li><p><em>attr</em> - name of the attribute/column on the entity.</p></li>
+<li><p><em>values</em> - list of values to exclude.</p></li>
 </ul>
 </dd>
 </dl>
 <p>This method will auto-forget items from the session after yielding them,
 so if you want to <em>change</em> data, you’ll have to handle saving and
 deleting outside of the session.</p>
-<dl class="docutils">
-<dt>..note: values &lt;= 7 characters long will be fast, values &gt;= 8 characters</dt>
-<dd>will require round trips and will be substantially slower.</dd>
+<dl class="simple">
+<dt>..note: values &lt;= 7 characters long will be fast, values &gt;= 8 characters</dt><dd><p>will require round trips and will be substantially slower.</p>
+</dd>
 </dl>
 </dd></dl>
 
-<dl class="classmethod">
-<dt id="rom.model.Model.does_not_startwith">
-<em class="property">classmethod </em><code class="descname">does_not_startwith</code><span class="sig-paren">(</span><em>attr</em>, <em>values</em>, <em>blocksize=100</em><span class="sig-paren">)</span><a class="headerlink" href="#rom.model.Model.does_not_startwith" title="Permalink to this definition">¶</a></dt>
+<dl class="py method">
+<dt class="sig sig-object py" id="rom.model.Model.does_not_startwith">
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">does_not_startwith</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">attr</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">values</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">blocksize</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">100</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#rom.model.Model.does_not_startwith" title="Permalink to this definition">¶</a></dt>
 <dd><p>This iterates over all entities with an attribute that does not start
 with the provided values. This is only available to models with a prefix
 index on the given attribute; values must be normalized the same as with
 the indexed inputs for this to work properly (lowercased, etc.).</p>
-<dl class="docutils">
-<dt>Args:</dt>
-<dd><ul class="first last simple">
-<li><em>attr</em> - name of the attribute/column on the entity.</li>
-<li><em>values</em> - list of values to exclude.</li>
+<dl class="simple">
+<dt>Args:</dt><dd><ul class="simple">
+<li><p><em>attr</em> - name of the attribute/column on the entity.</p></li>
+<li><p><em>values</em> - list of values to exclude.</p></li>
 </ul>
 </dd>
 </dl>
 <p>This method will auto-forget items from the session after yielding them,
 so if you want to <em>change</em> data, you’ll have to handle saving and
 deleting outside of the session.</p>
-<dl class="docutils">
-<dt>..note: values &lt;= 7 characters long will be fast, values &gt;= 8 characters</dt>
-<dd>will require round trips and will be substantially slower.</dd>
+<dl class="simple">
+<dt>..note: values &lt;= 7 characters long will be fast, values &gt;= 8 characters</dt><dd><p>will require round trips and will be substantially slower.</p>
+</dd>
 </dl>
 </dd></dl>
 
-<dl class="classmethod">
-<dt id="rom.model.Model.get">
-<em class="property">classmethod </em><code class="descname">get</code><span class="sig-paren">(</span><em>ids</em><span class="sig-paren">)</span><a class="headerlink" href="#rom.model.Model.get" title="Permalink to this definition">¶</a></dt>
+<dl class="py method">
+<dt class="sig sig-object py" id="rom.model.Model.get">
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">get</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ids</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#rom.model.Model.get" title="Permalink to this definition">¶</a></dt>
 <dd><p>Will fetch one or more entities of this type from the session or
 Redis.</p>
 <p>Used like:</p>
@@ -186,9 +187,9 @@ Redis.</p>
 order that the ids were passed.</p>
 </dd></dl>
 
-<dl class="classmethod">
-<dt id="rom.model.Model.get_by">
-<em class="property">classmethod </em><code class="descname">get_by</code><span class="sig-paren">(</span><em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#rom.model.Model.get_by" title="Permalink to this definition">¶</a></dt>
+<dl class="py method">
+<dt class="sig sig-object py" id="rom.model.Model.get_by">
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">get_by</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#rom.model.Model.get_by" title="Permalink to this definition">¶</a></dt>
 <dd><p>This method offers a simple query method for fetching entities of this
 type via attribute numeric ranges (such columns must be <code class="docutils literal notranslate"><span class="pre">indexed</span></code>),
 or via <code class="docutils literal notranslate"><span class="pre">unique</span></code> columns.</p>
@@ -203,32 +204,32 @@ or via <code class="docutils literal notranslate"><span class="pre">unique</span
 <p>Optional keyword-only arguments:</p>
 <blockquote>
 <div><ul class="simple">
-<li><em>_limit</em> - A 2-tuple of (offset, count) that can be used to
+<li><p><em>_limit</em> - A 2-tuple of (offset, count) that can be used to
 paginate or otherwise limit results returned by a numeric range
-query</li>
-<li><em>_numeric</em> - An optional boolean defaulting to False that forces
+query</p></li>
+<li><p><em>_numeric</em> - An optional boolean defaulting to False that forces
 the use of a numeric index for <code class="docutils literal notranslate"><span class="pre">.get_by(col=val)</span></code> queries even
-when <code class="docutils literal notranslate"><span class="pre">col</span></code> has an existing unique index</li>
+when <code class="docutils literal notranslate"><span class="pre">col</span></code> has an existing unique index</p></li>
 </ul>
 </div></blockquote>
 <p>If you would like to make queries against multiple columns or with
 multiple criteria, look into the Model.query class property.</p>
 <div class="admonition note">
-<p class="first admonition-title">Note</p>
-<p class="last">rom will attempt to use a unique index first, then a numeric
+<p class="admonition-title">Note</p>
+<p>rom will attempt to use a unique index first, then a numeric
 index if there was no unique index. You can explicitly tell rom to
 only use the numeric index by using <code class="docutils literal notranslate"><span class="pre">.get_by(...,</span> <span class="pre">_numeric=True)</span></code>.</p>
 </div>
 <div class="admonition note">
-<p class="first admonition-title">Note</p>
-<p class="last">Ranged queries with <cite>get_by(col=(start, end))</cite> will only work
+<p class="admonition-title">Note</p>
+<p>Ranged queries with <cite>get_by(col=(start, end))</cite> will only work
 with columns that use a numeric index.</p>
 </div>
 </dd></dl>
 
-<dl class="attribute">
-<dt id="rom.model.Model.id">
-<code class="descname">id</code><a class="headerlink" href="#rom.model.Model.id" title="Permalink to this definition">¶</a></dt>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="rom.model.Model.id">
+<span class="sig-name descname"><span class="pre">id</span></span><a class="headerlink" href="#rom.model.Model.id" title="Permalink to this definition">¶</a></dt>
 <dd><p>This is a primary key column, used when you want the primary key to be
 named something other than ‘id’. If you omit a PrimaryKey column on your
 Model classes, one will be automatically created for you.</p>
@@ -242,75 +243,75 @@ results by primary key.</p>
 </div>
 </dd></dl>
 
-<dl class="attribute">
-<dt id="rom.model.Model.query">
-<code class="descname">query</code><em class="property"> = &lt;rom.query.Query object&gt;</em><a class="headerlink" href="#rom.model.Model.query" title="Permalink to this definition">¶</a></dt>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="rom.model.Model.query">
+<span class="sig-name descname"><span class="pre">query</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">&lt;rom.query.Query</span> <span class="pre">object&gt;</span></em><a class="headerlink" href="#rom.model.Model.query" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
-<dl class="method">
-<dt id="rom.model.Model.refresh">
-<code class="descname">refresh</code><span class="sig-paren">(</span><em>force=False</em><span class="sig-paren">)</span><a class="headerlink" href="#rom.model.Model.refresh" title="Permalink to this definition">¶</a></dt>
+<dl class="py method">
+<dt class="sig sig-object py" id="rom.model.Model.refresh">
+<span class="sig-name descname"><span class="pre">refresh</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">force</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#rom.model.Model.refresh" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
-<dl class="method">
-<dt id="rom.model.Model.save">
-<code class="descname">save</code><span class="sig-paren">(</span><em>full=False</em>, <em>force=False</em><span class="sig-paren">)</span><a class="headerlink" href="#rom.model.Model.save" title="Permalink to this definition">¶</a></dt>
+<dl class="py method">
+<dt class="sig sig-object py" id="rom.model.Model.save">
+<span class="sig-name descname"><span class="pre">save</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">full</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">force</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#rom.model.Model.save" title="Permalink to this definition">¶</a></dt>
 <dd><p>Saves the current entity to Redis. Will only save changed data by
 default, but you can force a full save by passing <code class="docutils literal notranslate"><span class="pre">full=True</span></code>.</p>
 <p>If the underlying entity was deleted and you want to re-save the entity,
 you can pass <code class="docutils literal notranslate"><span class="pre">force=True</span></code> to force a full re-save of the entity.</p>
 </dd></dl>
 
-<dl class="method">
-<dt id="rom.model.Model.to_dict">
-<code class="descname">to_dict</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#rom.model.Model.to_dict" title="Permalink to this definition">¶</a></dt>
+<dl class="py method">
+<dt class="sig sig-object py" id="rom.model.Model.to_dict">
+<span class="sig-name descname"><span class="pre">to_dict</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#rom.model.Model.to_dict" title="Permalink to this definition">¶</a></dt>
 <dd><p>Returns a copy of all data assigned to columns in this entity. Useful
 for returning items to JSON-enabled APIs. If you want to copy an
 entity, you should look at the <code class="docutils literal notranslate"><span class="pre">.copy()</span></code> method.</p>
 </dd></dl>
 
-<dl class="method">
-<dt id="rom.model.Model.transfer">
-<code class="descname">transfer</code><span class="sig-paren">(</span><em>other</em>, <em>attr</em>, <em>value</em>, <em>txn_model</em>, <em>txn_attr</em>, <em>decimal_places=0</em>, <em>refresh_entities=True</em>, <em>refresh_index=True</em><span class="sig-paren">)</span><a class="headerlink" href="#rom.model.Model.transfer" title="Permalink to this definition">¶</a></dt>
+<dl class="py method">
+<dt class="sig sig-object py" id="rom.model.Model.transfer">
+<span class="sig-name descname"><span class="pre">transfer</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">other</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">attr</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">value</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">txn_model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">txn_attr</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">decimal_places</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">refresh_entities</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">refresh_index</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#rom.model.Model.transfer" title="Permalink to this definition">¶</a></dt>
 <dd><p>Transfer some numeric value from one entity to another.</p>
 <p>This can (for example) be used to transfer money as part of an in-game
 transaction, or other sort of value transfer.</p>
 <blockquote>
 <div><ul class="simple">
-<li><em>other</em> - the other entity you would like to participate in this
-transaction (must both have the same db connection)</li>
-<li><em>attr</em> - the name of the attribute to transfer value on</li>
-<li><em>value</em> - the value to transfer (rounded to <code class="docutils literal notranslate"><span class="pre">decimal_places</span></code>)</li>
-<li><em>txn_model</em> - the entity that represents the value transfer to
-perform (must have the same db connection as <code class="docutils literal notranslate"><span class="pre">self</span></code>, and <code class="docutils literal notranslate"><span class="pre">other</span></code>)</li>
-<li><em>txn_attr</em> - the attribute on the entity that represents if the
-value has been transferred</li>
-<li><em>decimal_places</em> - the number of decimal places to the right of the
+<li><p><em>other</em> - the other entity you would like to participate in this
+transaction (must both have the same db connection)</p></li>
+<li><p><em>attr</em> - the name of the attribute to transfer value on</p></li>
+<li><p><em>value</em> - the value to transfer (rounded to <code class="docutils literal notranslate"><span class="pre">decimal_places</span></code>)</p></li>
+<li><p><em>txn_model</em> - the entity that represents the value transfer to
+perform (must have the same db connection as <code class="docutils literal notranslate"><span class="pre">self</span></code>, and <code class="docutils literal notranslate"><span class="pre">other</span></code>)</p></li>
+<li><p><em>txn_attr</em> - the attribute on the entity that represents if the
+value has been transferred</p></li>
+<li><p><em>decimal_places</em> - the number of decimal places to the right of the
 decimal to round to inside Redis / Lua; note that for values <code class="docutils literal notranslate"><span class="pre">&gt;0</span></code>,
 this <em>will</em> introduce binary/decimal rounding problems; so small
 epsilon credit may go away, and you will want to explicitly round on
-the client on read + display. Or better yet; stick to integers.</li>
-<li><em>refresh_entities</em> - will refresh the entity data on transfer if
-<code class="docutils literal notranslate"><span class="pre">True</span></code>-ish</li>
-<li><em>refresh_index</em> - will refresh the update any relevant indexs after
-the transfer, if <code class="docutils literal notranslate"><span class="pre">True</span></code>-ish; implies <code class="docutils literal notranslate"><span class="pre">refresh_entities</span></code></li>
+the client on read + display. Or better yet; stick to integers.</p></li>
+<li><p><em>refresh_entities</em> - will refresh the entity data on transfer if
+<code class="docutils literal notranslate"><span class="pre">True</span></code>-ish</p></li>
+<li><p><em>refresh_index</em> - will refresh the update any relevant indexs after
+the transfer, if <code class="docutils literal notranslate"><span class="pre">True</span></code>-ish; implies <code class="docutils literal notranslate"><span class="pre">refresh_entities</span></code></p></li>
 </ul>
 </div></blockquote>
-<dl class="docutils">
-<dt>..warning: This doesn’t magically create more bits for you. Values in</dt>
-<dd>Redis are either stored as up-to 64 bit integers (0 decimal places) or
+<dl class="simple">
+<dt>..warning: This doesn’t magically create more bits for you. Values in</dt><dd><p>Redis are either stored as up-to 64 bit integers (0 decimal places) or
 64 bit doubles with 53 bits of precision. For doubles, that means
 15-16 decimal digits. For 64 bit integers, that is 19+ digits, but
 only integers. So if you want to maximize both precision, and your
 range of values for “gold”, “points”, “experience”, “value”, etc.; use
 your smallest denomination as your 1, and divmod on the client for
-display if you need to.</dd>
+display if you need to.</p>
+</dd>
 </dl>
 </dd></dl>
 
-<dl class="method">
-<dt id="rom.model.Model.update">
-<code class="descname">update</code><span class="sig-paren">(</span><em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#rom.model.Model.update" title="Permalink to this definition">¶</a></dt>
+<dl class="py method">
+<dt class="sig sig-object py" id="rom.model.Model.update">
+<span class="sig-name descname"><span class="pre">update</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#rom.model.Model.update" title="Permalink to this definition">¶</a></dt>
 <dd><p>Updates multiple attributes in a model. If <code class="docutils literal notranslate"><span class="pre">args</span></code> are provided, this
 method will assign attributes in the order returned by
 <code class="docutils literal notranslate"><span class="pre">list(self._columns)</span></code> until one or both are exhausted.</p>
@@ -320,27 +321,58 @@ names provided, after <code class="docutils literal notranslate"><span class="pr
 
 </dd></dl>
 
-<dl class="function">
-<dt id="rom.model.redis_writer_lua">
-<code class="descclassname">rom.model.</code><code class="descname">redis_writer_lua</code><span class="sig-paren">(</span><em>conn</em>, <em>pkey</em>, <em>namespace</em>, <em>id</em>, <em>unique</em>, <em>udelete</em>, <em>delete</em>, <em>data</em>, <em>keys</em>, <em>scored</em>, <em>prefix</em>, <em>suffix</em>, <em>geo</em>, <em>old_data</em>, <em>is_delete</em><span class="sig-paren">)</span><a class="headerlink" href="#rom.model.redis_writer_lua" title="Permalink to this definition">¶</a></dt>
+<dl class="py function">
+<dt class="sig sig-object py" id="rom.model.redis_writer_lua">
+<span class="sig-prename descclassname"><span class="pre">rom.model.</span></span><span class="sig-name descname"><span class="pre">redis_writer_lua</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">conn</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pkey</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">namespace</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">id</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">unique</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">udelete</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">delete</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">keys</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">scored</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prefix</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">suffix</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">geo</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">old_data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">is_delete</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#rom.model.redis_writer_lua" title="Permalink to this definition">¶</a></dt>
 <dd><p>… Actually write data to Redis. This is an internal detail. Please don’t
 call me directly.</p>
 </dd></dl>
 
-</div>
+</section>
 
 
+            <div class="clearer"></div>
           </div>
         </div>
       </div>
       <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
         <div class="sphinxsidebarwrapper">
-  <h4>Previous topic</h4>
-  <p class="topless"><a href="indexm.html"
-                        title="previous chapter"><code class="docutils literal notranslate"><span class="pre">index</span></code> Module</a></p>
-  <h4>Next topic</h4>
-  <p class="topless"><a href="query.html"
-                        title="next chapter"><code class="docutils literal notranslate"><span class="pre">query</span></code> Module</a></p>
+  <div>
+    <h3><a href="index.html">Table of Contents</a></h3>
+    <ul>
+<li><a class="reference internal" href="#"><code class="xref py py-mod docutils literal notranslate"><span class="pre">model</span></code> Module</a><ul>
+<li><a class="reference internal" href="#rom.model.Model"><code class="docutils literal notranslate"><span class="pre">Model</span></code></a><ul>
+<li><a class="reference internal" href="#rom.model.Model.copy"><code class="docutils literal notranslate"><span class="pre">Model.copy()</span></code></a></li>
+<li><a class="reference internal" href="#rom.model.Model.delete"><code class="docutils literal notranslate"><span class="pre">Model.delete()</span></code></a></li>
+<li><a class="reference internal" href="#rom.model.Model.does_not_endwith"><code class="docutils literal notranslate"><span class="pre">Model.does_not_endwith()</span></code></a></li>
+<li><a class="reference internal" href="#rom.model.Model.does_not_startwith"><code class="docutils literal notranslate"><span class="pre">Model.does_not_startwith()</span></code></a></li>
+<li><a class="reference internal" href="#rom.model.Model.get"><code class="docutils literal notranslate"><span class="pre">Model.get()</span></code></a></li>
+<li><a class="reference internal" href="#rom.model.Model.get_by"><code class="docutils literal notranslate"><span class="pre">Model.get_by()</span></code></a></li>
+<li><a class="reference internal" href="#rom.model.Model.id"><code class="docutils literal notranslate"><span class="pre">Model.id</span></code></a></li>
+<li><a class="reference internal" href="#rom.model.Model.query"><code class="docutils literal notranslate"><span class="pre">Model.query</span></code></a></li>
+<li><a class="reference internal" href="#rom.model.Model.refresh"><code class="docutils literal notranslate"><span class="pre">Model.refresh()</span></code></a></li>
+<li><a class="reference internal" href="#rom.model.Model.save"><code class="docutils literal notranslate"><span class="pre">Model.save()</span></code></a></li>
+<li><a class="reference internal" href="#rom.model.Model.to_dict"><code class="docutils literal notranslate"><span class="pre">Model.to_dict()</span></code></a></li>
+<li><a class="reference internal" href="#rom.model.Model.transfer"><code class="docutils literal notranslate"><span class="pre">Model.transfer()</span></code></a></li>
+<li><a class="reference internal" href="#rom.model.Model.update"><code class="docutils literal notranslate"><span class="pre">Model.update()</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#rom.model.redis_writer_lua"><code class="docutils literal notranslate"><span class="pre">redis_writer_lua()</span></code></a></li>
+</ul>
+</li>
+</ul>
+
+  </div>
+  <div>
+    <h4>Previous topic</h4>
+    <p class="topless"><a href="indexm.html"
+                          title="previous chapter"><code class="xref py py-mod docutils literal notranslate"><span class="pre">index</span></code> Module</a></p>
+  </div>
+  <div>
+    <h4>Next topic</h4>
+    <p class="topless"><a href="query.html"
+                          title="next chapter"><code class="xref py py-mod docutils literal notranslate"><span class="pre">query</span></code> Module</a></p>
+  </div>
   <div role="note" aria-label="source link">
     <h3>This Page</h3>
     <ul class="this-page-menu">
@@ -349,17 +381,15 @@ call me directly.</p>
     </ul>
    </div>
 <div id="searchbox" style="display: none" role="search">
-  <h3>Quick search</h3>
+  <h3 id="searchlabel">Quick search</h3>
     <div class="searchformwrapper">
     <form class="search" action="search.html" method="get">
-      <input type="text" name="q" />
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
       <input type="submit" value="Go" />
-      <input type="hidden" name="check_keywords" value="yes" />
-      <input type="hidden" name="area" value="default" />
     </form>
     </div>
 </div>
-<script type="text/javascript">$('#searchbox').show(0);</script>
+<script>document.getElementById('searchbox').style.display = "block"</script>
         </div>
       </div>
       <div class="clearer"></div>
@@ -379,12 +409,13 @@ call me directly.</p>
         <li class="right" >
           <a href="indexm.html" title="index Module"
              >previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="index.html">rom 1.0.4 documentation</a> &#187;</li> 
+        <li class="nav-item nav-item-0"><a href="index.html">rom 1.0.4 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href=""><code class="xref py py-mod docutils literal notranslate"><span class="pre">model</span></code> Module</a></li> 
       </ul>
     </div>
     <div class="footer" role="contentinfo">
         &#169; Copyright 2013-2015, Josiah Carlson.
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.8.2.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 5.3.0.
     </div>
   </body>
 </html>
