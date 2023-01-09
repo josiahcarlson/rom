@@ -318,7 +318,7 @@ def IDENTITY(val):
 
     Where ``FULL_TEXT`` would transform a sentence like "A Simple Sentence" into
     an inverted index searchable by the words "a", "simple", and/or "sentence",
-    ``IDENTITY`` will only be searchable by the orginal full sentence with the
+    ``IDENTITY`` will only be searchable by the original full sentence with the
     same capitalization - "A Simple Sentence". See ``IDENTITY_CI`` for the
     same function, only case-insensitive.
     '''
@@ -422,7 +422,7 @@ class Session(threading.local):
     when you ``import rom`` as ``rom.session``.
 
     .. note:: calling ``.flush()`` or ``.commit()`` doesn't cause all objects
-        to be written simultanously. They are written one-by-one, with any
+        to be written simultaneously. They are written one-by-one, with any
         error causing the call to fail.
     '''
     def __init__(self, *args, **kwargs):
@@ -565,7 +565,7 @@ class Session(threading.local):
             session.delete([obj1, obj2, ...])
 
         The keyword argument ``force=True`` can be provided, which can force
-        the deletion of an entitiy again, even if we believe it to already be
+        the deletion of an entity again, even if we believe it to already be
         deleted.
 
         If ``force=True``, we won't re-call the object's ``_before_delete()``

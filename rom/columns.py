@@ -200,7 +200,7 @@ class Column(object):
           keygen will be used for both the regular *index* as well as the
           *prefix* and/or *suffix* searches
         * If *prefix* is set, you can perform pattern matches over your data.
-          See documention on ``Query.like()`` for details.
+          See documentation on ``Query.like()`` for details.
         * Pattern matching over data is only guaranteed to be valid or correct
           for ANSI strings that do not include nulls, though we make an effort
           to support unicode strings and strings with embedded nulls
