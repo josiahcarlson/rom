@@ -31,6 +31,10 @@ from rom.exceptions import *
 
 string = String if six.PY2 else Text
 
+def plain2(a, d):
+    a = 'attr'
+    ret = [d[a].lower()] if d.get(a) else None
+    return ret
 
 def global_setup(a=1):
     c = connect(None)
@@ -241,7 +245,6 @@ class TestORM(unittest.TestCase):
 
     def test_index(self):
         plain = lambda x: [x.lower()] if x else None
-        plain2 = lambda a,d: [d['attr'].lower()] if d.get('attr') else None
         class RomTestIndexedModel(Model):
             attr = Text(index=True, keygen=FULL_TEXT)
             attr2 = Text(index=True, keygen=FULL_TEXT)
@@ -250,6 +253,9 @@ class TestORM(unittest.TestCase):
             attr5 = Decimal(index=True)
             attr6 = IndexOnly('attr', keygen=plain, suffix=True)
             attr7 = IndexOnly(keygen2=plain2, suffix=True)
+            attr8 = IndexOnly(keygen2=plain2, unique=True)
+            def __repr__(self):
+                return "<RTIM " + str(self.id) + " attr=" + str(self.attr) + ">"
 
         x = RomTestIndexedModel(
             attr='hello world',
@@ -266,6 +272,16 @@ class TestORM(unittest.TestCase):
             attr5=_Decimal('2.643'),
         ).save()
 
+        session.rollback()
+
+        self.assertRaises(UniqueKeyViolation, RomTestIndexedModel(
+                attr='world',
+                attr3=100,
+                attr4=-1000,
+                attr5=_Decimal('2.643'),
+            ).save)
+        session.rollback()
+
         self.assertEqual(RomTestIndexedModel.query.filter(attr='hello').count(), 1)
         self.assertEqual(RomTestIndexedModel.query.filter(attr2='how').filter(attr2='are').count(), 1)
         self.assertEqual(RomTestIndexedModel.query.filter(attr='hello').filter(attr2='how').filter(attr2='are').count(), 1)
@@ -277,7 +293,7 @@ class TestORM(unittest.TestCase):
         self.assertEqual(RomTestIndexedModel.query.filter(attr='hello', attr3=(5, 10), attr4=(4,5), attr5=(2.5, 2.7)).count(), 1)
         first = RomTestIndexedModel.query.filter(attr='hello', attr3=(5, 10), attr4=(4,5), attr5=(2.5, 2.7)).first()
         self.assertTrue(first)
-        self.assertTrue(first is x)
+        self.assertEqual(first._pk, x._pk)
         self.assertEqual(RomTestIndexedModel.query.filter(attr='hello', attr3=(10, 20), attr4=(4,5), attr5=(2.5, 2.7)).count(), 0)
         self.assertEqual(RomTestIndexedModel.query.filter(attr3=100).count(), 1)
         self.assertEqual(RomTestIndexedModel.query.filter(attr='world', attr5=_Decimal('2.643')).count(), 2)
@@ -298,7 +314,7 @@ class TestORM(unittest.TestCase):
         self.assertTrue(conn.ttl(key) <= 30)
         self.assertEqual(conn.zcard(key), 1)
         conn.delete(key)
-        self.assertRaises(QueryError, lambda: RomTestIndexedModel.query.order_by('attr8'))
+        self.assertRaises(QueryError, lambda: RomTestIndexedModel.query.order_by('attr9'))
 
         # Only the first call raises the warning, so only bother to call it
         # for our first pass through tests (non-Lua case).
@@ -311,14 +327,18 @@ class TestORM(unittest.TestCase):
             self.assertEqual(RomTestIndexedModel.query.endswith(**{aname:' world'}).count(), 1)
             self.assertRaises(InvalidColumnValue, lambda: RomTestIndexedModel(**{aname:'hello'}))
             a = RomTestIndexedModel(**{aname:None})
+            a.save()
 
             self.assertRaises(InvalidColumnValue, lambda: a.update(**{aname:'blah'}))
-            a.update(attr='another world').save()
+            name = 'another world'
+            a.update(attr=name).save()
             self.assertEqual(RomTestIndexedModel.query.endswith(**{aname:' world'}).count(), 2)
             if sys.version_info >= (3,6):
-                a.update('different world').save()
-                self.assertEqual(RomTestIndexedModel.query.endswith(**{aname:'different world'}).count(), 1)
-                a.update('overwritten', attr='kept').save()
+                name = 'different world'
+                a.update(attr=name).save()
+                self.assertEqual(RomTestIndexedModel.query.endswith(**{aname:name}).count(), 1)
+                name = 'different kept'
+                a.update(attr=name).save()
                 self.assertEqual(RomTestIndexedModel.query.endswith(**{aname:'kept'}).count(), 1)
             a.delete()
             session.rollback()

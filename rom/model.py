@@ -341,9 +341,7 @@ class Model(six.with_metaclass(_ModelMetaclass, object)):
 
         # update individual columns
         for attr in cls._columns:
-            ikey = None
-            if attr in cls._unique:
-                ikey = "%s:%s:uidx"%(model, attr)
+            is_unique = attr in cls._unique
 
             ca = columns[attr]
             roval = None if is_new else old.get(attr)
@@ -357,6 +355,7 @@ class Model(six.with_metaclass(_ModelMetaclass, object)):
             # Add/update standard index
             if ca._keygen and not delete and (nval is not None or not ca._allowed) and (ca._index or ca._prefix or ca._suffix):
                 generated = ca._keygen(attr, new)
+
                 if not generated:
                     # No index entries, we'll clean out old entries later
                     pass
@@ -413,6 +412,30 @@ class Model(six.with_metaclass(_ModelMetaclass, object)):
                 else:
                     raise ColumnError("Don't know how to turn %r into a sequence of keys"%(generated,))
 
+            if is_unique:
+                if ca._keygen and not ca._index:
+                    roval = ca._keygen(attr, old) or [roval]
+                    rnval = ca._keygen(attr, new) or [rnval]
+                    generated = (roval if delete else rnval) or []
+                    roval = list(roval)[0] if roval else None
+                    rnval = list(rnval)[0] if rnval else None
+
+                    if not isinstance(generated, (tuple, list, set)):
+                        raise TypeError("keygen must return a tuple, list, or set not " + str(type(generated)))
+                elif delete:
+                    generated = [roval] if roval else []
+                else:
+                    generated = [rnval] if rnval else []
+
+                # only 1 item per column
+                for k in generated:
+                    if k is not None:
+                        (udeleted if delete else unique)[attr] = k
+                        break
+
+                if roval and roval != rnval and not delete:
+                    udeleted[attr] = roval
+
             if nval == oval and not full:
                 continue
 
@@ -421,22 +444,12 @@ class Model(six.with_metaclass(_ModelMetaclass, object)):
             # Delete removed columns
             if nval is None and oval is not None:
                 deleted.append(attr)
-                if ikey:
-                    udeleted[attr] = roval
                 continue
 
             # Add/update column value
             if nval is not None:
                 data[attr] = rnval
 
-            # Add/update unique index
-            if ikey:
-                if not isinstance(roval, str) and roval is not None:
-                    roval = columns[attr]._to_redis(roval)
-                if oval is not None and roval != rnval:
-                    udeleted[attr] = oval
-                if rnval is not None:
-                    unique[attr] = rnval
 
         # Add/update multi-column unique constraint
         for uniq in cls._cunique:
@@ -747,7 +760,6 @@ class Model(six.with_metaclass(_ModelMetaclass, object)):
         excludes = ['inf'] + sorted(exclude, reverse=True)
         last = 0
         c = cls._connection
-        print(exclude)
         while excludes:
             exc = excludes.pop()
             # things that are between the matched items
@@ -1176,7 +1188,6 @@ def _zrange_limit_iterator(conn, key, vstart, end, count=100):
     start = 0
     lc = count
     while lc == count:
-        print(vstart, end, start, count)
         chunk = conn.execute_command("zrangebyscore", key, vstart, end, "LIMIT", start, count)
         yield chunk
         lc = len(chunk)

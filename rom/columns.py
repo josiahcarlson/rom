@@ -249,16 +249,17 @@ class Column(object):
         self._attr = None
         self._keygen = None
 
-        if (keygen or keygen2) and not (index or prefix or suffix):
-            raise ColumnError("Explicit keygen provided, but no index type spcified (index, prefix, and suffix all False)")
+        if (keygen or keygen2) and not (index or prefix or suffix or unique):
+            raise ColumnError("Explicit keygen provided, but no index type spcified (index, prefix, suffix, and unique all False)")
 
-        if not self._allowed and not hasattr(self, '_fmodel') and not hasattr(self, '_ftable') and not isinstance(self, IndexOnly):
+        indexonly = isinstance(self, IndexOnly)
+        if not self._allowed and not hasattr(self, '_fmodel') and not hasattr(self, '_ftable') and not indexonly:
             raise ColumnError("Missing valid class-level _allowed attribute on %r"%(type(self),))
 
         allowed = (self._allowed,) if isinstance(self._allowed, type) else self._allowed
         is_integer = all(issubclass(x, six.integer_types) for x in allowed)
         if unique:
-            if not (is_string or is_integer):
+            if not (is_string(allowed) or is_integer):
                 raise ColumnError("Unique columns can only be strings or integers")
 
         if keygen and keygen2:
@@ -699,7 +700,7 @@ class IndexOnly(Column):
 
     '''
 
-    def __init__(self, column=None, keygen=None, prefix=False, suffix=False, keygen2=None):
+    def __init__(self, column=None, keygen=None, prefix=False, suffix=False, keygen2=None, index=False, unique=False):
         '''
         Two ways to use:
 
@@ -714,6 +715,8 @@ class IndexOnly(Column):
             * *prefix* - passed through, see ``Column`` docs for more information
             * *suffix* - passed through, see ``Column`` docs for more information
             * *keygen2* - passed through, see ``Column`` docs for more information
+            * *unique* - passed through, see ``Column`` docs for more information
+            * *index* - really means: (index or prefix or suffix) or (not unique)
 
         .. note:: `unique` is not available or passed through, as it relies on
             data in the column (IndexOnly columns only store data in index(es)).
@@ -724,7 +727,8 @@ class IndexOnly(Column):
             pass
         else:
             raise ValueError("Need both of `column` and `keygen` or just `keygen2` argument")
-        Column.__init__(self, index=True, keygen2=keygen2, prefix=prefix, suffix=suffix)
+        index = (index or prefix or suffix) or (not unique)
+        Column.__init__(self, index=index, keygen2=keygen2, prefix=prefix, suffix=suffix, unique=unique)
 
     def _validate(self, value):
         if value is not None:

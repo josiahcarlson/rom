@@ -77,8 +77,8 @@ test-tox:
 
 docs:
 	python3.6 -c "import rom; open('README.rst', 'wb').write(rom.__doc__.encode('latin-1')); open('VERSION', 'wb').write(rom.VERSION.encode('latin-1'));"
-	docker-compose -f docker-compose.docs.yaml -- build
-	docker-compose -f docker-compose.docs.yaml -- run rom-test-docs $(SPHINXBUILD) -b html $(ALLSPHINXOPTS) /app/_build/html
+	docker-compose -f docker-compose.docs.yaml build
+	docker-compose -f docker-compose.docs.yaml run rom-test-docs $(SPHINXBUILD) -b html $(ALLSPHINXOPTS) /app/_build/html
 	cp -r $(BUILDDIR)/html/. docs
 	@echo
 	@echo "Build finished. The HTML pages are in docs"
