@@ -3898,7 +3898,7 @@ jQuery.fn.extend({
 			elem = this[0],
 			attrs = elem && elem.attributes;
 
-		// Special expectations of .data basically thwart jQuery.access,
+		// Special expections of .data basically thwart jQuery.access,
 		// so implement the relevant behavior ourselves
 
 		// Gets all values
@@ -6011,7 +6011,7 @@ function actualDisplay( name, doc ) {
 		// getDefaultComputedStyle might be reliably used only on attached element
 		display = window.getDefaultComputedStyle && ( style = window.getDefaultComputedStyle( elem[ 0 ] ) ) ?
 
-			// Use of this method is a temporary fix (more like optimization) until something better comes along,
+			// Use of this method is a temporary fix (more like optmization) until something better comes along,
 			// since it was removed from specification and supported only in FF
 			style.display : jQuery.css( elem[ 0 ], "display" );
 
@@ -6670,7 +6670,7 @@ jQuery.extend({
 				value += "px";
 			}
 
-			// Fixes #8908, it can be done more correctly by specifying setters in cssHooks,
+			// Fixes #8908, it can be done more correctly by specifing setters in cssHooks,
 			// but it would mean to define eight (for every problematic property) identical functions
 			if ( !support.clearCloneStyle && value === "" && name.indexOf("background") === 0 ) {
 				style[ name ] = "inherit";
@@ -8135,7 +8135,7 @@ if ( !support.style ) {
 		get: function( elem ) {
 			// Return undefined in the case of empty string
 			// Note: IE uppercases css property names, but if we were to .toLowerCase()
-			// .cssText, that would destroy case sensitivity in URL's, like in "background"
+			// .cssText, that would destroy case senstitivity in URL's, like in "background"
 			return elem.style.cssText || undefined;
 		},
 		set: function( elem, value ) {

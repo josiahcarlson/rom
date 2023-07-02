@@ -24,8 +24,8 @@ except AttributeError:
     #redis-python client 3.0+ change
     _Pipeline = client.Pipeline
 
-from .columns import (Column, Text, PrimaryKey, ManyToOne, OneToOne, OneToMany,
-    MODELS, MODELS_REFERENCED, _on_delete, SKIP_ON_DELETE)
+from .columns import (Column, IndexOnly, Text, PrimaryKey, ManyToOne, OneToOne,
+    OneToMany, MODELS, MODELS_REFERENCED, _on_delete, SKIP_ON_DELETE)
 from .exceptions import (ORMError, UniqueKeyViolation, InvalidOperation,
     QueryError, ColumnError, InvalidColumnValue, DataRaceError,
     EntityDeletedError)
@@ -650,7 +650,16 @@ class Model(six.with_metaclass(_ModelMetaclass, object)):
                 single = not isinstance(value, list)
                 if single:
                     value = [value]
-                qvalues = list(map(cls._columns[attr]._to_redis, value))
+                if isinstance(cls._columns[attr], IndexOnly):
+                    def as_bytes(data) -> bytes:
+                        if isinstance(data, bytes):
+                            return data
+                        elif isinstance(data, str):
+                            return data.encode("latin-1")
+                        return str(data).encode("latin-1")
+                    qvalues = list(map(as_bytes, value))
+                else:
+                    qvalues = list(map(cls._columns[attr]._to_redis, value))
                 ids = [x for x in conn.hmget('%s:%s:uidx'%(model, attr), qvalues) if x]
                 if not ids:
                     return None if single else []

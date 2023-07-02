@@ -5,7 +5,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
 
-    <title>rom Package &#8212; rom 1.0.6 documentation</title>
+    <title>rom Package &#8212; rom 1.0.7 documentation</title>
     <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
     <link rel="stylesheet" type="text/css" href="_static/classic.css" />
     
@@ -33,7 +33,7 @@
         <li class="right" >
           <a href="index.html" title="Welcome to the documentation for the Redis object Mapper"
              accesskey="P">previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="index.html">rom 1.0.6 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="index.html">rom 1.0.7 documentation</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href="">rom Package</a></li> 
       </ul>
     </div>  
@@ -198,7 +198,7 @@ is a huge waste and is the antithesis of good design.</p>
 <p>Instead, if you create a new <code class="docutils literal notranslate"><span class="pre">expire_at</span></code> float column with <code class="docutils literal notranslate"><span class="pre">index=True</span></code>,
 the column can store when the entity is to expire. Then to expire the data, you
 can use: <code class="docutils literal notranslate"><span class="pre">Model.query.filter(expire_at=(0,</span> <span class="pre">time.time())).limit(10)</span></code> to (for
-example) get up to the 10 oldest entites that need to be expired.</p>
+example) get up to the 10 oldest entities that need to be expired.</p>
 <p>Now, I know what you are thinking. You are thinking, “but I wish the data would
 just go away on its own.” And I don’t disagree. But for that to happen, Redis
 needs to grow Lua-script triggers, or you need to run a separate daemon to
@@ -311,7 +311,7 @@ during object construction: <code class="docutils literal notranslate"><span cla
 keygen will be used for both the regular <em>index</em> as well as the
 <em>prefix</em> and/or <em>suffix</em> searches</p></li>
 <li><p>If <em>prefix</em> is set, you can perform pattern matches over your data.
-See documention on <code class="docutils literal notranslate"><span class="pre">Query.like()</span></code> for details.</p></li>
+See documentation on <code class="docutils literal notranslate"><span class="pre">Query.like()</span></code> for details.</p></li>
 <li><p>Pattern matching over data is only guaranteed to be valid or correct
 for ANSI strings that do not include nulls, though we make an effort
 to support unicode strings and strings with embedded nulls</p></li>
@@ -606,7 +606,7 @@ things like:</p>
 </div>
 <p>Where <code class="docutils literal notranslate"><span class="pre">FULL_TEXT</span></code> would transform a sentence like “A Simple Sentence” into
 an inverted index searchable by the words “a”, “simple”, and/or “sentence”,
-<code class="docutils literal notranslate"><span class="pre">IDENTITY</span></code> will only be searchable by the orginal full sentence with the
+<code class="docutils literal notranslate"><span class="pre">IDENTITY</span></code> will only be searchable by the original full sentence with the
 same capitalization - “A Simple Sentence”. See <code class="docutils literal notranslate"><span class="pre">IDENTITY_CI</span></code> for the
 same function, only case-insensitive.</p>
 </dd></dl>
@@ -794,7 +794,7 @@ is comparable to SQLAlchemy’s <code class="docutils literal notranslate"><span
 <div class="admonition note">
 <p class="admonition-title">Note</p>
 <p>If one or more of the column values on an entity that is part of a
-unique constrant is None in Python, the unique constraint won’t apply.
+unique constraint is None in Python, the unique constraint won’t apply.
 This is the typical behavior of nulls in unique constraints inside both
 MySQL and Postgres.</p>
 </div>
@@ -952,7 +952,7 @@ epsilon credit may go away, and you will want to explicitly round on
 the client on read + display. Or better yet; stick to integers.</p></li>
 <li><p><em>refresh_entities</em> - will refresh the entity data on transfer if
 <code class="docutils literal notranslate"><span class="pre">True</span></code>-ish</p></li>
-<li><p><em>refresh_index</em> - will refresh the update any relevant indexs after
+<li><p><em>refresh_index</em> - will refresh the update any relevant indexes after
 the transfer, if <code class="docutils literal notranslate"><span class="pre">True</span></code>-ish; implies <code class="docutils literal notranslate"><span class="pre">refresh_entities</span></code></p></li>
 </ul>
 </div></blockquote>
@@ -1402,7 +1402,7 @@ see warning below</p></li>
 <p>If you use the <code class="docutils literal notranslate"><span class="pre">_namedtuple_data_factory</span></code>, and your
 columns include underscore prefixes, they will be stripped. If this
 results in a name collision, you <em>will</em> get an exception. If you want
-differerent behavior, write your own 20 line factory function that
+different behavior, write your own 20 line factory function that
 does exactly what you want, and pass it; they are really easy!</p>
 </div>
 </dd></dl>
@@ -1653,7 +1653,7 @@ arguments.</p>
         <li class="right" >
           <a href="index.html" title="Welcome to the documentation for the Redis object Mapper"
              >previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="index.html">rom 1.0.6 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="index.html">rom 1.0.7 documentation</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href="">rom Package</a></li> 
       </ul>
     </div>
