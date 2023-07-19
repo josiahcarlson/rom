@@ -140,7 +140,10 @@ specification of a keygen function. Provide an explicit keygen argument of
 matches the rom index API to remove this warning. This warning will become an
 exception in rom >= 0.31.0.'''.replace('\n', ' ')%STRING_INDEX_KEYGENS_STR
 
-class Column(object):
+class _Column(object):
+    pass
+
+class Column(_Column):
     '''
     Column objects handle data conversion to/from strings, store metadata
     about indices, etc. Note that these are "heavy" columns, in that whenever
@@ -984,6 +987,79 @@ class OneToMany(Column):
             model = None
         return model
 
-COLUMN_TYPES = [v for v in globals().values() if isinstance(v, type) and issubclass(v, Column)]
+
+class _UnsafeWrapper(object):
+    __slots__ = 'key', 'entity'
+    def __init__(self, key, entity):
+        self.key = key
+        self.entity = entity
+
+    def __getattr__(self, cmd):
+        if cmd in _UnsafeWrapper.__slots__:
+            return super(_UnsafeWrapper, self).__getattribute__(cmd)
+        conn = super(_UnsafeWrapper, self).__getattribute__("entity")._connection
+        return _unsafe(cmd, self.key, conn)
+
+def _unsafe(command, key, conn):
+    def wrapped(*args, **kwargs):
+        if kwargs.pop("skip_key", None):
+            return getattr(conn, command)(*args, **kwargs)
+        return getattr(conn, command)(key, *args, **kwargs)
+    return wrapped
+
+
+class UnsafeColumn(_Column):
+    '''
+    UnsafeColumns are attributes on models that allow for explicit model-related
+    data to be stored in native Redis structures. Data stored in these columns
+    are not synchronized with the underlying race-condition-prevention locking
+    mechanisms used during ``Model.save()`` and ``Model.delete()``. Though this
+    data is deleted during ``Model.delete()``.
+
+    As such, there may be race conditions if you delete an entity from one
+    process, but work on unsafe columns in another. To clean up leftover
+    unwanted attributes, use ``util.clean_unsafe_cols(*models)`` to clean the
+    namespace of given models.
+
+    By default, UnsafeColumn data is stored:
+    ``'%s:%s:%s' % (ent._namespace, ent.<primary key>, column_name)``
+
+    Which is separate from where most normal column data is stored, and can
+    be accessed directly if wanted. Hence why it is "unsafe".
+    '''
+    __slots__ = '_attr',
+    def __init__(self):
+        self._attr = None
+
+    def _init_(self, attr):
+        # let's not accidentally kill other indexes
+        assert attr not in ('idx', 'uidx', 'pre', 'suf', 'geo')
+        self._attr = attr
+
+    def __get__(self, obj, _):
+        if not obj or not self._attr:
+            raise AttributeError
+
+        if obj._deleted:
+            raise ValueError("The entity was deleted")
+
+        if self._attr not in obj._cached_unsafe:
+            key = self._key(obj)
+            obj._cached_unsafe[self._attr] = _UnsafeWrapper(key, obj)
+
+        return obj._cached_unsafe[self._attr]
+
+    def __delete__(self, obj):
+        if not obj or not self._attr:
+            raise AttributeError
+
+        obj._cached_unsafe.pop(self._attr, None)
+        return obj._connection.delete(self._key(obj))
+
+    def _key(self, obj):
+        return '%s:%s' % (obj._pk, self._attr)
+
+
+COLUMN_TYPES = [v for v in globals().values() if isinstance(v, type) and issubclass(v, _Column)]
 __all__ = [v.__name__ for v in COLUMN_TYPES] + 'MODELS MODELS_REFERENCED ON_DELETE'.split()
 __all__.sort()

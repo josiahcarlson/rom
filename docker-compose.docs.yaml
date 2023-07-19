@@ -8,3 +8,5 @@ services:
       PYTHONPATH: /app
     volumes:
       - /home/josiah/open-source/rom/_build/html/:/app/_build/html:rw
+      - /home/josiah/.pypirc:/root/.pypirc
+      - /home/josiah/open-source/rom/dist/:/app/dist/

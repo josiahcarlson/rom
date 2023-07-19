@@ -5,7 +5,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
 
-    <title>util Module &#8212; rom 1.0.7 documentation</title>
+    <title>util Module &#8212; rom 1.1.0 documentation</title>
     <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
     <link rel="stylesheet" type="text/css" href="_static/classic.css" />
     
@@ -29,7 +29,7 @@
         <li class="right" >
           <a href="query.html" title="query Module"
              accesskey="P">previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="index.html">rom 1.0.7 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="index.html">rom 1.1.0 documentation</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href=""><code class="xref py py-mod docutils literal notranslate"><span class="pre">util</span></code> Module</a></li> 
       </ul>
     </div>  
@@ -488,6 +488,52 @@ data that could be left over.</p>
 </dd></dl>
 
 <dl class="py function">
+<dt class="sig sig-object py" id="rom.util.clean_unsafe_cols">
+<span class="sig-prename descclassname"><span class="pre">rom.util.</span></span><span class="sig-name descname"><span class="pre">clean_unsafe_cols</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">models</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#rom.util.clean_unsafe_cols" title="Permalink to this definition">¶</a></dt>
+<dd><dl>
+<dt>Args:</dt><dd><dl class="simple">
+<dt>models - any model base that you want to clean the namespace of, because</dt><dd><p>you believe there are leftover unsafe column data that you have
+previously removed</p>
+</dd>
+</dl>
+<p>block_size - kwarg only, number of items to fetch per SCAN call</p>
+</dd>
+</dl>
+<p>What this does:</p>
+<blockquote>
+<div><ol class="arabic simple">
+<li><dl class="simple">
+<dt>Scans the namespace prefix for your model;</dt><dd><dl class="simple">
+<dt>clean_unsafe_cols(MyModelX) -&gt;</dt><dd><p>“MyModelX:” &lt;- namespace</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt>For any key that looks like: “MyModelX:&lt;number&gt;:&lt;attr&gt;”</dt><dd><p>Where attr not in {‘idx’, ‘uidx’, ‘pre’, ‘suf’, ‘geo’, ‘’}</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt>IF given one of the above keys from #2, and</dt><dd><p>“MyModelX:&lt;number&gt; DOES NOT EXIST, then
+DELETE KEY because the base entity does not exist
+ELSE IGNORE</p>
+</dd>
+</dl>
+</li>
+</ol>
+</div></blockquote>
+<dl class="simple">
+<dt>Returns:</dt><dd><dl class="simple">
+<dt>(keys_examined,</dt><dd><p>keys_deleted)</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
 <dt class="sig sig-object py" id="rom.util.get_connection">
 <span class="sig-prename descclassname"><span class="pre">rom.util.</span></span><span class="sig-name descname"><span class="pre">get_connection</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#rom.util.get_connection" title="Permalink to this definition">¶</a></dt>
 <dd><p>Override me for one of the ways to change the way I connect to Redis.</p>
@@ -630,6 +676,7 @@ respectively).</p>
 </ul>
 </li>
 <li><a class="reference internal" href="#rom.util.clean_old_index"><code class="docutils literal notranslate"><span class="pre">clean_old_index()</span></code></a></li>
+<li><a class="reference internal" href="#rom.util.clean_unsafe_cols"><code class="docutils literal notranslate"><span class="pre">clean_unsafe_cols()</span></code></a></li>
 <li><a class="reference internal" href="#rom.util.get_connection"><code class="docutils literal notranslate"><span class="pre">get_connection()</span></code></a></li>
 <li><a class="reference internal" href="#rom.util.refresh_all_indexes"><code class="docutils literal notranslate"><span class="pre">refresh_all_indexes()</span></code></a></li>
 <li><a class="reference internal" href="#rom.util.refresh_indices"><code class="docutils literal notranslate"><span class="pre">refresh_indices()</span></code></a></li>
@@ -680,7 +727,7 @@ respectively).</p>
         <li class="right" >
           <a href="query.html" title="query Module"
              >previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="index.html">rom 1.0.7 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="index.html">rom 1.1.0 documentation</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href=""><code class="xref py py-mod docutils literal notranslate"><span class="pre">util</span></code> Module</a></li> 
       </ul>
     </div>

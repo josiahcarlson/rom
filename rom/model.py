@@ -25,7 +25,7 @@ except AttributeError:
     _Pipeline = client.Pipeline
 
 from .columns import (Column, IndexOnly, Text, PrimaryKey, ManyToOne, OneToOne,
-    OneToMany, MODELS, MODELS_REFERENCED, _on_delete, SKIP_ON_DELETE)
+    OneToMany, MODELS, MODELS_REFERENCED, _on_delete, SKIP_ON_DELETE, UnsafeColumn)
 from .exceptions import (ORMError, UniqueKeyViolation, InvalidOperation,
     QueryError, ColumnError, InvalidColumnValue, DataRaceError,
     EntityDeletedError)
@@ -98,6 +98,11 @@ class _ModelMetaclass(type):
                     suffix.add(attr)
                 if col._unique:
                     unique.add(attr)
+
+            if isinstance(col, UnsafeColumn):
+                columns[attr] = col
+                # make sure the column knows what it's named
+                col._init_(attr)
 
             if isinstance(col, PrimaryKey):
                 if pkey:
@@ -187,6 +192,13 @@ class AttrDict(dict):
 
 _ModelMetaclass__init = False
 
+def _as_bytes(data):
+    if isinstance(data, bytes):
+        return data
+    elif isinstance(data, str):
+        return data.encode("latin-1")
+    return str(data).encode("latin-1")
+
 class Model(six.with_metaclass(_ModelMetaclass, object)):
     '''
     This is the base class for all models. You subclass from this base Model
@@ -252,10 +264,14 @@ class Model(six.with_metaclass(_ModelMetaclass, object)):
         model = self._namespace
         self._data = {}
         self._last = {}
+        self._cached_unsafe = {}
         self._modified = False
         self._deleted = False
         self._init = False
         for attr in self._columns:
+            if isinstance(self._columns[attr], UnsafeColumn):
+                continue
+
             cval = kwargs.get(attr, None)
             if loading and cval is False:
                 # Weird Redis' JSON nil -> False thing
@@ -338,12 +354,19 @@ class Model(six.with_metaclass(_ModelMetaclass, object)):
         suffix = []
         geo = []
         redis_data = {}
+        keys_to_delete = set()
 
         # update individual columns
         for attr in cls._columns:
             is_unique = attr in cls._unique
 
             ca = columns[attr]
+            if isinstance(ca, UnsafeColumn):
+                if delete:
+                    # blow away any unsafe columns
+                    keys_to_delete.add(model + ":" + str(pk) + ":" + attr)
+                continue
+
             roval = None if is_new else old.get(attr)
             oval = ca._from_redis(roval) if roval is not None else None
 
@@ -480,7 +503,7 @@ class Model(six.with_metaclass(_ModelMetaclass, object)):
         old_data = [] if is_new else ([(cls._pkey, str(pk))] + [(k, old.get(k)) for k in data if k in old])
         redis_writer_lua(conn, cls._pkey, model, id_only, unique, udeleted,
             deleted, data, list(keys), scores, prefix, suffix, geo, old_data,
-            delete)
+            delete, list(keys_to_delete))
 
         return changes, redis_data
 
@@ -651,13 +674,7 @@ class Model(six.with_metaclass(_ModelMetaclass, object)):
                 if single:
                     value = [value]
                 if isinstance(cls._columns[attr], IndexOnly):
-                    def as_bytes(data) -> bytes:
-                        if isinstance(data, bytes):
-                            return data
-                        elif isinstance(data, str):
-                            return data.encode("latin-1")
-                        return str(data).encode("latin-1")
-                    qvalues = list(map(as_bytes, value))
+                    qvalues = list(map(_as_bytes, value))
                 else:
                     qvalues = list(map(cls._columns[attr]._to_redis, value))
                 ids = [x for x in conn.hmget('%s:%s:uidx'%(model, attr), qvalues) if x]
@@ -1017,7 +1034,7 @@ end
 -- remove deleted columns
 local deleted = cjson.decode(ARGV[5])
 if #deleted > 0 then
-    redis.call('HDEL', string.format('%s:%s', namespace, id), unpack(deleted))
+    redis.call('HDEL', row_key, unpack(deleted))
 end
 
 -- update changed/added columns
@@ -1079,7 +1096,9 @@ if idata then
 end
 
 if is_delete then
-    redis.call('DEL', string.format('%s:%s', namespace, id))
+    local unsafe_columns = cjson.decode(ARGV[14])
+    redis.call('DEL', row_key, unpack(unsafe_columns))
+    _changes = _changes + 1 + #unsafe_columns
     -- should now be historic
     redis.call('HDEL', namespace .. '::', id)
     return cjson.encode({changes=_changes})
@@ -1128,7 +1147,7 @@ end
 local encoded = cjson.encode({nkeys, nscored, nprefix, nsuffix, ngeo})
 -- clean historic
 redis.call('HDEL', namespace .. '::', id)
-redis.call('HSET', namespace .. ':' .. id, '-index-data-', encoded)
+redis.call('HSET', row_key, '-index-data-', encoded)
 
 return cjson.encode({changes=#nkeys + #nscored + #nprefix + #nsuffix + #ngeo + _changes})
 ''')
@@ -1142,7 +1161,8 @@ def _fix_bytes(d):
 
 
 def redis_writer_lua(conn, pkey, namespace, id, unique, udelete, delete,
-                     data, keys, scored, prefix, suffix, geo, old_data, is_delete):
+                     data, keys, scored, prefix, suffix, geo, old_data, is_delete,
+                     keys_to_delete):
     '''
     ... Actually write data to Redis. This is an internal detail. Please don't
     call me directly.
@@ -1157,7 +1177,10 @@ def redis_writer_lua(conn, pkey, namespace, id, unique, udelete, delete,
         item.append(_prefix_score(item[-1]))
 
     data = [json.dumps(x, default=_fix_bytes) for x in
-            (unique, udelete, delete, ldata, keys, scored, prefix, suffix, geo, is_delete, old_data)]
+            (unique, udelete, delete, # args 3-5
+            ldata, keys, scored, prefix, suffix, # args 6-10
+            geo, is_delete, old_data, keys_to_delete) # args 11-14
+        ]
     result = _redis_writer_lua(conn, [], [namespace, id] + data)
 
     if isinstance(conn, _Pipeline):

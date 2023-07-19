@@ -70,7 +70,7 @@ upload:
 	git tag `cat VERSION`
 	git push origin --tags
 	python3.6 setup.py sdist
-	python3.6 -m twine upload --verbose dist/rom-`cat VERSION`.tar.gz
+	docker-compose -f docker-compose.docs.yaml run rom-test-docs python3.11 -m twine upload --verbose dist/rom-`cat VERSION`.tar.gz
 
 test-tox:
 	tox

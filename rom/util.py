@@ -853,6 +853,68 @@ def clean_old_index(model, block_size=100, **kwargs):
     yield max_id, max_id
 
 
+def clean_unsafe_cols(*models, **kwargs):
+    """
+    Args:
+        models - any model base that you want to clean the namespace of, because
+            you believe there are leftover unsafe column data that you have
+            previously removed
+        block_size - kwarg only, number of items to fetch per SCAN call
+
+    What this does:
+
+        1. Scans the namespace prefix for your model;
+            clean_unsafe_cols(MyModelX) ->
+                "MyModelX:" <- namespace
+
+        2. For any key that looks like: "MyModelX:<number>:<attr>"
+            Where attr not in {'idx', 'uidx', 'pre', 'suf', 'geo', ''}
+
+        3. IF given one of the above keys from #2, and
+            "MyModelX:<number> DOES NOT EXIST, then
+            DELETE KEY because the base entity does not exist
+            ELSE IGNORE
+
+    Returns:
+        (keys_examined,
+         keys_deleted)
+
+    """
+    if not models:
+        raise ValueError("missing models")
+    ignore = set(['idx', 'uidx', 'pre', 'suf', 'geo', ''])
+    block_size = max(kwargs.get('block_size', 1000), 1)
+
+    examined = deleted = 0
+    cursor = 0
+    first = True
+    for model in models:
+        pfx = model._namespace + ":"
+        cursor, chunk = model._connection.scan(cursor, pfx + "*", block_size)
+        while chunk and (cursor != 0 or first):
+            first = False
+            for key in chunk:
+                examined += 1
+                parts = key.decode().split(":")
+                if len(parts) != 3:
+                    continue
+                if parts[2] in ignore or parts[1] in ignore:
+                    continue
+                if not parts[1].isdigit():
+                    continue
+
+                # old or existing column, want to blow it away if no associated
+                # entity
+                ent = ":".join(parts[:2])
+                if not model._connection.exists(ent):
+                    # This key is extra, we don't want it. Let's get rid of it.
+                    model._connection.delete(key)
+                    deleted += 1
+
+            cursor, chunk = model._connection.scan(cursor, pfx + "*", block_size)
+
+    return examined, deleted
+
 def show_progress(job):
     '''
     This utility function will print the progress of a passed iterator job as

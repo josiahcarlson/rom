@@ -40,3 +40,6 @@ class InvalidColumnValue(ColumnError):
 
 class BulkError(ORMError):
     'Raised when using session.commit(fast=True) or equivalent, and there is at least one error.'
+
+class UnsafeError(ColumnError):
+    'Raised when an UnsafeColumn is accessed after the parent entity is deleted'

@@ -5,7 +5,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
 
-    <title>rom Package &#8212; rom 1.0.7 documentation</title>
+    <title>rom Package &#8212; rom 1.1.0 documentation</title>
     <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
     <link rel="stylesheet" type="text/css" href="_static/classic.css" />
     
@@ -33,7 +33,7 @@
         <li class="right" >
           <a href="index.html" title="Welcome to the documentation for the Redis object Mapper"
              accesskey="P">previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="index.html">rom 1.0.7 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="index.html">rom 1.1.0 documentation</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href="">rom Package</a></li> 
       </ul>
     </div>  
@@ -246,7 +246,7 @@ as expected when passed <code class="docutils literal notranslate"><span class="
 <dl class="py class">
 <dt class="sig sig-object py">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">rom.</span></span><span class="sig-name descname"><span class="pre">Column</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">required=False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">default=&lt;object</span> <span class="pre">object&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">unique=False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">index=False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">keygen=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prefix=False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">suffix=False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">keygen2=None</span></span></em><span class="sig-paren">)</span></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">_Column</span></code></p>
 <p>Column objects handle data conversion to/from strings, store metadata
 about indices, etc. Note that these are “heavy” columns, in that whenever
 data is read/written, it must go through descriptor processing. This is
@@ -1575,6 +1575,25 @@ arguments.</p>
 <p>Raised when trying to save an entity without a distinct column value</p>
 </dd></dl>
 
+<dl class="py class">
+<dt class="sig sig-object py">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">rom.</span></span><span class="sig-name descname"><span class="pre">UnsafeColumn</span></span></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">_Column</span></code></p>
+<p>UnsafeColumns are attributes on models that allow for explicit model-related
+data to be stored in native Redis structures. Data stored in these columns
+are not synchronized with the underlying race-condition-prevention locking
+mechanisms used during <code class="docutils literal notranslate"><span class="pre">Model.save()</span></code> and <code class="docutils literal notranslate"><span class="pre">Model.delete()</span></code>. Though this
+data is deleted during <code class="docutils literal notranslate"><span class="pre">Model.delete()</span></code>.</p>
+<p>As such, there may be race conditions if you delete an entity from one
+process, but work on unsafe columns in another. To clean up leftover
+unwanted attributes, use <code class="docutils literal notranslate"><span class="pre">util.clean_unsafe_cols(*models)</span></code> to clean the
+namespace of given models.</p>
+<p>By default, UnsafeColumn data is stored:
+<code class="docutils literal notranslate"><span class="pre">'%s:%s:%s'</span> <span class="pre">%</span> <span class="pre">(ent._namespace,</span> <span class="pre">ent.&lt;primary</span> <span class="pre">key&gt;,</span> <span class="pre">column_name)</span></code></p>
+<p>Which is separate from where most normal column data is stored, and can
+be accessed directly if wanted. Hence why it is “unsafe”.</p>
+</dd></dl>
+
 <p><a class="reference internal" href="columns.html#module-rom.columns" title="rom.columns"><code class="xref py py-mod docutils literal notranslate"><span class="pre">rom.columns</span></code></a>
 <a class="reference internal" href="exceptions.html#module-rom.exceptions" title="rom.exceptions"><code class="xref py py-mod docutils literal notranslate"><span class="pre">rom.exceptions</span></code></a>
 <a class="reference internal" href="indexm.html#module-rom.index" title="rom.index"><code class="xref py py-mod docutils literal notranslate"><span class="pre">rom.index</span></code></a>
@@ -1653,7 +1672,7 @@ arguments.</p>
         <li class="right" >
           <a href="index.html" title="Welcome to the documentation for the Redis object Mapper"
              >previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="index.html">rom 1.0.7 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="index.html">rom 1.1.0 documentation</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href="">rom Package</a></li> 
       </ul>
     </div>

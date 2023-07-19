@@ -1939,6 +1939,28 @@ class TestORM(unittest.TestCase):
         self.assertEqual(len(list(a.does_not_endwith('sfix', "fix"))), 2)
         self.assertEqual(len(list(a.does_not_endwith('sfix', "unmatched_suffix"))), 3)
 
+    def test_unsafe_cols(self):
+        class RomTestUnsafeCols1(Model):
+            unsafe = UnsafeColumn()
+
+        a = RomTestUnsafeCols1()
+        a.save()
+        unsafe = a.unsafe
+        unsafe.rpush("hello")
+        unsafe.rpush("world")
+        # self.assertEqual(unsafe._key("unsafe").count(":"), 2)
+        self.assertEqual(unsafe.llen(), 2)
+        a.delete()
+        self.assertEqual(unsafe.llen(), 0)
+        unsafe.rpush("world")
+        self.assertEqual(unsafe.llen(), 1)
+
+        util.clean_unsafe_cols(RomTestUnsafeCols1)
+        self.assertEqual(unsafe.llen(), 0)
+        self.assertRaises(ValueError, lambda: a.unsafe.info())
+
+
+
 def main():
     global_setup()
     try:
