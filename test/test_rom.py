@@ -615,6 +615,14 @@ class TestORM(unittest.TestCase):
         self.assertEqual(RomTestUnicode2.query.endswith(col=ch).count(), 1)
         self.assertEqual(RomTestUnicode2.query.endswith(col2=ch).count(), 1)
 
+        class RomTestPlain(Model):
+            col = String(prefix=True, suffix=True, keygen=IDENTITY_STRING)
+
+        RomTestPlain(col="hello").save()
+
+        self.assertEqual(RomTestPlain.query.startswith(col="h").count(), 1)
+        self.assertEqual(RomTestPlain.query.endswith(col="lo").count(), 1)
+
     def test_infinite_ranges(self):
         """ Infinite range lookups via None in tuple.
         The get_by method accepts None as an argument to range based

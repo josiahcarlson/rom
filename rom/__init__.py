@@ -1,7 +1,7 @@
 '''
 Rom - the Redis object mapper for Python
 
-Copyright 2013-2022 Josiah Carlson
+Copyright 2013-2023 Josiah Carlson
 
 Released under the LGPL license version 2.1 and version 3 (you can choose
 which you'd like to be bound under).
@@ -190,9 +190,10 @@ from .model import _ModelMetaclass, Model
 from .query import NOT_NULL, Query
 from .util import (ClassProperty, _connect, session,
     _prefix_score, _script_load, _encode_unique_constraint,
-    FULL_TEXT, CASE_INSENSITIVE, SIMPLE, SIMPLE_CI, IDENTITY, IDENTITY_CI)
+    FULL_TEXT, CASE_INSENSITIVE, SIMPLE, SIMPLE_CI, IDENTITY, IDENTITY_CI,
+    IDENTITY_STRING, IDENTITY_STRING_CI)
 
-VERSION = '1.1.0'
+VERSION = '1.1.1'
 
 COLUMN_TYPES = [Column, Integer, Boolean, Float, Decimal, DateTime, Date,
 Time, String, Text, Json, PrimaryKey, ManyToOne, ForeignModel, OneToMany,

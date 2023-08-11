@@ -332,7 +332,29 @@ def IDENTITY_CI(val):
     '''
     Case-insensitive version of IDENTITY
     '''
-    return IDENTITY(val.lower())
+    if val:
+        return IDENTITY(val.lower())
+
+
+def IDENTITY_STRING(val):
+    """
+    like IDENTITY, but for String columns
+    """
+    if val:
+        if not isinstance(val, six.binary_type):
+            val = val.encode("latin-1")
+        return [val]
+
+
+def IDENTITY_STRING_CI(val):
+    """
+    like IDENTITY_CI, but for String columns
+    """
+    if val:
+        if not isinstance(val, six.binary_type):
+            val = val.encode("latin-1")
+        return [val.lower()]
+
 
 STRING_INDEX_KEYGENS = (FULL_TEXT, SIMPLE, SIMPLE_CI, IDENTITY, IDENTITY_CI, CASE_INSENSITIVE)
 STRING_INDEX_KEYGENS_STR = ', '.join(x.__name__ for x in STRING_INDEX_KEYGENS)

@@ -1,7 +1,7 @@
 
 Rom - the Redis object mapper for Python
 
-Copyright 2013-2022 Josiah Carlson
+Copyright 2013-2023 Josiah Carlson
 
 Released under the LGPL license version 2.1 and version 3 (you can choose
 which you'd like to be bound under).
