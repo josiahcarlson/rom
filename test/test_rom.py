@@ -23,7 +23,7 @@ import six
 
 from rom import util
 
-util.CONNECTION = redis.Redis(db=15, port=6379, host='redis-data-storage')
+util.CONNECTION = redis.Redis(db=15, port=6379, host='valkey-data-storage')
 connect = util._connect
 
 from rom import *
@@ -374,7 +374,7 @@ class TestORM(unittest.TestCase):
             pass
 
         class RomTestBar(Model):
-            _conn = redis.Redis(db=14, port=6379, host='redis-data-storage')
+            _conn = redis.Redis(db=14, port=6379, host='valkey-data-storage')
 
         RomTestBar._conn.delete('RomTestBar:id:')
 
@@ -1762,6 +1762,10 @@ class TestORM(unittest.TestCase):
 
             #### ONE Company manufactures MANY Items
             items   = OneToMany(ftable='RomTestItem', column='company')
+
+        a = RomTestCompany()
+        a.save()
+        a.delete()
 
         if null_session:
             util.use_null_session()

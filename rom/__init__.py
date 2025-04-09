@@ -193,7 +193,7 @@ from .util import (ClassProperty, _connect, session,
     FULL_TEXT, CASE_INSENSITIVE, SIMPLE, SIMPLE_CI, IDENTITY, IDENTITY_CI,
     IDENTITY_STRING, IDENTITY_STRING_CI)
 
-VERSION = '1.1.1'
+VERSION = '1.1.2'
 
 COLUMN_TYPES = [Column, Integer, Boolean, Float, Decimal, DateTime, Date,
 Time, String, Text, Json, PrimaryKey, ManyToOne, ForeignModel, OneToMany,

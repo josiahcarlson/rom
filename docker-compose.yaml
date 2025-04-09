@@ -1,0 +1,244 @@
+version: '3.3'
+services:
+  valkey-data-storage:
+    image: valkey/valkey:7-bookworm
+    ports:
+      - "6379:6379"
+    command: valkey-server --save ""
+    networks:
+      - rom_default
+  rom-uploader:
+    build:
+      context: .
+      dockerfile: Dockerfile.upload
+      args:
+        PYTHON_VERSION: "3.13"
+    environment:
+      PYTHONPATH: /app
+      PY: python3.13
+      REDIS_HOST: valkey-data-storage
+      REDIS_PORT: 6379
+      REDIS_DB: 15
+    links:
+      - valkey-data-storage
+    networks:
+      - rom_default
+    volumes:
+      - ./:/source/:rw
+      - ~/.pypirc/:/root/.pypirc/:ro
+
+  rom-docs:
+    build:
+      context: .
+      dockerfile: Dockerfile.upload
+    environment:
+      PYTHONPATH: /app
+      PY: python3.13
+    volumes:
+      - ./:/source/:rw
+    links:
+      - valkey-data-storage
+    networks:
+      - rom_default
+
+  rom-test-3-13:
+    build:
+      context: .
+      dockerfile: Dockerfile.bullseye
+      args:
+        PYTHON_VERSION: "3.13"
+    environment:
+      PYTHONPATH: /app
+      PY: python3.13
+      REDIS_HOST: valkey-data-storage
+      REDIS_PORT: 6379
+      REDIS_DB: 15
+    links:
+      - valkey-data-storage
+    networks:
+      - rom_default
+  rom-test-3-12:
+    build:
+      context: .
+      dockerfile: Dockerfile.bullseye
+      args:
+        PYTHON_VERSION: "3.12"
+    environment:
+      PYTHONPATH: /app
+      PY: python3.12
+      REDIS_HOST: valkey-data-storage
+      REDIS_PORT: 6379
+      REDIS_DB: 15
+    links:
+      - valkey-data-storage
+    networks:
+      - rom_default
+  rom-test-3-11:
+    build:
+      context: .
+      dockerfile: Dockerfile.bullseye
+      args:
+        PYTHON_VERSION: "3.11"
+    environment:
+      PYTHONPATH: /app
+      PY: python3.11
+      REDIS_HOST: valkey-data-storage
+      REDIS_PORT: 6379
+      REDIS_DB: 15
+    links:
+      - valkey-data-storage
+    networks:
+      - rom_default
+  rom-test-3-10:
+    build:
+      context: .
+      dockerfile: Dockerfile.bullseye
+      args:
+        PYTHON_VERSION: "3.10"
+    environment:
+      PYTHONPATH: /app
+      PY: python3.10
+      REDIS_HOST: valkey-data-storage
+      REDIS_PORT: 6379
+      REDIS_DB: 15
+    links:
+      - valkey-data-storage
+    networks:
+      - rom_default
+  rom-test-3-9:
+    build:
+      context: .
+      dockerfile: Dockerfile.bullseye
+      args:
+        PYTHON_VERSION: "3.9"
+    environment:
+      PYTHONPATH: /app
+      PY: python3.9
+      REDIS_HOST: valkey-data-storage
+      REDIS_PORT: 6379
+      REDIS_DB: 15
+    links:
+      - valkey-data-storage
+    networks:
+      - rom_default
+  rom-test-3-8:
+    build:
+      context: .
+      dockerfile: Dockerfile.bullseye
+      args:
+        PYTHON_VERSION: "3.8"
+    environment:
+      PYTHONPATH: /app
+      PY: python3.8
+      REDIS_HOST: valkey-data-storage
+      REDIS_PORT: 6379
+      REDIS_DB: 15
+    links:
+      - valkey-data-storage
+    networks:
+      - rom_default
+  rom-test-3-7:
+    build:
+      context: .
+      dockerfile: Dockerfile.bullseye
+      args:
+        PYTHON_VERSION: "3.7"
+    environment:
+      PYTHONPATH: /app
+      PY: python3.7
+      REDIS_HOST: valkey-data-storage
+      REDIS_PORT: 6379
+      REDIS_DB: 15
+    links:
+      - valkey-data-storage
+    networks:
+      - rom_default
+  rom-test-3-6:
+    build:
+      context: .
+      dockerfile: Dockerfile.generic
+      args:
+        PYTHON_VERSION: "3.6"
+    environment:
+      PYTHONPATH: /app
+      PY: python3.6
+      REDIS_HOST: valkey-data-storage
+      REDIS_PORT: 6379
+      REDIS_DB: 15
+    links:
+      - valkey-data-storage
+    networks:
+      - rom_default
+  rom-test-3-5:
+    build:
+      context: .
+      dockerfile: Dockerfile.generic
+      args:
+        PYTHON_VERSION: "3.5"
+    environment:
+      PYTHONPATH: /app
+      PY: python3.5
+      REDIS_HOST: valkey-data-storage
+      REDIS_PORT: 6379
+      REDIS_DB: 15
+    links:
+      - valkey-data-storage
+    networks:
+      - rom_default
+  rom-test-3-4:
+    build:
+      context: .
+      dockerfile: Dockerfile.generic
+      args:
+        PYTHON_VERSION: "3.4"
+    environment:
+      PYTHONPATH: /app
+      PY: python3.4
+      REDIS_HOST: valkey-data-storage
+      REDIS_PORT: 6379
+      REDIS_DB: 15
+    links:
+      - valkey-data-storage
+    networks:
+      - rom_default
+  # rom-test-3-3:
+  #   build:
+  #     context: .
+  #     dockerfile: Dockerfile.generic
+  #     args:
+  #       PYTHON_VERSION: "3.3"
+  #   environment:
+  #     PYTHONPATH: /app
+  rom-test-2-7:
+    build:
+      context: .
+      dockerfile: Dockerfile.generic
+      args:
+        PYTHON_VERSION: "2.7"
+    environment:
+      PYTHONPATH: /app
+      PY: python2.7
+      REDIS_HOST: valkey-data-storage
+      REDIS_PORT: 6379
+      REDIS_DB: 15
+    links:
+      - valkey-data-storage
+    networks:
+      - rom_default
+  rom-test-2-7:
+    build:
+      context: .
+      dockerfile: Dockerfile.2.7
+    environment:
+      REDIS_HOST: valkey-data-storage
+      REDIS_PORT: 6379
+      REDIS_DB: 15
+      PYTHONPATH: /app
+    links:
+      - valkey-data-storage
+    networks:
+      - rom_default
+
+networks:
+  rom_default:
+    external: false

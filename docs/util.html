@@ -1,23 +1,23 @@
 <!DOCTYPE html>
 
-<html lang="en">
+<html lang="en" data-content_root="./">
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>util Module &#8212; rom 1.1.1 documentation</title>
-    <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
-    <link rel="stylesheet" type="text/css" href="_static/classic.css" />
+    <title>util Module &#8212; rom 1.1.2 documentation</title>
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=03e43079" />
+    <link rel="stylesheet" type="text/css" href="_static/classic.css?v=2bf1fcf8" />
     
-    <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
-    <script src="_static/doctools.js"></script>
-    <script src="_static/sphinx_highlight.js"></script>
+    <script src="_static/documentation_options.js?v=6f037312"></script>
+    <script src="_static/doctools.js?v=9bcbadda"></script>
+    <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
     
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
     <link rel="prev" title="query Module" href="query.html" /> 
   </head><body>
-    <div class="related" role="navigation" aria-label="related navigation">
+    <div class="related" role="navigation" aria-label="Related">
       <h3>Navigation</h3>
       <ul>
         <li class="right" style="margin-right: 10px">
@@ -29,7 +29,7 @@
         <li class="right" >
           <a href="query.html" title="query Module"
              accesskey="P">previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="index.html">rom 1.1.1 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="index.html">rom 1.1.2 documentation</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href=""><code class="xref py py-mod docutils literal notranslate"><span class="pre">util</span></code> Module</a></li> 
       </ul>
     </div>  
@@ -40,19 +40,19 @@
           <div class="body" role="main">
             
   <section id="module-rom.util">
-<span id="util-module"></span><h1><code class="xref py py-mod docutils literal notranslate"><span class="pre">util</span></code> Module<a class="headerlink" href="#module-rom.util" title="Permalink to this heading">¶</a></h1>
+<span id="util-module"></span><h1><code class="xref py py-mod docutils literal notranslate"><span class="pre">util</span></code> Module<a class="headerlink" href="#module-rom.util" title="Link to this heading">¶</a></h1>
 <p>Rom - the Redis object mapper for Python</p>
 <p>Copyright 2013-2020 Josiah Carlson</p>
 <p>Released under the LGPL license version 2.1 and version 3 (you can choose
 which you’d like to be bound under).</p>
 <section id="changing-connection-settings">
-<h2>Changing connection settings<a class="headerlink" href="#changing-connection-settings" title="Permalink to this heading">¶</a></h2>
+<h2>Changing connection settings<a class="headerlink" href="#changing-connection-settings" title="Link to this heading">¶</a></h2>
 <p>There are four ways to change the way that <code class="docutils literal notranslate"><span class="pre">rom</span></code> connects to Redis.</p>
 <ol class="arabic">
 <li><p>Set the global default connection settings by calling
 <code class="docutils literal notranslate"><span class="pre">rom.util.set_connection_settings()</span></code> with the same arguments you would
 pass to the redis.Redis() constructor:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">rom.util</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">rom.util</span>
 
 <span class="n">rom</span><span class="o">.</span><span class="n">util</span><span class="o">.</span><span class="n">set_connection_settings</span><span class="p">(</span><span class="n">host</span><span class="o">=</span><span class="s1">&#39;myhost&#39;</span><span class="p">,</span> <span class="n">db</span><span class="o">=</span><span class="mi">7</span><span class="p">)</span>
 </pre></div>
@@ -61,9 +61,9 @@ pass to the redis.Redis() constructor:</p>
 <li><p>Give each model its own Redis connection on creation, called _conn, which
 will be used whenever any Redis-related calls are made on instances of that
 model:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">rom</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">rom</span>
 
-<span class="k">class</span> <span class="nc">MyModel</span><span class="p">(</span><span class="n">rom</span><span class="o">.</span><span class="n">Model</span><span class="p">):</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">MyModel</span><span class="p">(</span><span class="n">rom</span><span class="o">.</span><span class="n">Model</span><span class="p">):</span>
     <span class="n">_conn</span> <span class="o">=</span> <span class="n">redis</span><span class="o">.</span><span class="n">Redis</span><span class="p">(</span><span class="n">host</span><span class="o">=</span><span class="s1">&#39;myhost&#39;</span><span class="p">,</span> <span class="n">db</span><span class="o">=</span><span class="mi">7</span><span class="p">)</span>
 
     <span class="n">attribute</span> <span class="o">=</span> <span class="n">rom</span><span class="o">.</span><span class="n">String</span><span class="p">()</span>
@@ -72,7 +72,7 @@ model:</p>
 </div>
 </li>
 <li><p>Replace the <code class="docutils literal notranslate"><span class="pre">CONNECTION</span></code> object in <code class="docutils literal notranslate"><span class="pre">rom.util</span></code>:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">rom.util</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">rom.util</span>
 
 <span class="n">rom</span><span class="o">.</span><span class="n">util</span><span class="o">.</span><span class="n">CONNECTION</span> <span class="o">=</span> <span class="n">redis</span><span class="o">.</span><span class="n">Redis</span><span class="p">(</span><span class="n">host</span><span class="o">=</span><span class="s1">&#39;myhost&#39;</span><span class="p">,</span> <span class="n">db</span><span class="o">=</span><span class="mi">7</span><span class="p">)</span>
 </pre></div>
@@ -80,9 +80,9 @@ model:</p>
 </li>
 <li><p>Monkey-patch <code class="docutils literal notranslate"><span class="pre">rom.util.get_connection</span></code> with a function that takes no
 arguments and returns a Redis connection:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">rom.util</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">rom.util</span>
 
-<span class="k">def</span> <span class="nf">my_connection</span><span class="p">():</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">my_connection</span><span class="p">():</span>
     <span class="c1"># Note that this function doesn&#39;t use connection pooling,</span>
     <span class="c1"># you would want to instantiate and cache a real connection</span>
     <span class="c1"># as necessary.</span>
@@ -95,14 +95,14 @@ arguments and returns a Redis connection:</p>
 </ol>
 </section>
 <section id="using-a-non-caching-session-object">
-<h2>Using a non-caching session object<a class="headerlink" href="#using-a-non-caching-session-object" title="Permalink to this heading">¶</a></h2>
+<h2>Using a non-caching session object<a class="headerlink" href="#using-a-non-caching-session-object" title="Link to this heading">¶</a></h2>
 <p>If you would like to stop <code class="docutils literal notranslate"><span class="pre">rom</span></code> from caching your data for later
 <code class="docutils literal notranslate"><span class="pre">session.commit()</span></code> or faster data fetching (and there are several reasons for
 doing this), <code class="docutils literal notranslate"><span class="pre">rom</span></code> offers two methods to enable or disable caching on either a
 global or per-thread basis.</p>
 <ol class="arabic">
 <li><p>To set the global default behavior as not caching anything, you can:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">rom.util</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">rom.util</span>
 <span class="n">rom</span><span class="o">.</span><span class="n">util</span><span class="o">.</span><span class="n">use_null_session</span><span class="p">()</span>
 </pre></div>
 </div>
@@ -122,20 +122,20 @@ will set the thread’s behavior to be uncached (<code class="docutils literal n
 </ol>
 </section>
 <section id="using-a-geo-index">
-<h2>Using a geo index<a class="headerlink" href="#using-a-geo-index" title="Permalink to this heading">¶</a></h2>
+<h2>Using a geo index<a class="headerlink" href="#using-a-geo-index" title="Link to this heading">¶</a></h2>
 <p>Your model must have an attribute called <code class="docutils literal notranslate"><span class="pre">geo_index</span></code>, and that attribute must
 be a list of <code class="docutils literal notranslate"><span class="pre">GeoIndex()</span></code> objects. Names for <code class="docutils literal notranslate"><span class="pre">GeoIndex</span></code> items must be unique
 per model.:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">rom</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">rom</span>
 
-<span class="k">def</span> <span class="nf">cb</span><span class="p">(</span><span class="n">data</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">cb</span><span class="p">(</span><span class="n">data</span><span class="p">):</span>
     <span class="c1"># ``data`` can act as an object or dictionary. This function could have</span>
     <span class="c1"># actually just read::</span>
     <span class="c1">#     return data</span>
     <span class="c1"># ... but we will be explicit in what we return... yes this works!</span>
     <span class="k">return</span> <span class="p">{</span><span class="s1">&#39;lon&#39;</span><span class="p">:</span> <span class="n">data</span><span class="p">[</span><span class="s1">&#39;lon&#39;</span><span class="p">],</span> <span class="s1">&#39;lat&#39;</span><span class="p">:</span> <span class="n">data</span><span class="o">.</span><span class="n">lat</span><span class="p">}</span>
 
-<span class="k">class</span> <span class="nc">PointOfInterest</span><span class="p">(</span><span class="n">rom</span><span class="o">.</span><span class="n">Model</span><span class="p">):</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">PointOfInterest</span><span class="p">(</span><span class="n">rom</span><span class="o">.</span><span class="n">Model</span><span class="p">):</span>
     <span class="o">...</span>
     <span class="n">tags</span> <span class="o">=</span> <span class="n">rom</span><span class="o">.</span><span class="n">String</span><span class="p">(</span><span class="n">index</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">keygen</span><span class="o">=</span><span class="n">rom</span><span class="o">.</span><span class="n">FULL_TEXT</span><span class="p">)</span>
     <span class="n">avg_rating</span> <span class="o">=</span> <span class="n">rom</span><span class="o">.</span><span class="n">Float</span><span class="p">(</span><span class="n">index</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
@@ -174,44 +174,44 @@ per model.:</p>
 </section>
 <dl class="py function">
 <dt class="sig sig-object py" id="rom.util.CASE_INSENSITIVE">
-<span class="sig-prename descclassname"><span class="pre">rom.util.</span></span><span class="sig-name descname"><span class="pre">CASE_INSENSITIVE</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">val</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#rom.util.CASE_INSENSITIVE" title="Permalink to this definition">¶</a></dt>
+<span class="sig-prename descclassname"><span class="pre">rom.util.</span></span><span class="sig-name descname"><span class="pre">CASE_INSENSITIVE</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">val</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#rom.util.CASE_INSENSITIVE" title="Link to this definition">¶</a></dt>
 <dd><p>Old alias for SIMPLE_CI</p>
 </dd></dl>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="rom.util.ClassProperty">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">rom.util.</span></span><span class="sig-name descname"><span class="pre">ClassProperty</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">get</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">set</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">delete</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#rom.util.ClassProperty" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">rom.util.</span></span><span class="sig-name descname"><span class="pre">ClassProperty</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">get</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">set</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">delete</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#rom.util.ClassProperty" title="Link to this definition">¶</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
 <p>Borrowed from: <a class="reference external" href="https://gist.github.com/josiahcarlson/1561563">https://gist.github.com/josiahcarlson/1561563</a></p>
 <dl class="py method">
 <dt class="sig sig-object py" id="rom.util.ClassProperty.deleter">
-<span class="sig-name descname"><span class="pre">deleter</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">delete</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#rom.util.ClassProperty.deleter" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">deleter</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">delete</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#rom.util.ClassProperty.deleter" title="Link to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="rom.util.ClassProperty.getter">
-<span class="sig-name descname"><span class="pre">getter</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">get</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#rom.util.ClassProperty.getter" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">getter</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">get</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#rom.util.ClassProperty.getter" title="Link to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="rom.util.ClassProperty.setter">
-<span class="sig-name descname"><span class="pre">setter</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">set</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#rom.util.ClassProperty.setter" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">setter</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">set</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#rom.util.ClassProperty.setter" title="Link to this definition">¶</a></dt>
 <dd></dd></dl>
 
 </dd></dl>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="rom.util.EntityLock">
-<span class="sig-prename descclassname"><span class="pre">rom.util.</span></span><span class="sig-name descname"><span class="pre">EntityLock</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">entity</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">acquire_timeout</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lock_timeout</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#rom.util.EntityLock" title="Permalink to this definition">¶</a></dt>
+<span class="sig-prename descclassname"><span class="pre">rom.util.</span></span><span class="sig-name descname"><span class="pre">EntityLock</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">entity</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">acquire_timeout</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lock_timeout</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#rom.util.EntityLock" title="Link to this definition">¶</a></dt>
 <dd><p>Useful when you want exclusive access to an entity across all writers.:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1"># example</span>
-<span class="kn">import</span> <span class="nn">rom</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">rom</span>
 
-<span class="k">class</span> <span class="nc">Document</span><span class="p">(</span><span class="n">rom</span><span class="o">.</span><span class="n">Model</span><span class="p">):</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">Document</span><span class="p">(</span><span class="n">rom</span><span class="o">.</span><span class="n">Model</span><span class="p">):</span>
     <span class="n">owner</span> <span class="o">=</span> <span class="n">rom</span><span class="o">.</span><span class="n">ManyToOne</span><span class="p">(</span><span class="s1">&#39;User&#39;</span><span class="p">,</span> <span class="n">on_delete</span><span class="o">=</span><span class="s1">&#39;restrict&#39;</span><span class="p">)</span>
     <span class="o">...</span>
 
-<span class="k">def</span> <span class="nf">change_owner</span><span class="p">(</span><span class="n">document</span><span class="p">,</span> <span class="n">new_owner</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">change_owner</span><span class="p">(</span><span class="n">document</span><span class="p">,</span> <span class="n">new_owner</span><span class="p">):</span>
     <span class="k">with</span> <span class="n">rom</span><span class="o">.</span><span class="n">util</span><span class="o">.</span><span class="n">EntityLock</span><span class="p">(</span><span class="n">document</span><span class="p">,</span> <span class="mi">5</span><span class="p">,</span> <span class="mi">90</span><span class="p">):</span>
         <span class="n">document</span><span class="o">.</span><span class="n">owner</span> <span class="o">=</span> <span class="n">new_owner</span>
         <span class="n">document</span><span class="o">.</span><span class="n">save</span><span class="p">()</span>
@@ -221,7 +221,7 @@ per model.:</p>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="rom.util.FULL_TEXT">
-<span class="sig-prename descclassname"><span class="pre">rom.util.</span></span><span class="sig-name descname"><span class="pre">FULL_TEXT</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">val</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#rom.util.FULL_TEXT" title="Permalink to this definition">¶</a></dt>
+<span class="sig-prename descclassname"><span class="pre">rom.util.</span></span><span class="sig-name descname"><span class="pre">FULL_TEXT</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">val</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#rom.util.FULL_TEXT" title="Link to this definition">¶</a></dt>
 <dd><p>This is a basic full-text index keygen function. Words are lowercased, split
 by whitespace, and stripped of punctuation from both ends before an inverted
 index is created for term searching.</p>
@@ -229,7 +229,7 @@ index is created for term searching.</p>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="rom.util.IDENTITY">
-<span class="sig-prename descclassname"><span class="pre">rom.util.</span></span><span class="sig-name descname"><span class="pre">IDENTITY</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">val</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#rom.util.IDENTITY" title="Permalink to this definition">¶</a></dt>
+<span class="sig-prename descclassname"><span class="pre">rom.util.</span></span><span class="sig-name descname"><span class="pre">IDENTITY</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">val</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#rom.util.IDENTITY" title="Link to this definition">¶</a></dt>
 <dd><p>This is a basic “equality” index keygen, primarily meant to be used for
 things like:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">Model</span><span class="o">.</span><span class="n">query</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">col</span><span class="o">=</span><span class="s1">&#39;value&#39;</span><span class="p">)</span>
@@ -244,25 +244,25 @@ same function, only case-insensitive.</p>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="rom.util.IDENTITY_CI">
-<span class="sig-prename descclassname"><span class="pre">rom.util.</span></span><span class="sig-name descname"><span class="pre">IDENTITY_CI</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">val</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#rom.util.IDENTITY_CI" title="Permalink to this definition">¶</a></dt>
+<span class="sig-prename descclassname"><span class="pre">rom.util.</span></span><span class="sig-name descname"><span class="pre">IDENTITY_CI</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">val</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#rom.util.IDENTITY_CI" title="Link to this definition">¶</a></dt>
 <dd><p>Case-insensitive version of IDENTITY</p>
 </dd></dl>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="rom.util.IDENTITY_STRING">
-<span class="sig-prename descclassname"><span class="pre">rom.util.</span></span><span class="sig-name descname"><span class="pre">IDENTITY_STRING</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">val</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#rom.util.IDENTITY_STRING" title="Permalink to this definition">¶</a></dt>
+<span class="sig-prename descclassname"><span class="pre">rom.util.</span></span><span class="sig-name descname"><span class="pre">IDENTITY_STRING</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">val</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#rom.util.IDENTITY_STRING" title="Link to this definition">¶</a></dt>
 <dd><p>like IDENTITY, but for String columns</p>
 </dd></dl>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="rom.util.IDENTITY_STRING_CI">
-<span class="sig-prename descclassname"><span class="pre">rom.util.</span></span><span class="sig-name descname"><span class="pre">IDENTITY_STRING_CI</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">val</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#rom.util.IDENTITY_STRING_CI" title="Permalink to this definition">¶</a></dt>
+<span class="sig-prename descclassname"><span class="pre">rom.util.</span></span><span class="sig-name descname"><span class="pre">IDENTITY_STRING_CI</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">val</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#rom.util.IDENTITY_STRING_CI" title="Link to this definition">¶</a></dt>
 <dd><p>like IDENTITY_CI, but for String columns</p>
 </dd></dl>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="rom.util.Lock">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">rom.util.</span></span><span class="sig-name descname"><span class="pre">Lock</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">conn</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lockname</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">acquire_timeout</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lock_timeout</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#rom.util.Lock" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">rom.util.</span></span><span class="sig-name descname"><span class="pre">Lock</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">conn</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lockname</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">acquire_timeout</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lock_timeout</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#rom.util.Lock" title="Link to this definition">¶</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
 <p>Borrowed/modified from my book, Redis in Action:
 <a class="reference external" href="https://github.com/josiahcarlson/redis-in-action/blob/master/python/ch11_listing_source.py">https://github.com/josiahcarlson/redis-in-action/blob/master/python/ch11_listing_source.py</a></p>
@@ -271,49 +271,49 @@ required semantics. Mostly intended as a general building block for use by
 EntityLock.</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="rom.util.Lock.acquire">
-<span class="sig-name descname"><span class="pre">acquire</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#rom.util.Lock.acquire" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">acquire</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#rom.util.Lock.acquire" title="Link to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="rom.util.Lock.acquire_timeout">
-<span class="sig-name descname"><span class="pre">acquire_timeout</span></span><a class="headerlink" href="#rom.util.Lock.acquire_timeout" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">acquire_timeout</span></span><a class="headerlink" href="#rom.util.Lock.acquire_timeout" title="Link to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="rom.util.Lock.conn">
-<span class="sig-name descname"><span class="pre">conn</span></span><a class="headerlink" href="#rom.util.Lock.conn" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">conn</span></span><a class="headerlink" href="#rom.util.Lock.conn" title="Link to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="rom.util.Lock.identifier">
-<span class="sig-name descname"><span class="pre">identifier</span></span><a class="headerlink" href="#rom.util.Lock.identifier" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">identifier</span></span><a class="headerlink" href="#rom.util.Lock.identifier" title="Link to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="rom.util.Lock.lock_timeout">
-<span class="sig-name descname"><span class="pre">lock_timeout</span></span><a class="headerlink" href="#rom.util.Lock.lock_timeout" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">lock_timeout</span></span><a class="headerlink" href="#rom.util.Lock.lock_timeout" title="Link to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="rom.util.Lock.lockname">
-<span class="sig-name descname"><span class="pre">lockname</span></span><a class="headerlink" href="#rom.util.Lock.lockname" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">lockname</span></span><a class="headerlink" href="#rom.util.Lock.lockname" title="Link to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="rom.util.Lock.refresh">
-<span class="sig-name descname"><span class="pre">refresh</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#rom.util.Lock.refresh" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">refresh</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#rom.util.Lock.refresh" title="Link to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="rom.util.Lock.release">
-<span class="sig-name descname"><span class="pre">release</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#rom.util.Lock.release" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">release</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#rom.util.Lock.release" title="Link to this definition">¶</a></dt>
 <dd></dd></dl>
 
 </dd></dl>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="rom.util.SIMPLE">
-<span class="sig-prename descclassname"><span class="pre">rom.util.</span></span><span class="sig-name descname"><span class="pre">SIMPLE</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">val</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#rom.util.SIMPLE" title="Permalink to this definition">¶</a></dt>
+<span class="sig-prename descclassname"><span class="pre">rom.util.</span></span><span class="sig-name descname"><span class="pre">SIMPLE</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">val</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#rom.util.SIMPLE" title="Link to this definition">¶</a></dt>
 <dd><p>This is a basic case-sensitive “sorted order” index keygen function for
 strings. This will return a value that is suitable to be used for ordering
 by a 7-byte prefix of a string (that is 7 characters from a byte-string, and
@@ -330,13 +330,13 @@ characters past the 7th encoded byte).</p>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="rom.util.SIMPLE_CI">
-<span class="sig-prename descclassname"><span class="pre">rom.util.</span></span><span class="sig-name descname"><span class="pre">SIMPLE_CI</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">val</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#rom.util.SIMPLE_CI" title="Permalink to this definition">¶</a></dt>
+<span class="sig-prename descclassname"><span class="pre">rom.util.</span></span><span class="sig-name descname"><span class="pre">SIMPLE_CI</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">val</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#rom.util.SIMPLE_CI" title="Link to this definition">¶</a></dt>
 <dd><p>The same as SIMPLE, only case-insensitive.</p>
 </dd></dl>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="rom.util.Session">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">rom.util.</span></span><span class="sig-name descname"><span class="pre">Session</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#rom.util.Session" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">rom.util.</span></span><span class="sig-name descname"><span class="pre">Session</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#rom.util.Session" title="Link to this definition">¶</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">_local</span></code></p>
 <p>This is a very dumb session. All it tries to do is to keep a cache of
 loaded entities, offering the ability to call <code class="docutils literal notranslate"><span class="pre">.save()</span></code> on modified (or
@@ -351,13 +351,13 @@ error causing the call to fail.</p>
 </div>
 <dl class="py method">
 <dt class="sig sig-object py" id="rom.util.Session.add">
-<span class="sig-name descname"><span class="pre">add</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">obj</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#rom.util.Session.add" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">add</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">obj</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#rom.util.Session.add" title="Link to this definition">¶</a></dt>
 <dd><p>Adds an entity to the session.</p>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="rom.util.Session.commit">
-<span class="sig-name descname"><span class="pre">commit</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">full</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">all</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">force</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#rom.util.Session.commit" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">commit</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">full</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">all</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">force</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#rom.util.Session.commit" title="Link to this definition">¶</a></dt>
 <dd><p>Call <code class="docutils literal notranslate"><span class="pre">.save()</span></code> on all modified entities in the session. Also forgets
 all known entities in the session, so this should only be called at
 the end of a request.</p>
@@ -376,7 +376,7 @@ DataRaceError and EntityDeletedError exceptions</p></li>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="rom.util.Session.delete">
-<span class="sig-name descname"><span class="pre">delete</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">objects</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#rom.util.Session.delete" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">delete</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">objects</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#rom.util.Session.delete" title="Link to this definition">¶</a></dt>
 <dd><p>This method offers the ability to delete multiple entities in a single
 round trip to Redis (assuming your models are all stored on the same
 server). You can call:</p>
@@ -399,7 +399,7 @@ delete for the sake of cache coherency.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="rom.util.Session.flush">
-<span class="sig-name descname"><span class="pre">flush</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">full</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">all</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">force</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#rom.util.Session.flush" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">flush</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">full</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">all</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">force</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#rom.util.Session.flush" title="Link to this definition">¶</a></dt>
 <dd><p>Call <code class="docutils literal notranslate"><span class="pre">.save()</span></code> on all modified entities in the session. Use when you
 want to flush changes to Redis, but don’t want to lose your local
 session cache.</p>
@@ -408,7 +408,7 @@ session cache.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="rom.util.Session.forget">
-<span class="sig-name descname"><span class="pre">forget</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">obj</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#rom.util.Session.forget" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">forget</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">obj</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#rom.util.Session.forget" title="Link to this definition">¶</a></dt>
 <dd><p>Forgets about an entity (automatically called when an entity is
 deleted). Call this to ensure that an entity that you’ve modified is
 not automatically saved on <code class="docutils literal notranslate"><span class="pre">session.commit()</span></code> .</p>
@@ -416,18 +416,18 @@ not automatically saved on <code class="docutils literal notranslate"><span clas
 
 <dl class="py method">
 <dt class="sig sig-object py" id="rom.util.Session.get">
-<span class="sig-name descname"><span class="pre">get</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">pk</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#rom.util.Session.get" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">get</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">pk</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#rom.util.Session.get" title="Link to this definition">¶</a></dt>
 <dd><p>Fetches an entity from the session based on primary key.</p>
 </dd></dl>
 
 <dl class="py property">
 <dt class="sig sig-object py" id="rom.util.Session.null_session">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">null_session</span></span><a class="headerlink" href="#rom.util.Session.null_session" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">null_session</span></span><a class="headerlink" href="#rom.util.Session.null_session" title="Link to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="rom.util.Session.refresh">
-<span class="sig-name descname"><span class="pre">refresh</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">objects</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#rom.util.Session.refresh" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">refresh</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">objects</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#rom.util.Session.refresh" title="Link to this definition">¶</a></dt>
 <dd><p>This method is an alternate API for refreshing many entities (possibly
 not tracked by the session). You can call:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">session</span><span class="o">.</span><span class="n">refresh</span><span class="p">(</span><span class="n">obj</span><span class="p">)</span>
@@ -441,7 +441,7 @@ not tracked by the session). You can call:</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="rom.util.Session.refresh_all">
-<span class="sig-name descname"><span class="pre">refresh_all</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">objects</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#rom.util.Session.refresh_all" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">refresh_all</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">objects</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#rom.util.Session.refresh_all" title="Link to this definition">¶</a></dt>
 <dd><p>This method is an alternate API for refreshing all entities tracked
 by the session. You can call:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">session</span><span class="o">.</span><span class="n">refresh_all</span><span class="p">()</span>
@@ -454,14 +454,14 @@ by the session. You can call:</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="rom.util.Session.rollback">
-<span class="sig-name descname"><span class="pre">rollback</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#rom.util.Session.rollback" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">rollback</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#rom.util.Session.rollback" title="Link to this definition">¶</a></dt>
 <dd><p>Forget about all entities in the session (<code class="docutils literal notranslate"><span class="pre">.commit()</span></code> will do
 nothing).</p>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="rom.util.Session.save">
-<span class="sig-name descname"><span class="pre">save</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">objects</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#rom.util.Session.save" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">save</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">objects</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#rom.util.Session.save" title="Link to this definition">¶</a></dt>
 <dd><p>This method is an alternate API for saving many entities (possibly not
 tracked by the session). You can call:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">session</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="n">obj</span><span class="p">)</span>
@@ -478,7 +478,7 @@ the same meaning and semantics as the <code class="docutils literal notranslate"
 
 <dl class="py function">
 <dt class="sig sig-object py" id="rom.util.clean_old_index">
-<span class="sig-prename descclassname"><span class="pre">rom.util.</span></span><span class="sig-name descname"><span class="pre">clean_old_index</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">block_size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">100</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#rom.util.clean_old_index" title="Permalink to this definition">¶</a></dt>
+<span class="sig-prename descclassname"><span class="pre">rom.util.</span></span><span class="sig-name descname"><span class="pre">clean_old_index</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">block_size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">100</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#rom.util.clean_old_index" title="Link to this definition">¶</a></dt>
 <dd><p>This utility function will clean out old index data that was accidentally
 left during item deletion in rom versions &lt;= 0.27.0 . You should run this
 after you have upgraded all of your clients to version 0.28.0 or later.</p>
@@ -501,7 +501,7 @@ data that could be left over.</p>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="rom.util.clean_unsafe_cols">
-<span class="sig-prename descclassname"><span class="pre">rom.util.</span></span><span class="sig-name descname"><span class="pre">clean_unsafe_cols</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">models</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#rom.util.clean_unsafe_cols" title="Permalink to this definition">¶</a></dt>
+<span class="sig-prename descclassname"><span class="pre">rom.util.</span></span><span class="sig-name descname"><span class="pre">clean_unsafe_cols</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">models</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#rom.util.clean_unsafe_cols" title="Link to this definition">¶</a></dt>
 <dd><dl>
 <dt>Args:</dt><dd><dl class="simple">
 <dt>models - any model base that you want to clean the namespace of, because</dt><dd><p>you believe there are leftover unsafe column data that you have
@@ -547,13 +547,13 @@ ELSE IGNORE</p>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="rom.util.get_connection">
-<span class="sig-prename descclassname"><span class="pre">rom.util.</span></span><span class="sig-name descname"><span class="pre">get_connection</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#rom.util.get_connection" title="Permalink to this definition">¶</a></dt>
+<span class="sig-prename descclassname"><span class="pre">rom.util.</span></span><span class="sig-name descname"><span class="pre">get_connection</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#rom.util.get_connection" title="Link to this definition">¶</a></dt>
 <dd><p>Override me for one of the ways to change the way I connect to Redis.</p>
 </dd></dl>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="rom.util.refresh_all_indexes">
-<span class="sig-prename descclassname"><span class="pre">rom.util.</span></span><span class="sig-name descname"><span class="pre">refresh_all_indexes</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#rom.util.refresh_all_indexes" title="Permalink to this definition">¶</a></dt>
+<span class="sig-prename descclassname"><span class="pre">rom.util.</span></span><span class="sig-name descname"><span class="pre">refresh_all_indexes</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#rom.util.refresh_all_indexes" title="Link to this definition">¶</a></dt>
 <dd><p>This utility function will renew and refresh all indexes for all entities.
 Useful if you’ve recently upgraded rom, or changed your index definitions
 and want to ensure that all of your models are properly indexed.</p>
@@ -562,7 +562,7 @@ and want to ensure that all of your models are properly indexed.</p>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="rom.util.refresh_indices">
-<span class="sig-prename descclassname"><span class="pre">rom.util.</span></span><span class="sig-name descname"><span class="pre">refresh_indices</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">block_size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">100</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">scan</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#rom.util.refresh_indices" title="Permalink to this definition">¶</a></dt>
+<span class="sig-prename descclassname"><span class="pre">rom.util.</span></span><span class="sig-name descname"><span class="pre">refresh_indices</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">block_size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">100</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">scan</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#rom.util.refresh_indices" title="Link to this definition">¶</a></dt>
 <dd><p>This utility function will iterate over all entities of a provided model,
 refreshing their indices. This is primarily useful after adding an index
 on a column.</p>
@@ -591,18 +591,18 @@ session, they will be committed.</p>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="rom.util.set_connection_settings">
-<span class="sig-prename descclassname"><span class="pre">rom.util.</span></span><span class="sig-name descname"><span class="pre">set_connection_settings</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#rom.util.set_connection_settings" title="Permalink to this definition">¶</a></dt>
+<span class="sig-prename descclassname"><span class="pre">rom.util.</span></span><span class="sig-name descname"><span class="pre">set_connection_settings</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#rom.util.set_connection_settings" title="Link to this definition">¶</a></dt>
 <dd><p>Update the global connection settings for models that don’t have
 model-specific connections.</p>
 </dd></dl>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="rom.util.show_progress">
-<span class="sig-prename descclassname"><span class="pre">rom.util.</span></span><span class="sig-name descname"><span class="pre">show_progress</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">job</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#rom.util.show_progress" title="Permalink to this definition">¶</a></dt>
+<span class="sig-prename descclassname"><span class="pre">rom.util.</span></span><span class="sig-name descname"><span class="pre">show_progress</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">job</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#rom.util.show_progress" title="Link to this definition">¶</a></dt>
 <dd><p>This utility function will print the progress of a passed iterator job as
 started by <code class="docutils literal notranslate"><span class="pre">refresh_indices()</span></code> and <code class="docutils literal notranslate"><span class="pre">clean_old_index()</span></code>.</p>
 <p>Usage example:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">class</span> <span class="nc">RomTest</span><span class="p">(</span><span class="n">Model</span><span class="p">):</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">class</span><span class="w"> </span><span class="nc">RomTest</span><span class="p">(</span><span class="n">Model</span><span class="p">):</span>
     <span class="k">pass</span>
 
 <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">xrange</span><span class="p">(</span><span class="mi">1000</span><span class="p">):</span>
@@ -615,7 +615,7 @@ started by <code class="docutils literal notranslate"><span class="pre">refresh_
 
 <dl class="py function">
 <dt class="sig sig-object py" id="rom.util.use_null_session">
-<span class="sig-prename descclassname"><span class="pre">rom.util.</span></span><span class="sig-name descname"><span class="pre">use_null_session</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#rom.util.use_null_session" title="Permalink to this definition">¶</a></dt>
+<span class="sig-prename descclassname"><span class="pre">rom.util.</span></span><span class="sig-name descname"><span class="pre">use_null_session</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#rom.util.use_null_session" title="Link to this definition">¶</a></dt>
 <dd><p>If you call <code class="docutils literal notranslate"><span class="pre">use_null_session()</span></code>, you will change the default session for
 all threads to <em>not cache</em>. You can override the default on a per-thread
 basis by manipulating <code class="docutils literal notranslate"><span class="pre">session.null_session</span></code> (set to <code class="docutils literal notranslate"><span class="pre">True</span></code>, <code class="docutils literal notranslate"><span class="pre">False</span></code>,
@@ -625,7 +625,7 @@ respectively).</p>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="rom.util.use_rom_session">
-<span class="sig-prename descclassname"><span class="pre">rom.util.</span></span><span class="sig-name descname"><span class="pre">use_rom_session</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#rom.util.use_rom_session" title="Permalink to this definition">¶</a></dt>
+<span class="sig-prename descclassname"><span class="pre">rom.util.</span></span><span class="sig-name descname"><span class="pre">use_rom_session</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#rom.util.use_rom_session" title="Link to this definition">¶</a></dt>
 <dd><p>If you call <code class="docutils literal notranslate"><span class="pre">use_rom_session()</span></code>, you will change the default session for
 all threads to <em>cache</em>. You can override the default on a per-thread basis
 by manipulating <code class="docutils literal notranslate"><span class="pre">session.null_session</span></code> (set to <code class="docutils literal notranslate"><span class="pre">True</span></code>, <code class="docutils literal notranslate"><span class="pre">False</span></code>, or
@@ -640,7 +640,7 @@ respectively).</p>
           </div>
         </div>
       </div>
-      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+      <div class="sphinxsidebar" role="navigation" aria-label="Main">
         <div class="sphinxsidebarwrapper">
   <div>
     <h3><a href="index.html">Table of Contents</a></h3>
@@ -715,7 +715,7 @@ respectively).</p>
             rel="nofollow">Show Source</a></li>
     </ul>
    </div>
-<div id="searchbox" style="display: none" role="search">
+<search id="searchbox" style="display: none" role="search">
   <h3 id="searchlabel">Quick search</h3>
     <div class="searchformwrapper">
     <form class="search" action="search.html" method="get">
@@ -723,13 +723,13 @@ respectively).</p>
       <input type="submit" value="Go" />
     </form>
     </div>
-</div>
+</search>
 <script>document.getElementById('searchbox').style.display = "block"</script>
         </div>
       </div>
       <div class="clearer"></div>
     </div>
-    <div class="related" role="navigation" aria-label="related navigation">
+    <div class="related" role="navigation" aria-label="Related">
       <h3>Navigation</h3>
       <ul>
         <li class="right" style="margin-right: 10px">
@@ -741,13 +741,13 @@ respectively).</p>
         <li class="right" >
           <a href="query.html" title="query Module"
              >previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="index.html">rom 1.1.1 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="index.html">rom 1.1.2 documentation</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href=""><code class="xref py py-mod docutils literal notranslate"><span class="pre">util</span></code> Module</a></li> 
       </ul>
     </div>
     <div class="footer" role="contentinfo">
-        &#169; Copyright 2013-2015, Josiah Carlson.
-      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 7.0.0.
+    &#169; Copyright 2013-2015, Josiah Carlson.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 8.2.3.
     </div>
   </body>
 </html>

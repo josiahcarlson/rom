@@ -1,0 +1,13 @@
+ARG PYTHON_VERSION="3.11"
+
+FROM python:${PYTHON_VERSION}-bullseye
+ARG PYTHON_VERSION
+ARG PY="python${PYTHON_VERSION}"
+
+ENV PYTHON_VERSION=$PYTHON_VERSION
+
+WORKDIR /app
+
+RUN ${PY} -m pip install --upgrade pip build setuptools twine sphinx
+COPY requirements.txt .
+RUN ${PY} -m pip install -r requirements.txt

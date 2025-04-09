@@ -1,24 +1,24 @@
 <!DOCTYPE html>
 
-<html lang="en">
+<html lang="en" data-content_root="./">
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>index Module &#8212; rom 1.1.1 documentation</title>
-    <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
-    <link rel="stylesheet" type="text/css" href="_static/classic.css" />
+    <title>index Module &#8212; rom 1.1.2 documentation</title>
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=03e43079" />
+    <link rel="stylesheet" type="text/css" href="_static/classic.css?v=2bf1fcf8" />
     
-    <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
-    <script src="_static/doctools.js"></script>
-    <script src="_static/sphinx_highlight.js"></script>
+    <script src="_static/documentation_options.js?v=6f037312"></script>
+    <script src="_static/doctools.js?v=9bcbadda"></script>
+    <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
     
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
     <link rel="next" title="model Module" href="model.html" />
     <link rel="prev" title="exceptions Module" href="exceptions.html" /> 
   </head><body>
-    <div class="related" role="navigation" aria-label="related navigation">
+    <div class="related" role="navigation" aria-label="Related">
       <h3>Navigation</h3>
       <ul>
         <li class="right" style="margin-right: 10px">
@@ -33,7 +33,7 @@
         <li class="right" >
           <a href="exceptions.html" title="exceptions Module"
              accesskey="P">previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="index.html">rom 1.1.1 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="index.html">rom 1.1.2 documentation</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href=""><code class="xref py py-mod docutils literal notranslate"><span class="pre">index</span></code> Module</a></li> 
       </ul>
     </div>  
@@ -44,14 +44,14 @@
           <div class="body" role="main">
             
   <section id="module-rom.index">
-<span id="index-module"></span><h1><code class="xref py py-mod docutils literal notranslate"><span class="pre">index</span></code> Module<a class="headerlink" href="#module-rom.index" title="Permalink to this heading">¶</a></h1>
+<span id="index-module"></span><h1><code class="xref py py-mod docutils literal notranslate"><span class="pre">index</span></code> Module<a class="headerlink" href="#module-rom.index" title="Link to this heading">¶</a></h1>
 <p>Rom - the Redis object mapper for Python</p>
 <p>Copyright 2013-2016 Josiah Carlson</p>
 <p>Released under the LGPL license version 2.1 and version 3 (you can choose
 which you’d like to be bound under).</p>
 <dl class="py class">
 <dt class="sig sig-object py" id="rom.index.GeneralIndex">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">rom.index.</span></span><span class="sig-name descname"><span class="pre">GeneralIndex</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">namespace</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#rom.index.GeneralIndex" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">rom.index.</span></span><span class="sig-name descname"><span class="pre">GeneralIndex</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">namespace</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#rom.index.GeneralIndex" title="Link to this definition">¶</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
 <p>This class implements general indexing and search for the <code class="docutils literal notranslate"><span class="pre">rom</span></code> package.</p>
 <div class="admonition warning">
@@ -88,7 +88,7 @@ runtime proportional to the number of matched entries.</p>
 index, exploiting prefixes in patterns if they exist.</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="rom.index.GeneralIndex.count">
-<span class="sig-name descname"><span class="pre">count</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">conn</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">filters</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#rom.index.GeneralIndex.count" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">count</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">conn</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">filters</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#rom.index.GeneralIndex.count" title="Link to this definition">¶</a></dt>
 <dd><p>Returns the count of the items that match the provided filters.</p>
 <p>For the meaning of what the <code class="docutils literal notranslate"><span class="pre">filters</span></code> argument means, see the
 <code class="docutils literal notranslate"><span class="pre">.search()</span></code> method docs.</p>
@@ -96,7 +96,7 @@ index, exploiting prefixes in patterns if they exist.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="rom.index.GeneralIndex.search">
-<span class="sig-name descname"><span class="pre">search</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">conn</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">filters</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">order_by</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">offset</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">count</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">timeout</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#rom.index.GeneralIndex.search" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">search</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">conn</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">filters</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">order_by</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">offset</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">count</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">timeout</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#rom.index.GeneralIndex.search" title="Link to this definition">¶</a></dt>
 <dd><p>Search for model ids that match the provided filters.</p>
 <p>Arguments:</p>
 <blockquote>
@@ -162,17 +162,17 @@ then results will be ordered by that result.</p>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="rom.index.GeoIndex">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">rom.index.</span></span><span class="sig-name descname"><span class="pre">GeoIndex</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">callback</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#rom.index.GeoIndex" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">rom.index.</span></span><span class="sig-name descname"><span class="pre">GeoIndex</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">callback</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#rom.index.GeoIndex" title="Link to this definition">¶</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">tuple</span></code></p>
 <dl class="py attribute">
 <dt class="sig sig-object py" id="rom.index.GeoIndex.callback">
-<span class="sig-name descname"><span class="pre">callback</span></span><a class="headerlink" href="#rom.index.GeoIndex.callback" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">callback</span></span><a class="headerlink" href="#rom.index.GeoIndex.callback" title="Link to this definition">¶</a></dt>
 <dd><p>Alias for field number 1</p>
 </dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="rom.index.GeoIndex.name">
-<span class="sig-name descname"><span class="pre">name</span></span><a class="headerlink" href="#rom.index.GeoIndex.name" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">name</span></span><a class="headerlink" href="#rom.index.GeoIndex.name" title="Link to this definition">¶</a></dt>
 <dd><p>Alias for field number 0</p>
 </dd></dl>
 
@@ -180,23 +180,23 @@ then results will be ordered by that result.</p>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="rom.index.Geofilter">
-<span class="sig-prename descclassname"><span class="pre">rom.index.</span></span><span class="sig-name descname"><span class="pre">Geofilter</span></span><a class="headerlink" href="#rom.index.Geofilter" title="Permalink to this definition">¶</a></dt>
+<span class="sig-prename descclassname"><span class="pre">rom.index.</span></span><span class="sig-name descname"><span class="pre">Geofilter</span></span><a class="headerlink" href="#rom.index.Geofilter" title="Link to this definition">¶</a></dt>
 <dd><p>alias of <code class="xref py py-class docutils literal notranslate"><span class="pre">Geo</span></code></p>
 </dd></dl>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="rom.index.Pattern">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">rom.index.</span></span><span class="sig-name descname"><span class="pre">Pattern</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">attr</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pattern</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#rom.index.Pattern" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">rom.index.</span></span><span class="sig-name descname"><span class="pre">Pattern</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">attr</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pattern</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#rom.index.Pattern" title="Link to this definition">¶</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">tuple</span></code></p>
 <dl class="py attribute">
 <dt class="sig sig-object py" id="rom.index.Pattern.attr">
-<span class="sig-name descname"><span class="pre">attr</span></span><a class="headerlink" href="#rom.index.Pattern.attr" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">attr</span></span><a class="headerlink" href="#rom.index.Pattern.attr" title="Link to this definition">¶</a></dt>
 <dd><p>Alias for field number 0</p>
 </dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="rom.index.Pattern.pattern">
-<span class="sig-name descname"><span class="pre">pattern</span></span><a class="headerlink" href="#rom.index.Pattern.pattern" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">pattern</span></span><a class="headerlink" href="#rom.index.Pattern.pattern" title="Link to this definition">¶</a></dt>
 <dd><p>Alias for field number 1</p>
 </dd></dl>
 
@@ -204,17 +204,17 @@ then results will be ordered by that result.</p>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="rom.index.Prefix">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">rom.index.</span></span><span class="sig-name descname"><span class="pre">Prefix</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">attr</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prefix</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#rom.index.Prefix" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">rom.index.</span></span><span class="sig-name descname"><span class="pre">Prefix</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">attr</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prefix</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#rom.index.Prefix" title="Link to this definition">¶</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">tuple</span></code></p>
 <dl class="py attribute">
 <dt class="sig sig-object py" id="rom.index.Prefix.attr">
-<span class="sig-name descname"><span class="pre">attr</span></span><a class="headerlink" href="#rom.index.Prefix.attr" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">attr</span></span><a class="headerlink" href="#rom.index.Prefix.attr" title="Link to this definition">¶</a></dt>
 <dd><p>Alias for field number 0</p>
 </dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="rom.index.Prefix.prefix">
-<span class="sig-name descname"><span class="pre">prefix</span></span><a class="headerlink" href="#rom.index.Prefix.prefix" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">prefix</span></span><a class="headerlink" href="#rom.index.Prefix.prefix" title="Link to this definition">¶</a></dt>
 <dd><p>Alias for field number 1</p>
 </dd></dl>
 
@@ -222,17 +222,17 @@ then results will be ordered by that result.</p>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="rom.index.Suffix">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">rom.index.</span></span><span class="sig-name descname"><span class="pre">Suffix</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">attr</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">suffix</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#rom.index.Suffix" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">rom.index.</span></span><span class="sig-name descname"><span class="pre">Suffix</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">attr</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">suffix</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#rom.index.Suffix" title="Link to this definition">¶</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">tuple</span></code></p>
 <dl class="py attribute">
 <dt class="sig sig-object py" id="rom.index.Suffix.attr">
-<span class="sig-name descname"><span class="pre">attr</span></span><a class="headerlink" href="#rom.index.Suffix.attr" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">attr</span></span><a class="headerlink" href="#rom.index.Suffix.attr" title="Link to this definition">¶</a></dt>
 <dd><p>Alias for field number 0</p>
 </dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="rom.index.Suffix.suffix">
-<span class="sig-name descname"><span class="pre">suffix</span></span><a class="headerlink" href="#rom.index.Suffix.suffix" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">suffix</span></span><a class="headerlink" href="#rom.index.Suffix.suffix" title="Link to this definition">¶</a></dt>
 <dd><p>Alias for field number 1</p>
 </dd></dl>
 
@@ -240,14 +240,14 @@ then results will be ordered by that result.</p>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="rom.index.estimate_work_lua">
-<span class="sig-prename descclassname"><span class="pre">rom.index.</span></span><span class="sig-name descname"><span class="pre">estimate_work_lua</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">conn</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">index</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prefix</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#rom.index.estimate_work_lua" title="Permalink to this definition">¶</a></dt>
+<span class="sig-prename descclassname"><span class="pre">rom.index.</span></span><span class="sig-name descname"><span class="pre">estimate_work_lua</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">conn</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">index</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prefix</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#rom.index.estimate_work_lua" title="Link to this definition">¶</a></dt>
 <dd><p>Estimates the total work necessary to calculate the prefix match over the
 given index with the provided prefix.</p>
 </dd></dl>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="rom.index.redis_prefix_lua">
-<span class="sig-prename descclassname"><span class="pre">rom.index.</span></span><span class="sig-name descname"><span class="pre">redis_prefix_lua</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">conn</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dest</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">index</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prefix</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">is_first</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pattern</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#rom.index.redis_prefix_lua" title="Permalink to this definition">¶</a></dt>
+<span class="sig-prename descclassname"><span class="pre">rom.index.</span></span><span class="sig-name descname"><span class="pre">redis_prefix_lua</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">conn</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dest</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">index</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prefix</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">is_first</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pattern</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#rom.index.redis_prefix_lua" title="Link to this definition">¶</a></dt>
 <dd><p>Performs the actual prefix, suffix, and pattern match operations.</p>
 </dd></dl>
 
@@ -258,7 +258,7 @@ given index with the provided prefix.</p>
           </div>
         </div>
       </div>
-      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+      <div class="sphinxsidebar" role="navigation" aria-label="Main">
         <div class="sphinxsidebarwrapper">
   <div>
     <h3><a href="index.html">Table of Contents</a></h3>
@@ -314,7 +314,7 @@ given index with the provided prefix.</p>
             rel="nofollow">Show Source</a></li>
     </ul>
    </div>
-<div id="searchbox" style="display: none" role="search">
+<search id="searchbox" style="display: none" role="search">
   <h3 id="searchlabel">Quick search</h3>
     <div class="searchformwrapper">
     <form class="search" action="search.html" method="get">
@@ -322,13 +322,13 @@ given index with the provided prefix.</p>
       <input type="submit" value="Go" />
     </form>
     </div>
-</div>
+</search>
 <script>document.getElementById('searchbox').style.display = "block"</script>
         </div>
       </div>
       <div class="clearer"></div>
     </div>
-    <div class="related" role="navigation" aria-label="related navigation">
+    <div class="related" role="navigation" aria-label="Related">
       <h3>Navigation</h3>
       <ul>
         <li class="right" style="margin-right: 10px">
@@ -343,13 +343,13 @@ given index with the provided prefix.</p>
         <li class="right" >
           <a href="exceptions.html" title="exceptions Module"
              >previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="index.html">rom 1.1.1 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="index.html">rom 1.1.2 documentation</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href=""><code class="xref py py-mod docutils literal notranslate"><span class="pre">index</span></code> Module</a></li> 
       </ul>
     </div>
     <div class="footer" role="contentinfo">
-        &#169; Copyright 2013-2015, Josiah Carlson.
-      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 7.0.0.
+    &#169; Copyright 2013-2015, Josiah Carlson.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 8.2.3.
     </div>
   </body>
 </html>

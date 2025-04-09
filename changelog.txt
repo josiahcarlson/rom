@@ -1,5 +1,8 @@
+#----------------------------------- 1.1.2 -----------------------------------
+[added] pyproject.toml and related build update steps.
+[fixed] invalid command 'bdist_wheel' during install
 #----------------------------------- 1.1.1 -----------------------------------
-[added] IDENTITY_STRING and IDENTITY_STRING_CI keygens for 
+[added] IDENTITY_STRING and IDENTITY_STRING_CI keygens for string columns
 [fixed] exception edge case when saving / deleting index-only columns with a
     unique constraint and no relevant data.
 #----------------------------------- 1.1.0 -----------------------------------

@@ -1,24 +1,24 @@
 <!DOCTYPE html>
 
-<html lang="en">
+<html lang="en" data-content_root="./">
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>query Module &#8212; rom 1.1.1 documentation</title>
-    <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
-    <link rel="stylesheet" type="text/css" href="_static/classic.css" />
+    <title>query Module &#8212; rom 1.1.2 documentation</title>
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=03e43079" />
+    <link rel="stylesheet" type="text/css" href="_static/classic.css?v=2bf1fcf8" />
     
-    <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
-    <script src="_static/doctools.js"></script>
-    <script src="_static/sphinx_highlight.js"></script>
+    <script src="_static/documentation_options.js?v=6f037312"></script>
+    <script src="_static/doctools.js?v=9bcbadda"></script>
+    <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
     
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
     <link rel="next" title="util Module" href="util.html" />
     <link rel="prev" title="model Module" href="model.html" /> 
   </head><body>
-    <div class="related" role="navigation" aria-label="related navigation">
+    <div class="related" role="navigation" aria-label="Related">
       <h3>Navigation</h3>
       <ul>
         <li class="right" style="margin-right: 10px">
@@ -33,7 +33,7 @@
         <li class="right" >
           <a href="model.html" title="model Module"
              accesskey="P">previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="index.html">rom 1.1.1 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="index.html">rom 1.1.2 documentation</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href=""><code class="xref py py-mod docutils literal notranslate"><span class="pre">query</span></code> Module</a></li> 
       </ul>
     </div>  
@@ -44,27 +44,27 @@
           <div class="body" role="main">
             
   <section id="module-rom.query">
-<span id="query-module"></span><h1><code class="xref py py-mod docutils literal notranslate"><span class="pre">query</span></code> Module<a class="headerlink" href="#module-rom.query" title="Permalink to this heading">¶</a></h1>
+<span id="query-module"></span><h1><code class="xref py py-mod docutils literal notranslate"><span class="pre">query</span></code> Module<a class="headerlink" href="#module-rom.query" title="Link to this heading">¶</a></h1>
 <p>Rom - the Redis object mapper for Python</p>
 <p>Copyright 2013-2016 Josiah Carlson</p>
 <p>Released under the LGPL license version 2.1 and version 3 (you can choose
 which you’d like to be bound under).</p>
 <dl class="py class">
 <dt class="sig sig-object py" id="rom.query.Query">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">rom.query.</span></span><span class="sig-name descname"><span class="pre">Query</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">filters</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">()</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">order_by</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">limit</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">select</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#rom.query.Query" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">rom.query.</span></span><span class="sig-name descname"><span class="pre">Query</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">filters</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">()</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">order_by</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">limit</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">select</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#rom.query.Query" title="Link to this definition">¶</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
 <p>This is a query object. It behaves a lot like other query objects. Every
 operation performed on Query objects returns a new Query object. The old
 Query object <em>does not</em> have any updated filters.</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="rom.query.Query.all">
-<span class="sig-name descname"><span class="pre">all</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#rom.query.Query.all" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">all</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#rom.query.Query.all" title="Link to this definition">¶</a></dt>
 <dd><p>Alias for <code class="docutils literal notranslate"><span class="pre">execute()</span></code>.</p>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="rom.query.Query.cached_result">
-<span class="sig-name descname"><span class="pre">cached_result</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">timeout</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#rom.query.Query.cached_result" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">cached_result</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">timeout</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#rom.query.Query.cached_result" title="Link to this definition">¶</a></dt>
 <dd><p>This will execute the query, returning the key where a ZSET of your
 results will be stored for pagination, further operations, etc.</p>
 <p>The timeout must be a positive integer number of seconds for which to
@@ -88,7 +88,7 @@ step to use the PERSIST command).</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="rom.query.Query.count">
-<span class="sig-name descname"><span class="pre">count</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#rom.query.Query.count" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">count</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#rom.query.Query.count" title="Link to this definition">¶</a></dt>
 <dd><p>Will return the total count of the objects that match the specified
 filters.:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1"># counts the number of users created in the last 24 hours</span>
@@ -99,7 +99,7 @@ filters.:</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="rom.query.Query.delete">
-<span class="sig-name descname"><span class="pre">delete</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">blocksize</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">100</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#rom.query.Query.delete" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">delete</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">blocksize</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">100</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#rom.query.Query.delete" title="Link to this definition">¶</a></dt>
 <dd><p>Will delete the entities that match at the time the query is executed.</p>
 <p>Used like:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">MyModel</span><span class="o">.</span><span class="n">query</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">email</span><span class="o">=...</span><span class="p">)</span><span class="o">.</span><span class="n">delete</span><span class="p">()</span>
@@ -115,7 +115,7 @@ filters.:</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="rom.query.Query.endswith">
-<span class="sig-name descname"><span class="pre">endswith</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#rom.query.Query.endswith" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">endswith</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#rom.query.Query.endswith" title="Link to this definition">¶</a></dt>
 <dd><p>When provided with keyword arguments of the form <code class="docutils literal notranslate"><span class="pre">col=suffix</span></code>, this
 will limit the entities returned to those that have a word with the
 provided suffix in the specified column(s). This requires that the
@@ -128,7 +128,7 @@ provided suffix in the specified column(s). This requires that the
 
 <dl class="py method">
 <dt class="sig sig-object py" id="rom.query.Query.execute">
-<span class="sig-name descname"><span class="pre">execute</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#rom.query.Query.execute" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">execute</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#rom.query.Query.execute" title="Link to this definition">¶</a></dt>
 <dd><p>Actually executes the query, returning any entities that match the
 filters, ordered by the specified ordering (if any), limited by any
 earlier limit calls.</p>
@@ -136,7 +136,7 @@ earlier limit calls.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="rom.query.Query.filter">
-<span class="sig-name descname"><span class="pre">filter</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#rom.query.Query.filter" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">filter</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#rom.query.Query.filter" title="Link to this definition">¶</a></dt>
 <dd><p>Only columns/attributes that have been specified as having an index with
 the <code class="docutils literal notranslate"><span class="pre">index=True</span></code> option on the column definition can be filtered with
 this method. Prefix, suffix, and pattern match filters must be provided
@@ -192,13 +192,13 @@ string columns won’t return any results.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="rom.query.Query.first">
-<span class="sig-name descname"><span class="pre">first</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#rom.query.Query.first" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">first</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#rom.query.Query.first" title="Link to this definition">¶</a></dt>
 <dd><p>Returns only the first result from the query, if any.</p>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="rom.query.Query.iter_result">
-<span class="sig-name descname"><span class="pre">iter_result</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">timeout</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">30</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pagesize</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">100</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">no_hscan</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#rom.query.Query.iter_result" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">iter_result</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">timeout</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">30</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pagesize</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">100</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">no_hscan</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#rom.query.Query.iter_result" title="Link to this definition">¶</a></dt>
 <dd><p>Iterate over the results of your query instead of getting them all with
 <cite>.all()</cite>. Will only perform a single query. If you expect that your
 processing will take more than 30 seconds to process 100 items, you
@@ -214,7 +214,7 @@ and page size to fetch at once.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="rom.query.Query.like">
-<span class="sig-name descname"><span class="pre">like</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#rom.query.Query.like" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">like</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#rom.query.Query.like" title="Link to this definition">¶</a></dt>
 <dd><p>When provided with keyword arguments of the form <code class="docutils literal notranslate"><span class="pre">col=pattern</span></code>, this
 will limit the entities returned to those that include the provided
 pattern. Note that ‘like’ queries require that the <code class="docutils literal notranslate"><span class="pre">prefix=True</span></code>
@@ -251,7 +251,7 @@ wildcard characters (like <code class="docutils literal notranslate"><span class
 
 <dl class="py method">
 <dt class="sig sig-object py" id="rom.query.Query.limit">
-<span class="sig-name descname"><span class="pre">limit</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">offset</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">count</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#rom.query.Query.limit" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">limit</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">offset</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">count</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#rom.query.Query.limit" title="Link to this definition">¶</a></dt>
 <dd><p>Will limit the number of results returned from a query:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1"># returns the most recent 25 users</span>
 <span class="n">User</span><span class="o">.</span><span class="n">query</span><span class="o">.</span><span class="n">order_by</span><span class="p">(</span><span class="s1">&#39;-created_at&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">limit</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">25</span><span class="p">)</span><span class="o">.</span><span class="n">execute</span><span class="p">()</span>
@@ -261,12 +261,12 @@ wildcard characters (like <code class="docutils literal notranslate"><span class
 
 <dl class="py method">
 <dt class="sig sig-object py" id="rom.query.Query.near">
-<span class="sig-name descname"><span class="pre">near</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lon</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lat</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">distance</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">measure</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">count</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#rom.query.Query.near" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">near</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lon</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lat</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">distance</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">measure</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">count</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#rom.query.Query.near" title="Link to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="rom.query.Query.order_by">
-<span class="sig-name descname"><span class="pre">order_by</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">column</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#rom.query.Query.order_by" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">order_by</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">column</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#rom.query.Query.order_by" title="Link to this definition">¶</a></dt>
 <dd><p>When provided with a column name, will sort the results of your query:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1"># returns all users, ordered by the created_at column in</span>
 <span class="c1"># descending order</span>
@@ -277,7 +277,7 @@ wildcard characters (like <code class="docutils literal notranslate"><span class
 
 <dl class="py method">
 <dt class="sig sig-object py" id="rom.query.Query.replace">
-<span class="sig-name descname"><span class="pre">replace</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#rom.query.Query.replace" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">replace</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#rom.query.Query.replace" title="Link to this definition">¶</a></dt>
 <dd><p>Copy the Query object, optionally replacing the filters, order_by, or
 limit information on the copy. This is mostly an internal detail that
 you can ignore.</p>
@@ -285,7 +285,7 @@ you can ignore.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="rom.query.Query.select">
-<span class="sig-name descname"><span class="pre">select</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">column_names</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#rom.query.Query.select" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">select</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">column_names</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#rom.query.Query.select" title="Link to this definition">¶</a></dt>
 <dd><p>Select the provided column names from the model, do not return an entity,
 do not involve the rom session, just get the raw and/or processed column
 data from Redis.</p>
@@ -322,10 +322,10 @@ the primary key column, it will be appended to your list of columns.</p>
 data, it must be of the form (below is the actual dict factory
 function)</p>
 </div>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">_dict_data_factory</span><span class="p">(</span><span class="n">columns</span><span class="p">):</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">def</span><span class="w"> </span><span class="nf">_dict_data_factory</span><span class="p">(</span><span class="n">columns</span><span class="p">):</span>
     <span class="n">_dict</span> <span class="o">=</span> <span class="nb">dict</span>
     <span class="n">_zip</span> <span class="o">=</span> <span class="nb">zip</span>
-    <span class="k">def</span> <span class="nf">make</span><span class="p">(</span><span class="n">data</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">make</span><span class="p">(</span><span class="n">data</span><span class="p">):</span>
         <span class="c1"># do whatever you need to turn your tuple of columns plus</span>
         <span class="c1"># your list of data into whatever you want:</span>
         <span class="k">return</span> <span class="n">_dict</span><span class="p">(</span><span class="n">_zip</span><span class="p">(</span><span class="n">columns</span><span class="p">,</span> <span class="n">data</span><span class="p">))</span>
@@ -355,7 +355,7 @@ does exactly what you want, and pass it; they are really easy!</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="rom.query.Query.startswith">
-<span class="sig-name descname"><span class="pre">startswith</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#rom.query.Query.startswith" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">startswith</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#rom.query.Query.startswith" title="Link to this definition">¶</a></dt>
 <dd><p>When provided with keyword arguments of the form <code class="docutils literal notranslate"><span class="pre">col=prefix</span></code>, this
 will limit the entities returned to those that have a word with the
 provided prefix in the specified column(s). This requires that the
@@ -375,7 +375,7 @@ provided prefix in the specified column(s). This requires that the
           </div>
         </div>
       </div>
-      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+      <div class="sphinxsidebar" role="navigation" aria-label="Main">
         <div class="sphinxsidebarwrapper">
   <div>
     <h3><a href="index.html">Table of Contents</a></h3>
@@ -422,7 +422,7 @@ provided prefix in the specified column(s). This requires that the
             rel="nofollow">Show Source</a></li>
     </ul>
    </div>
-<div id="searchbox" style="display: none" role="search">
+<search id="searchbox" style="display: none" role="search">
   <h3 id="searchlabel">Quick search</h3>
     <div class="searchformwrapper">
     <form class="search" action="search.html" method="get">
@@ -430,13 +430,13 @@ provided prefix in the specified column(s). This requires that the
       <input type="submit" value="Go" />
     </form>
     </div>
-</div>
+</search>
 <script>document.getElementById('searchbox').style.display = "block"</script>
         </div>
       </div>
       <div class="clearer"></div>
     </div>
-    <div class="related" role="navigation" aria-label="related navigation">
+    <div class="related" role="navigation" aria-label="Related">
       <h3>Navigation</h3>
       <ul>
         <li class="right" style="margin-right: 10px">
@@ -451,13 +451,13 @@ provided prefix in the specified column(s). This requires that the
         <li class="right" >
           <a href="model.html" title="model Module"
              >previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="index.html">rom 1.1.1 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="index.html">rom 1.1.2 documentation</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href=""><code class="xref py py-mod docutils literal notranslate"><span class="pre">query</span></code> Module</a></li> 
       </ul>
     </div>
     <div class="footer" role="contentinfo">
-        &#169; Copyright 2013-2015, Josiah Carlson.
-      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 7.0.0.
+    &#169; Copyright 2013-2015, Josiah Carlson.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 8.2.3.
     </div>
   </body>
 </html>

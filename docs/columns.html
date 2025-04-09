@@ -1,24 +1,24 @@
 <!DOCTYPE html>
 
-<html lang="en">
+<html lang="en" data-content_root="./">
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>columns Module &#8212; rom 1.1.1 documentation</title>
-    <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
-    <link rel="stylesheet" type="text/css" href="_static/classic.css" />
+    <title>columns Module &#8212; rom 1.1.2 documentation</title>
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=03e43079" />
+    <link rel="stylesheet" type="text/css" href="_static/classic.css?v=2bf1fcf8" />
     
-    <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
-    <script src="_static/doctools.js"></script>
-    <script src="_static/sphinx_highlight.js"></script>
+    <script src="_static/documentation_options.js?v=6f037312"></script>
+    <script src="_static/doctools.js?v=9bcbadda"></script>
+    <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
     
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
     <link rel="next" title="exceptions Module" href="exceptions.html" />
     <link rel="prev" title="rom Package" href="rom.html" /> 
   </head><body>
-    <div class="related" role="navigation" aria-label="related navigation">
+    <div class="related" role="navigation" aria-label="Related">
       <h3>Navigation</h3>
       <ul>
         <li class="right" style="margin-right: 10px">
@@ -33,7 +33,7 @@
         <li class="right" >
           <a href="rom.html" title="rom Package"
              accesskey="P">previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="index.html">rom 1.1.1 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="index.html">rom 1.1.2 documentation</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href=""><code class="xref py py-mod docutils literal notranslate"><span class="pre">columns</span></code> Module</a></li> 
       </ul>
     </div>  
@@ -44,14 +44,14 @@
           <div class="body" role="main">
             
   <section id="module-rom.columns">
-<span id="columns-module"></span><h1><code class="xref py py-mod docutils literal notranslate"><span class="pre">columns</span></code> Module<a class="headerlink" href="#module-rom.columns" title="Permalink to this heading">¶</a></h1>
+<span id="columns-module"></span><h1><code class="xref py py-mod docutils literal notranslate"><span class="pre">columns</span></code> Module<a class="headerlink" href="#module-rom.columns" title="Link to this heading">¶</a></h1>
 <p>Rom - the Redis object mapper for Python</p>
 <p>Copyright 2013-2016 Josiah Carlson</p>
 <p>Released under the LGPL license version 2.1 and version 3 (you can choose
 which you’d like to be bound under).</p>
 <dl class="py class">
 <dt class="sig sig-object py" id="rom.columns.Boolean">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">rom.columns.</span></span><span class="sig-name descname"><span class="pre">Boolean</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">required=False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">default=&lt;object</span> <span class="pre">object&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">unique=False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">index=False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">keygen=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prefix=False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">suffix=False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">keygen2=None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#rom.columns.Boolean" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">rom.columns.</span></span><span class="sig-name descname"><span class="pre">Boolean</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">required=False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">default=&lt;object</span> <span class="pre">object&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">unique=False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">index=False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">keygen=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prefix=False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">suffix=False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">keygen2=None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#rom.columns.Boolean" title="Link to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#rom.columns.Column" title="rom.columns.Column"><code class="xref py py-class docutils literal notranslate"><span class="pre">Column</span></code></a></p>
 <p>Used for boolean columns.</p>
 <p>All standard arguments supported. See <code class="docutils literal notranslate"><span class="pre">Column</span></code> for details on supported
@@ -60,7 +60,7 @@ arguments.</p>
 of None (which behaves as though the value was missing), and any existing
 data in Redis is considered <code class="docutils literal notranslate"><span class="pre">False</span></code> if empty, and <code class="docutils literal notranslate"><span class="pre">True</span></code> otherwise.</p>
 <p>Used via:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">class</span> <span class="nc">MyModel</span><span class="p">(</span><span class="n">Model</span><span class="p">):</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">class</span><span class="w"> </span><span class="nc">MyModel</span><span class="p">(</span><span class="n">Model</span><span class="p">):</span>
     <span class="n">col</span> <span class="o">=</span> <span class="n">Boolean</span><span class="p">()</span>
 </pre></div>
 </div>
@@ -74,7 +74,7 @@ as expected when passed <code class="docutils literal notranslate"><span class="
 
 <dl class="py class">
 <dt class="sig sig-object py" id="rom.columns.Column">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">rom.columns.</span></span><span class="sig-name descname"><span class="pre">Column</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">required=False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">default=&lt;object</span> <span class="pre">object&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">unique=False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">index=False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">keygen=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prefix=False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">suffix=False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">keygen2=None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#rom.columns.Column" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">rom.columns.</span></span><span class="sig-name descname"><span class="pre">Column</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">required=False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">default=&lt;object</span> <span class="pre">object&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">unique=False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">index=False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">keygen=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prefix=False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">suffix=False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">keygen2=None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#rom.columns.Column" title="Link to this definition">¶</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">_Column</span></code></p>
 <p>Column objects handle data conversion to/from strings, store metadata
 about indices, etc. Note that these are “heavy” columns, in that whenever
@@ -181,13 +181,13 @@ full text</p></li>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="rom.columns.Date">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">rom.columns.</span></span><span class="sig-name descname"><span class="pre">Date</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">required=False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">default=&lt;object</span> <span class="pre">object&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">unique=False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">index=False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">keygen=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prefix=False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">suffix=False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">keygen2=None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#rom.columns.Date" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">rom.columns.</span></span><span class="sig-name descname"><span class="pre">Date</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">required=False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">default=&lt;object</span> <span class="pre">object&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">unique=False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">index=False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">keygen=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prefix=False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">suffix=False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">keygen2=None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#rom.columns.Date" title="Link to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#rom.columns.Column" title="rom.columns.Column"><code class="xref py py-class docutils literal notranslate"><span class="pre">Column</span></code></a></p>
 <p>A date column.</p>
 <p>All standard arguments supported. See <code class="docutils literal notranslate"><span class="pre">Column</span></code> for details on supported
 arguments.</p>
 <p>Used via:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">class</span> <span class="nc">MyModel</span><span class="p">(</span><span class="n">Model</span><span class="p">):</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">class</span><span class="w"> </span><span class="nc">MyModel</span><span class="p">(</span><span class="n">Model</span><span class="p">):</span>
     <span class="n">col</span> <span class="o">=</span> <span class="n">Date</span><span class="p">()</span>
 </pre></div>
 </div>
@@ -195,13 +195,13 @@ arguments.</p>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="rom.columns.DateTime">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">rom.columns.</span></span><span class="sig-name descname"><span class="pre">DateTime</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">required=False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">default=&lt;object</span> <span class="pre">object&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">unique=False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">index=False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">keygen=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prefix=False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">suffix=False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">keygen2=None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#rom.columns.DateTime" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">rom.columns.</span></span><span class="sig-name descname"><span class="pre">DateTime</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">required=False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">default=&lt;object</span> <span class="pre">object&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">unique=False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">index=False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">keygen=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prefix=False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">suffix=False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">keygen2=None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#rom.columns.DateTime" title="Link to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#rom.columns.Column" title="rom.columns.Column"><code class="xref py py-class docutils literal notranslate"><span class="pre">Column</span></code></a></p>
 <p>A datetime column.</p>
 <p>All standard arguments supported. See <code class="docutils literal notranslate"><span class="pre">Column</span></code> for details on supported
 arguments.</p>
 <p>Used via:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">class</span> <span class="nc">MyModel</span><span class="p">(</span><span class="n">Model</span><span class="p">):</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">class</span><span class="w"> </span><span class="nc">MyModel</span><span class="p">(</span><span class="n">Model</span><span class="p">):</span>
     <span class="n">col</span> <span class="o">=</span> <span class="n">DateTime</span><span class="p">()</span>
 </pre></div>
 </div>
@@ -213,14 +213,14 @@ arguments.</p>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="rom.columns.Decimal">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">rom.columns.</span></span><span class="sig-name descname"><span class="pre">Decimal</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">required=False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">default=&lt;object</span> <span class="pre">object&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">unique=False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">index=False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">keygen=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prefix=False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">suffix=False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">keygen2=None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#rom.columns.Decimal" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">rom.columns.</span></span><span class="sig-name descname"><span class="pre">Decimal</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">required=False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">default=&lt;object</span> <span class="pre">object&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">unique=False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">index=False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">keygen=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prefix=False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">suffix=False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">keygen2=None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#rom.columns.Decimal" title="Link to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#rom.columns.Column" title="rom.columns.Column"><code class="xref py py-class docutils literal notranslate"><span class="pre">Column</span></code></a></p>
 <p>A Decimal-only numeric column (converts ints/longs into Decimals
 automatically). Attempts to assign Python float will fail.</p>
 <p>All standard arguments supported. See <code class="docutils literal notranslate"><span class="pre">Column</span></code> for details on supported
 arguments.</p>
 <p>Used via:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">class</span> <span class="nc">MyModel</span><span class="p">(</span><span class="n">Model</span><span class="p">):</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">class</span><span class="w"> </span><span class="nc">MyModel</span><span class="p">(</span><span class="n">Model</span><span class="p">):</span>
     <span class="n">col</span> <span class="o">=</span> <span class="n">Decimal</span><span class="p">()</span>
 </pre></div>
 </div>
@@ -228,14 +228,14 @@ arguments.</p>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="rom.columns.Float">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">rom.columns.</span></span><span class="sig-name descname"><span class="pre">Float</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">required=False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">default=&lt;object</span> <span class="pre">object&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">unique=False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">index=False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">keygen=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prefix=False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">suffix=False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">keygen2=None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#rom.columns.Float" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">rom.columns.</span></span><span class="sig-name descname"><span class="pre">Float</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">required=False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">default=&lt;object</span> <span class="pre">object&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">unique=False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">index=False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">keygen=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prefix=False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">suffix=False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">keygen2=None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#rom.columns.Float" title="Link to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#rom.columns.Column" title="rom.columns.Column"><code class="xref py py-class docutils literal notranslate"><span class="pre">Column</span></code></a></p>
 <p>Numeric column that supports integers and floats (values are turned into
 floats on load from Redis).</p>
 <p>All standard arguments supported. See <code class="docutils literal notranslate"><span class="pre">Column</span></code> for details on supported
 arguments.</p>
 <p>Used via:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">class</span> <span class="nc">MyModel</span><span class="p">(</span><span class="n">Model</span><span class="p">):</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">class</span><span class="w"> </span><span class="nc">MyModel</span><span class="p">(</span><span class="n">Model</span><span class="p">):</span>
     <span class="n">col</span> <span class="o">=</span> <span class="n">Float</span><span class="p">()</span>
 </pre></div>
 </div>
@@ -243,7 +243,7 @@ arguments.</p>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="rom.columns.ForeignModel">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">rom.columns.</span></span><span class="sig-name descname"><span class="pre">ForeignModel</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">fmodel</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">required=False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">default=&lt;object</span> <span class="pre">object&gt;</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#rom.columns.ForeignModel" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">rom.columns.</span></span><span class="sig-name descname"><span class="pre">ForeignModel</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">fmodel</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">required=False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">default=&lt;object</span> <span class="pre">object&gt;</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#rom.columns.ForeignModel" title="Link to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#rom.columns.Column" title="rom.columns.Column"><code class="xref py py-class docutils literal notranslate"><span class="pre">Column</span></code></a></p>
 <p>This column allows for <code class="docutils literal notranslate"><span class="pre">rom</span></code> models to reference an instance of another
 model from an unrelated ORM or otherwise.</p>
@@ -255,7 +255,7 @@ have an <code class="docutils literal notranslate"><span class="pre">id</span></
 the proper database entity.</p>
 </div>
 <p>Used via:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">class</span> <span class="nc">MyModel</span><span class="p">(</span><span class="n">Model</span><span class="p">):</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">class</span><span class="w"> </span><span class="nc">MyModel</span><span class="p">(</span><span class="n">Model</span><span class="p">):</span>
     <span class="n">col</span> <span class="o">=</span> <span class="n">ForeignModel</span><span class="p">(</span><span class="n">DjangoModel</span><span class="p">)</span>
 
 <span class="n">dm</span> <span class="o">=</span> <span class="n">DjangoModel</span><span class="p">(</span><span class="n">col1</span><span class="o">=</span><span class="s1">&#39;foo&#39;</span><span class="p">)</span>
@@ -269,7 +269,7 @@ the proper database entity.</p>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="rom.columns.IndexOnly">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">rom.columns.</span></span><span class="sig-name descname"><span class="pre">IndexOnly</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">column</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">keygen</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prefix</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">suffix</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">keygen2</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">index</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">unique</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#rom.columns.IndexOnly" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">rom.columns.</span></span><span class="sig-name descname"><span class="pre">IndexOnly</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">column</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">keygen</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prefix</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">suffix</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">keygen2</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">index</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">unique</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#rom.columns.IndexOnly" title="Link to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#rom.columns.Column" title="rom.columns.Column"><code class="xref py py-class docutils literal notranslate"><span class="pre">Column</span></code></a></p>
 <p>This column doesn’t actually store data, except in indexes for other
 columns. Say, for example, you have an email text field that you want to
@@ -278,12 +278,12 @@ address-book index. Normally that would suck. But not with <code class="docutils
 columns! Data set on this attribute will raise an exception, and will be
 silently ignored (and potentially deleted) if already stored in Redis.</p>
 <p>Used via:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">re</span>
-<span class="k">def</span> <span class="nf">split_email</span><span class="p">(</span><span class="n">val</span><span class="p">):</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">re</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">split_email</span><span class="p">(</span><span class="n">val</span><span class="p">):</span>
     <span class="k">if</span> <span class="n">val</span><span class="p">:</span>
         <span class="k">return</span> <span class="nb">set</span><span class="p">(</span><span class="nb">filter</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="n">re</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;[^\w]&#39;</span><span class="p">,</span> <span class="n">val</span><span class="o">.</span><span class="n">lower</span><span class="p">())))</span>
 
-<span class="k">class</span> <span class="nc">MyModel</span><span class="p">(</span><span class="n">Model</span><span class="p">):</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">MyModel</span><span class="p">(</span><span class="n">Model</span><span class="p">):</span>
     <span class="n">email</span> <span class="o">=</span> <span class="n">Text</span><span class="p">(</span><span class="n">unique</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
     <span class="n">elookup</span> <span class="o">=</span> <span class="n">IndexOnly</span><span class="p">(</span><span class="s1">&#39;email&#39;</span><span class="p">,</span> <span class="n">keygen</span><span class="o">=</span><span class="n">split_email</span><span class="p">)</span>
 
@@ -301,13 +301,13 @@ own work, and I thought I’d release it as a convenience column.</p>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="rom.columns.Integer">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">rom.columns.</span></span><span class="sig-name descname"><span class="pre">Integer</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">required=False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">default=&lt;object</span> <span class="pre">object&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">unique=False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">index=False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">keygen=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prefix=False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">suffix=False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">keygen2=None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#rom.columns.Integer" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">rom.columns.</span></span><span class="sig-name descname"><span class="pre">Integer</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">required=False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">default=&lt;object</span> <span class="pre">object&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">unique=False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">index=False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">keygen=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prefix=False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">suffix=False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">keygen2=None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#rom.columns.Integer" title="Link to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#rom.columns.Column" title="rom.columns.Column"><code class="xref py py-class docutils literal notranslate"><span class="pre">Column</span></code></a></p>
 <p>Used for integer numeric columns.</p>
 <p>All standard arguments supported. See <code class="docutils literal notranslate"><span class="pre">Column</span></code> for details on supported
 arguments.</p>
 <p>Used via:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">class</span> <span class="nc">MyModel</span><span class="p">(</span><span class="n">Model</span><span class="p">):</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">class</span><span class="w"> </span><span class="nc">MyModel</span><span class="p">(</span><span class="n">Model</span><span class="p">):</span>
     <span class="n">col</span> <span class="o">=</span> <span class="n">Integer</span><span class="p">()</span>
 </pre></div>
 </div>
@@ -315,13 +315,13 @@ arguments.</p>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="rom.columns.Json">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">rom.columns.</span></span><span class="sig-name descname"><span class="pre">Json</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">required=False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">default=&lt;object</span> <span class="pre">object&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">unique=False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">index=False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">keygen=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prefix=False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">suffix=False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">keygen2=None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#rom.columns.Json" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">rom.columns.</span></span><span class="sig-name descname"><span class="pre">Json</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">required=False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">default=&lt;object</span> <span class="pre">object&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">unique=False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">index=False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">keygen=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prefix=False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">suffix=False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">keygen2=None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#rom.columns.Json" title="Link to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#rom.columns.Column" title="rom.columns.Column"><code class="xref py py-class docutils literal notranslate"><span class="pre">Column</span></code></a></p>
 <p>Allows for more complicated nested structures as attributes.</p>
 <p>All standard arguments supported. The <code class="docutils literal notranslate"><span class="pre">keygen</span></code> argument must be provided
 if <code class="docutils literal notranslate"><span class="pre">index</span></code> is <code class="docutils literal notranslate"><span class="pre">True</span></code>.</p>
 <p>Used via:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">class</span> <span class="nc">MyModel</span><span class="p">(</span><span class="n">Model</span><span class="p">):</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">class</span><span class="w"> </span><span class="nc">MyModel</span><span class="p">(</span><span class="n">Model</span><span class="p">):</span>
     <span class="n">col</span> <span class="o">=</span> <span class="n">Json</span><span class="p">()</span>
 </pre></div>
 </div>
@@ -329,7 +329,7 @@ if <code class="docutils literal notranslate"><span class="pre">index</span></co
 
 <dl class="py class">
 <dt class="sig sig-object py" id="rom.columns.ManyToOne">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">rom.columns.</span></span><span class="sig-name descname"><span class="pre">ManyToOne</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ftable</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">on_delete=&lt;object</span> <span class="pre">object&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">required=False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">default=&lt;object</span> <span class="pre">object&gt;</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#rom.columns.ManyToOne" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">rom.columns.</span></span><span class="sig-name descname"><span class="pre">ManyToOne</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ftable</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">on_delete=&lt;object</span> <span class="pre">object&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">required=False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">default=&lt;object</span> <span class="pre">object&gt;</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#rom.columns.ManyToOne" title="Link to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#rom.columns.Column" title="rom.columns.Column"><code class="xref py py-class docutils literal notranslate"><span class="pre">Column</span></code></a></p>
 <p>This ManyToOne column allows for one model to reference another model.
 While a ManyToOne column does not require a reverse OneToMany column
@@ -355,7 +355,7 @@ when this column is not provided</p></li>
 </ul>
 </div></blockquote>
 <p>Used via:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">class</span> <span class="nc">MyModel</span><span class="p">(</span><span class="n">Model</span><span class="p">):</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">class</span><span class="w"> </span><span class="nc">MyModel</span><span class="p">(</span><span class="n">Model</span><span class="p">):</span>
     <span class="n">col</span> <span class="o">=</span> <span class="n">ManyToOne</span><span class="p">(</span><span class="s1">&#39;OtherModelName&#39;</span><span class="p">)</span>
 </pre></div>
 </div>
@@ -367,14 +367,14 @@ referenced ids.</p>
 </div>
 <dl class="py method">
 <dt class="sig sig-object py" id="rom.columns.ManyToOne.get_related_model">
-<span class="sig-name descname"><span class="pre">get_related_model</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#rom.columns.ManyToOne.get_related_model" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">get_related_model</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#rom.columns.ManyToOne.get_related_model" title="Link to this definition">¶</a></dt>
 <dd></dd></dl>
 
 </dd></dl>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="rom.columns.OneToMany">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">rom.columns.</span></span><span class="sig-name descname"><span class="pre">OneToMany</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ftable</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">column</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#rom.columns.OneToMany" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">rom.columns.</span></span><span class="sig-name descname"><span class="pre">OneToMany</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ftable</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">column</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#rom.columns.OneToMany" title="Link to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#rom.columns.Column" title="rom.columns.Column"><code class="xref py py-class docutils literal notranslate"><span class="pre">Column</span></code></a></p>
 <p>OneToMany columns do not actually store any information. They rely on a
 properly defined reverse ManyToOne column on the referenced model in order
@@ -392,21 +392,21 @@ referencing this model with OneToOne or ManyToOne columns</p>
 </ul>
 </div></blockquote>
 <p>Used via:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">class</span> <span class="nc">MyModel</span><span class="p">(</span><span class="n">Model</span><span class="p">):</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">class</span><span class="w"> </span><span class="nc">MyModel</span><span class="p">(</span><span class="n">Model</span><span class="p">):</span>
     <span class="n">col</span> <span class="o">=</span> <span class="n">OneToMany</span><span class="p">(</span><span class="s1">&#39;OtherModelName&#39;</span><span class="p">)</span>
     <span class="n">ocol</span> <span class="o">=</span> <span class="n">OneToMany</span><span class="p">(</span><span class="s1">&#39;ModelName&#39;</span><span class="p">)</span>
 </pre></div>
 </div>
 <dl class="py method">
 <dt class="sig sig-object py" id="rom.columns.OneToMany.get_related_model">
-<span class="sig-name descname"><span class="pre">get_related_model</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#rom.columns.OneToMany.get_related_model" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">get_related_model</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#rom.columns.OneToMany.get_related_model" title="Link to this definition">¶</a></dt>
 <dd></dd></dl>
 
 </dd></dl>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="rom.columns.OneToOne">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">rom.columns.</span></span><span class="sig-name descname"><span class="pre">OneToOne</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ftable</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">on_delete=&lt;object</span> <span class="pre">object&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">required=False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">default=&lt;object</span> <span class="pre">object&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">unique=False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#rom.columns.OneToOne" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">rom.columns.</span></span><span class="sig-name descname"><span class="pre">OneToOne</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ftable</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">on_delete=&lt;object</span> <span class="pre">object&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">required=False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">default=&lt;object</span> <span class="pre">object&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">unique=False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#rom.columns.OneToOne" title="Link to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#rom.columns.ManyToOne" title="rom.columns.ManyToOne"><code class="xref py py-class docutils literal notranslate"><span class="pre">ManyToOne</span></code></a></p>
 <p>This OneToOne column allows for one model to reference another model.
 A OneToOne column does not require a reverse OneToOne column, and provides
@@ -433,7 +433,7 @@ when this column is not provided</p></li>
 </ul>
 </div></blockquote>
 <p>Used via:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">class</span> <span class="nc">MyModel</span><span class="p">(</span><span class="n">Model</span><span class="p">):</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">class</span><span class="w"> </span><span class="nc">MyModel</span><span class="p">(</span><span class="n">Model</span><span class="p">):</span>
     <span class="n">col</span> <span class="o">=</span> <span class="n">OneToOne</span><span class="p">(</span><span class="s1">&#39;OtherModelName&#39;</span><span class="p">,</span> <span class="s1">&#39;no action&#39;</span><span class="p">)</span>
 </pre></div>
 </div>
@@ -447,7 +447,7 @@ referenced ids.</p>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="rom.columns.PrimaryKey">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">rom.columns.</span></span><span class="sig-name descname"><span class="pre">PrimaryKey</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">index</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#rom.columns.PrimaryKey" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">rom.columns.</span></span><span class="sig-name descname"><span class="pre">PrimaryKey</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">index</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#rom.columns.PrimaryKey" title="Link to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#rom.columns.Column" title="rom.columns.Column"><code class="xref py py-class docutils literal notranslate"><span class="pre">Column</span></code></a></p>
 <p>This is a primary key column, used when you want the primary key to be
 named something other than ‘id’. If you omit a PrimaryKey column on your
@@ -456,7 +456,7 @@ Model classes, one will be automatically created for you.</p>
 on this column if you want to be able to perform queries and sort the
 results by primary key.</p>
 <p>Used via:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">class</span> <span class="nc">MyModel</span><span class="p">(</span><span class="n">Model</span><span class="p">):</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">class</span><span class="w"> </span><span class="nc">MyModel</span><span class="p">(</span><span class="n">Model</span><span class="p">):</span>
     <span class="nb">id</span> <span class="o">=</span> <span class="n">PrimaryKey</span><span class="p">()</span>
 </pre></div>
 </div>
@@ -464,14 +464,14 @@ results by primary key.</p>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="rom.columns.SaferDateTime">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">rom.columns.</span></span><span class="sig-name descname"><span class="pre">SaferDateTime</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">required=False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">default=&lt;object</span> <span class="pre">object&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">unique=False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">index=False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">keygen=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prefix=False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">suffix=False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">keygen2=None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#rom.columns.SaferDateTime" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">rom.columns.</span></span><span class="sig-name descname"><span class="pre">SaferDateTime</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">required=False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">default=&lt;object</span> <span class="pre">object&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">unique=False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">index=False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">keygen=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prefix=False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">suffix=False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">keygen2=None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#rom.columns.SaferDateTime" title="Link to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#rom.columns.DateTime" title="rom.columns.DateTime"><code class="xref py py-class docutils literal notranslate"><span class="pre">DateTime</span></code></a></p>
 <p>A (safer) datetime column (see Issue #109 or the below note for more
 information)</p>
 <p>All standard arguments supported. See <code class="docutils literal notranslate"><span class="pre">Column</span></code> for details on supported
 arguments.</p>
 <p>Used via:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">class</span> <span class="nc">MyModel</span><span class="p">(</span><span class="n">Model</span><span class="p">):</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">class</span><span class="w"> </span><span class="nc">MyModel</span><span class="p">(</span><span class="n">Model</span><span class="p">):</span>
     <span class="n">col</span> <span class="o">=</span> <span class="n">SaferDateTime</span><span class="p">()</span>
 </pre></div>
 </div>
@@ -490,7 +490,7 @@ seconds since the unix epoch.</p>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="rom.columns.String">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">rom.columns.</span></span><span class="sig-name descname"><span class="pre">String</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">required=False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">default=&lt;object</span> <span class="pre">object&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">unique=False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">index=False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">keygen=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prefix=False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">suffix=False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">keygen2=None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#rom.columns.String" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">rom.columns.</span></span><span class="sig-name descname"><span class="pre">String</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">required=False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">default=&lt;object</span> <span class="pre">object&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">unique=False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">index=False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">keygen=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prefix=False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">suffix=False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">keygen2=None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#rom.columns.String" title="Link to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#rom.columns.Column" title="rom.columns.Column"><code class="xref py py-class docutils literal notranslate"><span class="pre">Column</span></code></a></p>
 <p>A plain string column (str in 2.x, bytes in 3.x). Trying to save unicode
 strings will probably result in an error, if not corrupted data.</p>
@@ -503,7 +503,7 @@ a case-insensitive full-text index (<code class="docutils literal notranslate"><
 a case-sensitive identity index (<code class="docutils literal notranslate"><span class="pre">keygen=rom.IDENTITY</span></code>), and a
 case-insensitive identity index (<code class="docutils literal notranslate"><span class="pre">keygen=rom.IDENTITY_CI</span></code>).</p>
 <p>Used via:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">class</span> <span class="nc">MyModel</span><span class="p">(</span><span class="n">Model</span><span class="p">):</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">class</span><span class="w"> </span><span class="nc">MyModel</span><span class="p">(</span><span class="n">Model</span><span class="p">):</span>
     <span class="n">col</span> <span class="o">=</span> <span class="n">String</span><span class="p">()</span>
 </pre></div>
 </div>
@@ -511,7 +511,7 @@ case-insensitive identity index (<code class="docutils literal notranslate"><spa
 
 <dl class="py class">
 <dt class="sig sig-object py" id="rom.columns.Text">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">rom.columns.</span></span><span class="sig-name descname"><span class="pre">Text</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">required=False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">default=&lt;object</span> <span class="pre">object&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">unique=False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">index=False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">keygen=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prefix=False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">suffix=False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">keygen2=None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#rom.columns.Text" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">rom.columns.</span></span><span class="sig-name descname"><span class="pre">Text</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">required=False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">default=&lt;object</span> <span class="pre">object&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">unique=False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">index=False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">keygen=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prefix=False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">suffix=False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">keygen2=None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#rom.columns.Text" title="Link to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#rom.columns.Column" title="rom.columns.Column"><code class="xref py py-class docutils literal notranslate"><span class="pre">Column</span></code></a></p>
 <p>A unicode string column. Behavior is more or less identical to the String
 column type, except that unicode is supported (unicode in 2.x, str in 3.x).
@@ -529,7 +529,7 @@ case-insensitive identity index (<code class="docutils literal notranslate"><spa
 <code class="docutils literal notranslate"><span class="pre">rom.SIMPLE_CI</span></code> keygen, because we use UTF-8 to encode text, a single
 character can turn into 1-3 bytes, so may not be useful in practice.</p>
 <p>Used via:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">class</span> <span class="nc">MyModel</span><span class="p">(</span><span class="n">Model</span><span class="p">):</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">class</span><span class="w"> </span><span class="nc">MyModel</span><span class="p">(</span><span class="n">Model</span><span class="p">):</span>
     <span class="n">col</span> <span class="o">=</span> <span class="n">Text</span><span class="p">()</span>
 </pre></div>
 </div>
@@ -537,13 +537,13 @@ character can turn into 1-3 bytes, so may not be useful in practice.</p>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="rom.columns.Time">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">rom.columns.</span></span><span class="sig-name descname"><span class="pre">Time</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">required=False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">default=&lt;object</span> <span class="pre">object&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">unique=False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">index=False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">keygen=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prefix=False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">suffix=False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">keygen2=None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#rom.columns.Time" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">rom.columns.</span></span><span class="sig-name descname"><span class="pre">Time</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">required=False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">default=&lt;object</span> <span class="pre">object&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">unique=False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">index=False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">keygen=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prefix=False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">suffix=False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">keygen2=None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#rom.columns.Time" title="Link to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#rom.columns.Column" title="rom.columns.Column"><code class="xref py py-class docutils literal notranslate"><span class="pre">Column</span></code></a></p>
 <p>A time column. Timezones are ignored.</p>
 <p>All standard arguments supported. See <code class="docutils literal notranslate"><span class="pre">Column</span></code> for details on supported
 arguments.</p>
 <p>Used via:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">class</span> <span class="nc">MyModel</span><span class="p">(</span><span class="n">Model</span><span class="p">):</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">class</span><span class="w"> </span><span class="nc">MyModel</span><span class="p">(</span><span class="n">Model</span><span class="p">):</span>
     <span class="n">col</span> <span class="o">=</span> <span class="n">Time</span><span class="p">()</span>
 </pre></div>
 </div>
@@ -555,7 +555,7 @@ arguments.</p>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="rom.columns.UnsafeColumn">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">rom.columns.</span></span><span class="sig-name descname"><span class="pre">UnsafeColumn</span></span><a class="headerlink" href="#rom.columns.UnsafeColumn" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">rom.columns.</span></span><span class="sig-name descname"><span class="pre">UnsafeColumn</span></span><a class="headerlink" href="#rom.columns.UnsafeColumn" title="Link to this definition">¶</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">_Column</span></code></p>
 <p>UnsafeColumns are attributes on models that allow for explicit model-related
 data to be stored in native Redis structures. Data stored in these columns
@@ -579,7 +579,7 @@ be accessed directly if wanted. Hence why it is “unsafe”.</p>
           </div>
         </div>
       </div>
-      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+      <div class="sphinxsidebar" role="navigation" aria-label="Main">
         <div class="sphinxsidebarwrapper">
   <div>
     <h3><a href="index.html">Table of Contents</a></h3>
@@ -632,7 +632,7 @@ be accessed directly if wanted. Hence why it is “unsafe”.</p>
             rel="nofollow">Show Source</a></li>
     </ul>
    </div>
-<div id="searchbox" style="display: none" role="search">
+<search id="searchbox" style="display: none" role="search">
   <h3 id="searchlabel">Quick search</h3>
     <div class="searchformwrapper">
     <form class="search" action="search.html" method="get">
@@ -640,13 +640,13 @@ be accessed directly if wanted. Hence why it is “unsafe”.</p>
       <input type="submit" value="Go" />
     </form>
     </div>
-</div>
+</search>
 <script>document.getElementById('searchbox').style.display = "block"</script>
         </div>
       </div>
       <div class="clearer"></div>
     </div>
-    <div class="related" role="navigation" aria-label="related navigation">
+    <div class="related" role="navigation" aria-label="Related">
       <h3>Navigation</h3>
       <ul>
         <li class="right" style="margin-right: 10px">
@@ -661,13 +661,13 @@ be accessed directly if wanted. Hence why it is “unsafe”.</p>
         <li class="right" >
           <a href="rom.html" title="rom Package"
              >previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="index.html">rom 1.1.1 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="index.html">rom 1.1.2 documentation</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href=""><code class="xref py py-mod docutils literal notranslate"><span class="pre">columns</span></code> Module</a></li> 
       </ul>
     </div>
     <div class="footer" role="contentinfo">
-        &#169; Copyright 2013-2015, Josiah Carlson.
-      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 7.0.0.
+    &#169; Copyright 2013-2015, Josiah Carlson.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 8.2.3.
     </div>
   </body>
 </html>

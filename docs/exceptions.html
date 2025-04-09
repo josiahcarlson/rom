@@ -1,24 +1,24 @@
 <!DOCTYPE html>
 
-<html lang="en">
+<html lang="en" data-content_root="./">
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>exceptions Module &#8212; rom 1.1.1 documentation</title>
-    <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
-    <link rel="stylesheet" type="text/css" href="_static/classic.css" />
+    <title>exceptions Module &#8212; rom 1.1.2 documentation</title>
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=03e43079" />
+    <link rel="stylesheet" type="text/css" href="_static/classic.css?v=2bf1fcf8" />
     
-    <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
-    <script src="_static/doctools.js"></script>
-    <script src="_static/sphinx_highlight.js"></script>
+    <script src="_static/documentation_options.js?v=6f037312"></script>
+    <script src="_static/doctools.js?v=9bcbadda"></script>
+    <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
     
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
     <link rel="next" title="index Module" href="indexm.html" />
     <link rel="prev" title="columns Module" href="columns.html" /> 
   </head><body>
-    <div class="related" role="navigation" aria-label="related navigation">
+    <div class="related" role="navigation" aria-label="Related">
       <h3>Navigation</h3>
       <ul>
         <li class="right" style="margin-right: 10px">
@@ -33,7 +33,7 @@
         <li class="right" >
           <a href="columns.html" title="columns Module"
              accesskey="P">previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="index.html">rom 1.1.1 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="index.html">rom 1.1.2 documentation</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href=""><code class="xref py py-mod docutils literal notranslate"><span class="pre">exceptions</span></code> Module</a></li> 
       </ul>
     </div>  
@@ -44,80 +44,80 @@
           <div class="body" role="main">
             
   <section id="module-rom.exceptions">
-<span id="exceptions-module"></span><h1><code class="xref py py-mod docutils literal notranslate"><span class="pre">exceptions</span></code> Module<a class="headerlink" href="#module-rom.exceptions" title="Permalink to this heading">¶</a></h1>
+<span id="exceptions-module"></span><h1><code class="xref py py-mod docutils literal notranslate"><span class="pre">exceptions</span></code> Module<a class="headerlink" href="#module-rom.exceptions" title="Link to this heading">¶</a></h1>
 <dl class="py exception">
 <dt class="sig sig-object py" id="rom.exceptions.BulkError">
-<em class="property"><span class="pre">exception</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">rom.exceptions.</span></span><span class="sig-name descname"><span class="pre">BulkError</span></span><a class="headerlink" href="#rom.exceptions.BulkError" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="k"><span class="pre">exception</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">rom.exceptions.</span></span><span class="sig-name descname"><span class="pre">BulkError</span></span><a class="headerlink" href="#rom.exceptions.BulkError" title="Link to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#rom.exceptions.ORMError" title="rom.exceptions.ORMError"><code class="xref py py-class docutils literal notranslate"><span class="pre">ORMError</span></code></a></p>
 <p>Raised when using session.commit(fast=True) or equivalent, and there is at least one error.</p>
 </dd></dl>
 
 <dl class="py exception">
 <dt class="sig sig-object py" id="rom.exceptions.ColumnError">
-<em class="property"><span class="pre">exception</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">rom.exceptions.</span></span><span class="sig-name descname"><span class="pre">ColumnError</span></span><a class="headerlink" href="#rom.exceptions.ColumnError" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="k"><span class="pre">exception</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">rom.exceptions.</span></span><span class="sig-name descname"><span class="pre">ColumnError</span></span><a class="headerlink" href="#rom.exceptions.ColumnError" title="Link to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#rom.exceptions.ORMError" title="rom.exceptions.ORMError"><code class="xref py py-class docutils literal notranslate"><span class="pre">ORMError</span></code></a></p>
 <p>Raised when your column definitions are not correct</p>
 </dd></dl>
 
 <dl class="py exception">
 <dt class="sig sig-object py" id="rom.exceptions.DataRaceError">
-<em class="property"><span class="pre">exception</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">rom.exceptions.</span></span><span class="sig-name descname"><span class="pre">DataRaceError</span></span><a class="headerlink" href="#rom.exceptions.DataRaceError" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="k"><span class="pre">exception</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">rom.exceptions.</span></span><span class="sig-name descname"><span class="pre">DataRaceError</span></span><a class="headerlink" href="#rom.exceptions.DataRaceError" title="Link to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#rom.exceptions.InvalidOperation" title="rom.exceptions.InvalidOperation"><code class="xref py py-class docutils literal notranslate"><span class="pre">InvalidOperation</span></code></a></p>
 <p>Raised when more than one writer tries to update the same columns on the same entity</p>
 </dd></dl>
 
 <dl class="py exception">
 <dt class="sig sig-object py" id="rom.exceptions.EntityDeletedError">
-<em class="property"><span class="pre">exception</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">rom.exceptions.</span></span><span class="sig-name descname"><span class="pre">EntityDeletedError</span></span><a class="headerlink" href="#rom.exceptions.EntityDeletedError" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="k"><span class="pre">exception</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">rom.exceptions.</span></span><span class="sig-name descname"><span class="pre">EntityDeletedError</span></span><a class="headerlink" href="#rom.exceptions.EntityDeletedError" title="Link to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#rom.exceptions.InvalidOperation" title="rom.exceptions.InvalidOperation"><code class="xref py py-class docutils literal notranslate"><span class="pre">InvalidOperation</span></code></a></p>
 <p>Raised when another writer deleted the entity from Redis; use .save(force=True) to re-save</p>
 </dd></dl>
 
 <dl class="py exception">
 <dt class="sig sig-object py" id="rom.exceptions.InvalidColumnValue">
-<em class="property"><span class="pre">exception</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">rom.exceptions.</span></span><span class="sig-name descname"><span class="pre">InvalidColumnValue</span></span><a class="headerlink" href="#rom.exceptions.InvalidColumnValue" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="k"><span class="pre">exception</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">rom.exceptions.</span></span><span class="sig-name descname"><span class="pre">InvalidColumnValue</span></span><a class="headerlink" href="#rom.exceptions.InvalidColumnValue" title="Link to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#rom.exceptions.ColumnError" title="rom.exceptions.ColumnError"><code class="xref py py-class docutils literal notranslate"><span class="pre">ColumnError</span></code></a></p>
 <p>Raised when you attempt to pass a primary key on entity creation or when data assigned to a column is the wrong type</p>
 </dd></dl>
 
 <dl class="py exception">
 <dt class="sig sig-object py" id="rom.exceptions.InvalidOperation">
-<em class="property"><span class="pre">exception</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">rom.exceptions.</span></span><span class="sig-name descname"><span class="pre">InvalidOperation</span></span><a class="headerlink" href="#rom.exceptions.InvalidOperation" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="k"><span class="pre">exception</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">rom.exceptions.</span></span><span class="sig-name descname"><span class="pre">InvalidOperation</span></span><a class="headerlink" href="#rom.exceptions.InvalidOperation" title="Link to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#rom.exceptions.ORMError" title="rom.exceptions.ORMError"><code class="xref py py-class docutils literal notranslate"><span class="pre">ORMError</span></code></a></p>
 <p>Raised when trying to delete or modify a column that cannot be deleted or modified</p>
 </dd></dl>
 
 <dl class="py exception">
 <dt class="sig sig-object py" id="rom.exceptions.MissingColumn">
-<em class="property"><span class="pre">exception</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">rom.exceptions.</span></span><span class="sig-name descname"><span class="pre">MissingColumn</span></span><a class="headerlink" href="#rom.exceptions.MissingColumn" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="k"><span class="pre">exception</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">rom.exceptions.</span></span><span class="sig-name descname"><span class="pre">MissingColumn</span></span><a class="headerlink" href="#rom.exceptions.MissingColumn" title="Link to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#rom.exceptions.ColumnError" title="rom.exceptions.ColumnError"><code class="xref py py-class docutils literal notranslate"><span class="pre">ColumnError</span></code></a></p>
 <p>Raised when a model has a required column, but it is not provided on construction</p>
 </dd></dl>
 
 <dl class="py exception">
 <dt class="sig sig-object py" id="rom.exceptions.ORMError">
-<em class="property"><span class="pre">exception</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">rom.exceptions.</span></span><span class="sig-name descname"><span class="pre">ORMError</span></span><a class="headerlink" href="#rom.exceptions.ORMError" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="k"><span class="pre">exception</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">rom.exceptions.</span></span><span class="sig-name descname"><span class="pre">ORMError</span></span><a class="headerlink" href="#rom.exceptions.ORMError" title="Link to this definition">¶</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Exception</span></code></p>
 <p>Base class for all ORM-related errors</p>
 </dd></dl>
 
 <dl class="py exception">
 <dt class="sig sig-object py" id="rom.exceptions.QueryError">
-<em class="property"><span class="pre">exception</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">rom.exceptions.</span></span><span class="sig-name descname"><span class="pre">QueryError</span></span><a class="headerlink" href="#rom.exceptions.QueryError" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="k"><span class="pre">exception</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">rom.exceptions.</span></span><span class="sig-name descname"><span class="pre">QueryError</span></span><a class="headerlink" href="#rom.exceptions.QueryError" title="Link to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#rom.exceptions.InvalidOperation" title="rom.exceptions.InvalidOperation"><code class="xref py py-class docutils literal notranslate"><span class="pre">InvalidOperation</span></code></a></p>
 <p>Raised when arguments to <code class="docutils literal notranslate"><span class="pre">Model.get_by()</span></code> or <code class="docutils literal notranslate"><span class="pre">Query.filter</span></code> are not valid</p>
 </dd></dl>
 
 <dl class="py exception">
 <dt class="sig sig-object py" id="rom.exceptions.RestrictError">
-<em class="property"><span class="pre">exception</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">rom.exceptions.</span></span><span class="sig-name descname"><span class="pre">RestrictError</span></span><a class="headerlink" href="#rom.exceptions.RestrictError" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="k"><span class="pre">exception</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">rom.exceptions.</span></span><span class="sig-name descname"><span class="pre">RestrictError</span></span><a class="headerlink" href="#rom.exceptions.RestrictError" title="Link to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#rom.exceptions.InvalidOperation" title="rom.exceptions.InvalidOperation"><code class="xref py py-class docutils literal notranslate"><span class="pre">InvalidOperation</span></code></a></p>
 <p>Raised when deleting an object referenced by other objects</p>
 </dd></dl>
 
 <dl class="py exception">
 <dt class="sig sig-object py" id="rom.exceptions.UniqueKeyViolation">
-<em class="property"><span class="pre">exception</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">rom.exceptions.</span></span><span class="sig-name descname"><span class="pre">UniqueKeyViolation</span></span><a class="headerlink" href="#rom.exceptions.UniqueKeyViolation" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="k"><span class="pre">exception</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">rom.exceptions.</span></span><span class="sig-name descname"><span class="pre">UniqueKeyViolation</span></span><a class="headerlink" href="#rom.exceptions.UniqueKeyViolation" title="Link to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#rom.exceptions.ORMError" title="rom.exceptions.ORMError"><code class="xref py py-class docutils literal notranslate"><span class="pre">ORMError</span></code></a></p>
 <p>Raised when trying to save an entity without a distinct column value</p>
 </dd></dl>
@@ -129,7 +129,7 @@
           </div>
         </div>
       </div>
-      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+      <div class="sphinxsidebar" role="navigation" aria-label="Main">
         <div class="sphinxsidebarwrapper">
   <div>
     <h3><a href="index.html">Table of Contents</a></h3>
@@ -168,7 +168,7 @@
             rel="nofollow">Show Source</a></li>
     </ul>
    </div>
-<div id="searchbox" style="display: none" role="search">
+<search id="searchbox" style="display: none" role="search">
   <h3 id="searchlabel">Quick search</h3>
     <div class="searchformwrapper">
     <form class="search" action="search.html" method="get">
@@ -176,13 +176,13 @@
       <input type="submit" value="Go" />
     </form>
     </div>
-</div>
+</search>
 <script>document.getElementById('searchbox').style.display = "block"</script>
         </div>
       </div>
       <div class="clearer"></div>
     </div>
-    <div class="related" role="navigation" aria-label="related navigation">
+    <div class="related" role="navigation" aria-label="Related">
       <h3>Navigation</h3>
       <ul>
         <li class="right" style="margin-right: 10px">
@@ -197,13 +197,13 @@
         <li class="right" >
           <a href="columns.html" title="columns Module"
              >previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="index.html">rom 1.1.1 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="index.html">rom 1.1.2 documentation</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href=""><code class="xref py py-mod docutils literal notranslate"><span class="pre">exceptions</span></code> Module</a></li> 
       </ul>
     </div>
     <div class="footer" role="contentinfo">
-        &#169; Copyright 2013-2015, Josiah Carlson.
-      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 7.0.0.
+    &#169; Copyright 2013-2015, Josiah Carlson.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 8.2.3.
     </div>
   </body>
 </html>
